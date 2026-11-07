@@ -33,7 +33,7 @@
   "peerDependencies": {
     "@angular-devkit/schematics": "^22.0.0",
     "@angular/core": "^22.0.0",
-    "@rivinia/select": "^1.0.0"
+    "@rivinia/select": "^1.0.3"
   },
   "peerDependenciesMeta": {
     "@angular-devkit/schematics": {

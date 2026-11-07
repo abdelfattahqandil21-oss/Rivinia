@@ -78,6 +78,10 @@ Optional, for the shared token layer: `npm install @rivinia/theme`.
 - Requires **Angular `^22.0.0`** (`@angular/core`, `@angular/common` and
   `@angular/forms` are peers, not dependencies). No dependency on
   `@rivinia/menu`.
+- Runtime dependency: `@rivinia/popup` requires **`^1.0.3`**; the published
+  `@rivinia/select` version is **`1.0.3`** and the published `@rivinia/popup`
+  version is **`1.0.3`**. The range is the minimum compatible dependency
+  contract; each package version is its exact published release.
 - Node: **same as Angular 22** (`^22.22.3 || ^24.15.0 || >=26.0.0`).
 - `@rivinia/select` exports the headless controller and its types;
   `@rivinia/select/ui` exports `RiviniaSelectComponent` and `SelectChange`.

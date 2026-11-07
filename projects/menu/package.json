@@ -29,7 +29,7 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
-    "@rivinia/popup": "^1.0.0"
+    "@rivinia/popup": "^1.0.3"
   },
   "sideEffects": false
 }
