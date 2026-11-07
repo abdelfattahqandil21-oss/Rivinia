@@ -1,6 +1,6 @@
 {
   "name": "@rivinia/datepicker",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Headless Gregorian date and time picker for Angular: month grid, time zone and DST resolution, keyboard navigation, RTL, locale-aware formatting.",
   "keywords": [
     "angular",

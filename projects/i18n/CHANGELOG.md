@@ -1,5 +1,9 @@
 # @rivinia/i18n
 
+## 1.0.4
+
+- Update published internal dependency metadata and version-pinned documentation links for the synchronized Rivinia 1.0 patch. No public API changes.
+
 ## 1.0.3
 
 - Correct package repository, documentation, homepage, and issue links after the GitHub repository rename.
