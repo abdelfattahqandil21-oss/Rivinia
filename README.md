@@ -14,9 +14,8 @@ synchronized `1.x` line (group `rivinia-1.0`). Install and configure only the
 package your application needs; each package README is the detailed consumer
 reference for its public API.
 
-Published packages target Angular 22. All eleven packages are currently published at `1.0.3` on npm (registry checked
-on 2026-11-07). “Workspace” shows the candidate manifest version; the latest npm
-version stays `1.0.3` until the `1.0.4` candidate is approved and published.
+Published packages target Angular 22. All eleven packages are currently published at `1.0.4` on npm (registry checked
+on 2026-11-07). “Workspace” shows each package manifest version; `Latest on npm` shows the registry version.
 
 ## Start here (humans)
 
@@ -32,17 +31,17 @@ version published to the registry.
 
 | Package                                                  | Latest on npm                                              | Workspace | `ng add` | Use it for                                                                                      |
 | -------------------------------------------------------- | ---------------------------------------------------------- | --------- | -------- | ----------------------------------------------------------------------------------------------- |
-| [`@rivinia/http`](./projects/http/README.md)             | [1.0.3](https://www.npmjs.com/package/@rivinia/http)       | 1.0.4 | Yes      | Typed `HttpClient` methods, response-envelope unwrapping, and `httpResource` integration.       |
-| [`@rivinia/toast`](./projects/toast/README.md)           | [1.0.3](https://www.npmjs.com/package/@rivinia/toast)      | 1.0.4 | Yes      | A headless signal-based notification queue with timers and actions.                             |
-| [`@rivinia/modal`](./projects/modal/README.md)           | [1.0.3](https://www.npmjs.com/package/@rivinia/modal)      | 1.0.4 | Yes      | Headless modal coordination, stacking/queuing, and typed results.                               |
-| [`@rivinia/i18n`](./projects/i18n/README.md)             | [1.0.3](https://www.npmjs.com/package/@rivinia/i18n)      | 1.0.4 | Yes      | Language state, direction, SSR-safe loaders, ICU plurals, and typed keys.                       |
-| [`@rivinia/env`](./projects/env/README.md)               | [1.0.3](https://www.npmjs.com/package/@rivinia/env)        | 1.0.4 | Yes      | Typed application environment configuration (dev/staging/prod).                                 |
-| [`@rivinia/menu`](./projects/menu/README.md)             | [1.0.3](https://www.npmjs.com/package/@rivinia/menu)       | 1.0.4 | No       | Headless menu behavior, keyboard navigation, and its optional ready-made UI.                    |
-| [`@rivinia/popup`](./projects/popup/README.md)           | [1.0.3](https://www.npmjs.com/package/@rivinia/popup)      | 1.0.4 | No       | Internal headless positioning and dismissal mechanics shared by Rivinia popups.                 |
-| [`@rivinia/select`](./projects/select/README.md)         | [1.0.3](https://www.npmjs.com/package/@rivinia/select)     | 1.0.4 | No       | Headless single/multi selection, search filtering, and optional UI at `@rivinia/select/ui`.     |
-| [`@rivinia/theme`](./projects/theme/README.md)           | [1.0.3](https://www.npmjs.com/package/@rivinia/theme)      | 1.0.4 | No       | Shared design tokens for Rivinia component colors, shapes, and typography.                      |
-| [`@rivinia/datepicker`](./projects/datepicker/README.md) | [1.0.3](https://www.npmjs.com/package/@rivinia/datepicker) | 1.0.4 | No       | Headless Gregorian date/time picker: month grid, time zones and DST, keyboard navigation, RTL.  |
-| [`@rivinia/table`](./projects/table/README.md)           | [1.0.3](https://www.npmjs.com/package/@rivinia/table)      | 1.0.4 | No       | Headless table: typed columns, sorting, filtering, pagination, selection, and row/column spans. |
+| [`@rivinia/http`](./projects/http/README.md)             | [1.0.4](https://www.npmjs.com/package/@rivinia/http)       | 1.0.4 | Yes      | Typed `HttpClient` methods, response-envelope unwrapping, and `httpResource` integration.       |
+| [`@rivinia/toast`](./projects/toast/README.md)           | [1.0.4](https://www.npmjs.com/package/@rivinia/toast)      | 1.0.4 | Yes      | A headless signal-based notification queue with timers and actions.                             |
+| [`@rivinia/modal`](./projects/modal/README.md)           | [1.0.4](https://www.npmjs.com/package/@rivinia/modal)      | 1.0.4 | Yes      | Headless modal coordination, stacking/queuing, and typed results.                               |
+| [`@rivinia/i18n`](./projects/i18n/README.md)             | [1.0.4](https://www.npmjs.com/package/@rivinia/i18n)      | 1.0.4 | Yes      | Language state, direction, SSR-safe loaders, ICU plurals, and typed keys.                       |
+| [`@rivinia/env`](./projects/env/README.md)               | [1.0.4](https://www.npmjs.com/package/@rivinia/env)        | 1.0.4 | Yes      | Typed application environment configuration (dev/staging/prod).                                 |
+| [`@rivinia/menu`](./projects/menu/README.md)             | [1.0.4](https://www.npmjs.com/package/@rivinia/menu)       | 1.0.4 | No       | Headless menu behavior, keyboard navigation, and its optional ready-made UI.                    |
+| [`@rivinia/popup`](./projects/popup/README.md)           | [1.0.4](https://www.npmjs.com/package/@rivinia/popup)      | 1.0.4 | No       | Internal headless positioning and dismissal mechanics shared by Rivinia popups.                 |
+| [`@rivinia/select`](./projects/select/README.md)         | [1.0.4](https://www.npmjs.com/package/@rivinia/select)     | 1.0.4 | No       | Headless single/multi selection, search filtering, and optional UI at `@rivinia/select/ui`.     |
+| [`@rivinia/theme`](./projects/theme/README.md)           | [1.0.4](https://www.npmjs.com/package/@rivinia/theme)      | 1.0.4 | No       | Shared design tokens for Rivinia component colors, shapes, and typography.                      |
+| [`@rivinia/datepicker`](./projects/datepicker/README.md) | [1.0.4](https://www.npmjs.com/package/@rivinia/datepicker) | 1.0.4 | No       | Headless Gregorian date/time picker: month grid, time zones and DST, keyboard navigation, RTL.  |
+| [`@rivinia/table`](./projects/table/README.md)           | [1.0.4](https://www.npmjs.com/package/@rivinia/table)      | 1.0.4 | No       | Headless table: typed columns, sorting, filtering, pagination, selection, and row/column spans. |
 
 The `i18n-e2e` and `menu-e2e` projects are test harness applications that
 serve the Playwright suites; they are not packages and are never published.
@@ -94,4 +93,4 @@ without confirming the package name, version, access, and inspected tarball;
 follow the release gates in [`AGENTS.md`](./AGENTS.md) and the decisions in
 [`docs/decisions/README.md`](./docs/decisions/README.md); the stable entry point is
 [`docs/DECISIONS.md`](./docs/DECISIONS.md). Releases are tagged on `main` as
-`<package>/v<semver>` (for example `i18n/v1.0.3`); tags are immutable.
+`<package>/v<semver>` (for example `i18n/v1.0.4`); tags are immutable.
