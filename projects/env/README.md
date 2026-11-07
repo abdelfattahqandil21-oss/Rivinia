@@ -5,7 +5,7 @@
 
 A typed application environment contract and Angular CLI schematic.
 
-Package version: **1.0.3**
+Package version: **1.0.4**
 
 ```ts
 import type { BaseEnvironment } from '@rivinia/env';
@@ -86,4 +86,4 @@ MIT.
 
 | Topic | Read |
 | --- | --- |
-| Scaffold environments | [Scaffold environments](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/env/v1.0.3/docs/env/scaffolding.md) |
+| Scaffold environments | [Scaffold environments](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/env/v1.0.4/docs/env/scaffolding.md) |

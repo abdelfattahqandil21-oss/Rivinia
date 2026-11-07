@@ -4,12 +4,12 @@
 [![license](https://img.shields.io/npm/l/@rivinia/select.svg)](https://www.npmjs.com/package/@rivinia/select)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/abdelfattahqandil21-oss/Rivinia/select/v1.0.3/assets/rivinia-abstract-mark-light.svg" alt="Rivinia" width="340" />
+  <img src="https://raw.githubusercontent.com/abdelfattahqandil21-oss/Rivinia/select/v1.0.4/assets/rivinia-abstract-mark-light.svg" alt="Rivinia" width="340" />
 </p>
 
 Angular select fields: an optional ready-made UI and the headless controller
 behind it — an option registry, an accent-insensitive filter, and a single or
-multi value. Package version: **1.0.3**.
+multi value. Package version: **1.0.4**.
 
 The `1.0.0` stable release follows the 1.0 release candidates; 0.x was experimental.
 
@@ -44,7 +44,7 @@ That is the whole field: type to filter, Tab into the list, Enter to pick,
 Escape back to the trigger, and a panel that stays attached to its trigger in a
 right-to-left form inside a left-to-right app. No service providers, no global
 styles to configure. The same page under
-[`projects/menu-e2e/src/app/pages/select.ts`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.3/projects/menu-e2e/src/app/pages/select.ts)
+[`projects/menu-e2e/src/app/pages/select.ts`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/projects/menu-e2e/src/app/pages/select.ts)
 is what the popup conformance suite drives — `npx ng build menu-e2e` runs it
 locally.
 
@@ -78,9 +78,9 @@ Optional, for the shared token layer: `npm install @rivinia/theme`.
 - Requires **Angular `^22.0.0`** (`@angular/core`, `@angular/common` and
   `@angular/forms` are peers, not dependencies). No dependency on
   `@rivinia/menu`.
-- Runtime dependency: `@rivinia/popup` requires **`^1.0.3`**; the published
-  `@rivinia/select` version is **`1.0.3`** and the published `@rivinia/popup`
-  version is **`1.0.3`**. The range is the minimum compatible dependency
+- Runtime dependency: `@rivinia/popup` requires **`^1.0.4`**; the published
+  `@rivinia/select` version is **`1.0.4`** and the published `@rivinia/popup`
+  version is **`1.0.4`**. The range is the minimum compatible dependency
   contract; each package version is its exact published release.
 - Node: **same as Angular 22** (`^22.22.3 || ^24.15.0 || >=26.0.0`).
 - `@rivinia/select` exports the headless controller and its types;
@@ -158,20 +158,20 @@ which is the path this suite measures three times a day.
 `@rivinia/select` needs no feature to work that Angular itself does not need.
 The floor dates, the `@supports` gate, and what has never been run (including
 real Safari) are in
-[browser support](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.3/docs/browser-support.md).
+[browser support](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/browser-support.md).
 
 ## Go further
 
 | Topic                                                                                        | Read                                                                                                                               |
 | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Every input, output, controller member and type, per entry point                             | [docs/select/api.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.3/docs/select/api.md)                     |
-| Signal Forms, Reactive Forms, `ngModel`, value types, ownership rules                        | [docs/select/forms.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.3/docs/select/forms.md)                 |
-| Keys, focus, the shipped ARIA, and the verification gaps                                     | [docs/select/accessibility.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.3/docs/select/accessibility.md) |
-| Headless: the controller surface and a complete custom dropdown                              | [docs/select/headless.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.3/docs/select/headless.md)           |
-| `optionTemplate` rows, paged data, a virtualised list, your own entrance animation           | [docs/select/recipes.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.3/docs/select/recipes.md)             |
-| `simple` vs `premium`, what premium actually paints, and its measured byte cost              | [docs/select/variants.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.3/docs/select/variants.md)           |
-| The select's tokens, classes, `data-*` hooks and forced-colors behaviour                     | [docs/select/theming.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.3/docs/select/theming.md)             |
-| Theming every Rivinia component — the cascade, light and dark, where an override has to live | [docs/theme/README.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.3/docs/theme/README.md)                 |
+| Every input, output, controller member and type, per entry point                             | [docs/select/api.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/api.md)                     |
+| Signal Forms, Reactive Forms, `ngModel`, value types, ownership rules                        | [docs/select/forms.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/forms.md)                 |
+| Keys, focus, the shipped ARIA, and the verification gaps                                     | [docs/select/accessibility.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/accessibility.md) |
+| Headless: the controller surface and a complete custom dropdown                              | [docs/select/headless.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/headless.md)           |
+| `optionTemplate` rows, paged data, a virtualised list, your own entrance animation           | [docs/select/recipes.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/recipes.md)             |
+| `simple` vs `premium`, what premium actually paints, and its measured byte cost              | [docs/select/variants.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/variants.md)           |
+| The select's tokens, classes, `data-*` hooks and forced-colors behaviour                     | [docs/select/theming.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/theming.md)             |
+| Theming every Rivinia component — the cascade, light and dark, where an override has to live | [docs/theme/README.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/theme/README.md)                 |
 
-Release history: [CHANGELOG.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.3/projects/select/CHANGELOG.md).
+Release history: [CHANGELOG.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/projects/select/CHANGELOG.md).
 MIT licensed.
