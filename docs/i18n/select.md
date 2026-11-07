@@ -174,7 +174,7 @@ readonly options = computed(() => languageSelectOptions(this.i18n.languages()));
 
 ```json
 {
-  "peerDependencies": { "@rivinia/select": "^1.0.0-rc.1" },
+  "peerDependencies": { "@rivinia/select": "^1.0.3" },
   "peerDependenciesMeta": { "@rivinia/select": { "optional": true } }
 }
 ```

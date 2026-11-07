@@ -124,7 +124,7 @@ describe('@rivinia/i18n/select — packaging', () => {
       dependencies?: Record<string, string>;
     };
 
-    expect(pkg.peerDependencies?.['@rivinia/select']).toBe('^1.0.0');
+    expect(pkg.peerDependencies?.['@rivinia/select']).toBe('^1.0.3');
     expect(pkg.peerDependenciesMeta?.['@rivinia/select']?.optional).toBe(true);
     expect(pkg.dependencies?.['@rivinia/select']).toBeUndefined();
   });
