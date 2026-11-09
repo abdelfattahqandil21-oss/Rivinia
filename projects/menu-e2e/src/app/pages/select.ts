@@ -88,9 +88,23 @@ import { RiviniaMenuComponent, RiviniaMenuItem } from '@rivinia/menu/ui';
       id="multi-select"
       [mode]="'multi'"
       [options]="multiOptions"
+      (closed)="onMultiClosed()"
       (selectionChange)="multiValue.set($any($event))"
     />
     <p data-testid="multi-value">values={{ (multiValue() || []).join(',') }}</p>
+    <p data-testid="multi-closed-count">closed={{ multiClosed() }}</p>
+
+    <h2>Multi searchable</h2>
+    <rv-select
+      id="multi-searchable-select"
+      [mode]="'multi'"
+      [searchable]="true"
+      [options]="multiOptions"
+      (closed)="onSearchableMultiClosed()"
+      (selectionChange)="searchableMultiValue.set($any($event))"
+    />
+    <p data-testid="multi-searchable-value">values={{ (searchableMultiValue() || []).join(',') }}</p>
+    <p data-testid="multi-searchable-closed-count">closed={{ searchableMultiClosed() }}</p>
 
     <!--
       RTL placement fixture. dir="rtl" sits on a WRAPPER, not on <html>, so the
@@ -179,6 +193,9 @@ export class SelectPage {
   ];
   readonly singleValue = signal<string | null>(null);
   readonly multiValue = signal<readonly string[] | null>(null);
+  readonly multiClosed = signal(0);
+  readonly searchableMultiValue = signal<readonly string[] | null>(null);
+  readonly searchableMultiClosed = signal(0);
   readonly rtlOptions = [
     { id: 'owner', label: 'Owner' },
     { id: 'admin', label: 'Admin' },
@@ -215,6 +232,14 @@ export class SelectPage {
     }));
   });
   readonly virtualPanel = signal<HTMLElement | null>(null);
+
+  onMultiClosed(): void {
+    this.multiClosed.update((count) => count + 1);
+  }
+
+  onSearchableMultiClosed(): void {
+    this.searchableMultiClosed.update((count) => count + 1);
+  }
 
   onPanelReady(panel: HTMLElement): void {
     this.virtualPanel.set(panel);

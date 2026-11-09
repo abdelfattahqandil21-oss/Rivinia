@@ -493,11 +493,8 @@ export class RiviniaSelectComponent implements FormValueControl<SelectChange> {
       this.focusTrigger();
     } else {
       if (!c.toggle(id)) return;
-      // The inner menu closed synchronously; reopen in the same pass.
-      // doClose() cleared activeId, so restore it to the picked item —
-      // otherwise the next arrow-key navigation starts from the first item.
-      this.popup.openMenu('current');
-      this.popup.activate(id);
+      // Multi-pick keeps the existing panel mounted, preserving the search
+      // query, focused element, active row and scroll position.
       this.value.set(c.values());
       this.selectionChange.emit(c.values());
     }

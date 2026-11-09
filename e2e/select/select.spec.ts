@@ -77,6 +77,65 @@ test.describe('select: multi mode', () => {
     await expect(page.getByTestId('multi-value')).toContainText('values=a,b');
     await expect(page.locator('#multi-select .rv-select-check')).toHaveCount(2);
   });
+
+  test('Enter and Space picks stay open without changing the active row', async ({ page }) => {
+    await page.goto('/select');
+    await page.locator('#multi-searchable-select .rv-select-trigger').click();
+    const panel = page.locator('#multi-searchable-select .rv-select-popup-panel');
+    const rows = page.locator('#multi-searchable-select .rv-select-popup-menu [role="menuitemcheckbox"]');
+    const search = page.locator('#multi-searchable-select .rv-select-search');
+    await expect(panel).toBeVisible();
+    await expect(search).toBeFocused();
+    await search.press('Tab');
+    await expect(rows.nth(0)).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(rows.nth(0)).toHaveAttribute('data-active', 'true');
+    await page.keyboard.press('ArrowDown');
+    await expect(rows.nth(1)).toBeFocused();
+    await page.keyboard.press('Space');
+
+    await expect(panel).toBeVisible();
+    await expect(rows.nth(1)).toHaveAttribute('data-active', 'true');
+    await expect(page.getByTestId('multi-searchable-value')).toContainText('values=a,b');
+    await expect(page.getByTestId('multi-searchable-closed-count')).toHaveText('closed=0');
+  });
+
+  test.describe('mobile multi-mode pick', () => {
+    test.use({
+      viewport: { width: 390, height: 664 },
+      isMobile: true,
+      hasTouch: true,
+    });
+
+    test('keeps the searched, focused panel open without emitting closed', async ({ page }) => {
+      await page.goto('/select');
+      const trigger = page.locator('#multi-searchable-select .rv-select-trigger');
+      await trigger.click();
+      const panel = page.locator('#multi-searchable-select .rv-select-popup-panel');
+      const search = page.locator('#multi-searchable-select .rv-select-search');
+      await expect(panel).toBeVisible();
+      await expect(search).toBeFocused();
+      await search.fill('Alpha');
+      await search.evaluate((element) => {
+        (window as unknown as Record<string, Element>).__multiSearchBeforePick = element;
+      });
+
+      await page.locator('#multi-searchable-select .rv-select-popup-menu [data-rv-id="a"]').click({
+        force: true,
+      });
+
+      await expect(panel).toBeVisible();
+      await expect(search).toHaveValue('Alpha');
+      await expect(search).toBeFocused();
+      await expect(page.getByTestId('multi-searchable-closed-count')).toHaveText('closed=0');
+      expect(
+        await search.evaluate(
+          (element) =>
+            (window as unknown as Record<string, Element>).__multiSearchBeforePick === element,
+        ),
+      ).toBe(true);
+    });
+  });
 });
 
 test.describe('select: theme isolation', () => {

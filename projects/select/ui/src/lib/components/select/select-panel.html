@@ -4,6 +4,7 @@
 <div class="rv-select" (focusout)="onFocusOut($event)">
   <rv-select-popup
     [popup]="popup"
+    [closeOnPick]="controller().mode === 'single'"
     [variant]="variant()"
     [placement]="placement()"
     [popupLabel]="panelLabel()"

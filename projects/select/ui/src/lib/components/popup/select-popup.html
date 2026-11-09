@@ -11,6 +11,7 @@
     [attr.data-flipped]="flipped()"
     [attr.data-positioned]="positioned()"
     [attr.data-top-layer]="topLayerSupported"
+    (focusin)="onPanelFocusIn($event)"
     (keydown)="onPanelKey($event)"
     (scroll)="onPanelScroll($event)"
   >

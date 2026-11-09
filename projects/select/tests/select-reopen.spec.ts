@@ -3,7 +3,7 @@
  *
  * The complaint: pick a value with the arrow keys, reopen, and the active row
  * starts at the FIRST option instead of the one already chosen. Multi mode
- * was already right — it never closes on a pick, so the active row stayed put.
+ * keeps its current active row when another row is picked.
  */
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -117,7 +117,7 @@ describe('reopening a single-mode select', () => {
     expect(activeRow(host)).toBe('b');
   });
 
-  it('multi mode keeps the picked row active', () => {
+  it('multi mode keeps the existing active row after picking another option', () => {
     const fixture = TestBed.createComponent(MultiHost);
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
@@ -133,6 +133,7 @@ describe('reopening a single-mode select', () => {
     TestBed.flushEffects();
     fixture.detectChanges();
 
-    expect(activeRow(host)).toBe('c');
+    expect(activeRow(host)).toBe('a');
+    expect(fixture.componentInstance.chosen()).toEqual(['c']);
   });
 });

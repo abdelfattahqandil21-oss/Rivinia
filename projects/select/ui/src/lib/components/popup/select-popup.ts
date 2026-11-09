@@ -208,6 +208,8 @@ export class SelectPopupComponent {
    * per-item `label` in {@link SelectPopupItemData}.
    */
   readonly popupLabel = input<string | null>(null);
+  /** Whether an enabled item pick closes this panel. @default true */
+  readonly closeOnPick = input(true);
   /**
    * Declarative items. When provided, the panel renders these rows itself —
    * no `rvSelectPopupItem` markup and no controller needed. Mutually exclusive with
@@ -219,7 +221,7 @@ export class SelectPopupComponent {
   /** Extra class(es) on data-driven rows only (projected rows use your markup). */
   readonly itemClass = input<string | null>(null);
 
-  /** Fired when the user picks an enabled item (id). Closes first. */
+  /** Fired when the user picks an enabled item (id). Closes first when `closeOnPick` is true. */
   readonly picked = output<SelectPopupPick>();
   readonly opened = output<void>();
   readonly closed = output<void>();
@@ -265,6 +267,8 @@ export class SelectPopupComponent {
   protected readonly panelId = `rv-select-popup-panel-${++nextPanelId}`;
   /** Deferred initial focus: set on open paths, consumed after render. */
   private focusPending = false;
+  /** Last editable control focused in the panel, restored after a multi pick. */
+  private focusedEditable: HTMLElement | null = null;
   /**
    * Manual popover support (top-layer). Feature-detected: modern browsers
    * escape clipping ancestors; older ones keep the absolute fallback.
@@ -497,6 +501,27 @@ export class SelectPopupComponent {
     this.flipped.set(at.flipped);
   }
 
+  protected onPanelFocusIn(event: FocusEvent): void {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (
+      target.isContentEditable ||
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement
+    ) {
+      this.focusedEditable = target;
+    }
+  }
+
+  private restoreEditableFocus(): void {
+    if (!this.focusedEditable?.isConnected) return;
+    try {
+      this.focusedEditable.focus({ preventScroll: true });
+    } catch {
+      // Restoring focus is best-effort for consumer-projected editables.
+    }
+  }
+
   /**
    * Flags a direction mismatch between the component and the document root.
    *
@@ -723,7 +748,7 @@ export class SelectPopupComponent {
     // activate a disabled row (measured: all-disabled menu emitted `picked=one`).
     const item = c.items().find((i) => i.id === id);
     if (!item || item.disabled) return;
-    this.doClose(false);
+    if (this.closeOnPick()) this.doClose(false);
     this.picked.emit({ id });
   }
 
@@ -732,8 +757,15 @@ export class SelectPopupComponent {
    * Disabled/unknown ids are ignored via `activate` (returns false).
    */
   pickItem(id: string): void {
-    if (!this.controller().activate(id)) return;
-    this.doClose(false);
+    const controller = this.controller();
+    const item = controller.items().find((candidate) => candidate.id === id);
+    if (!item || item.disabled) return;
+    if (this.closeOnPick()) {
+      if (!controller.activate(id)) return;
+      this.doClose(false);
+    } else {
+      this.restoreEditableFocus();
+    }
     this.picked.emit({ id });
   }
 
@@ -744,6 +776,7 @@ export class SelectPopupComponent {
 
   private doClose(restoreFocus: boolean): void {
     const was = this.controller().open();
+    this.focusedEditable = null;
     // APG: the typeahead buffer is per-open. Keeping it across a close made
     // the next open start mid-word (measured: `due` + `d` matched nothing).
     this.resetTypeahead();
