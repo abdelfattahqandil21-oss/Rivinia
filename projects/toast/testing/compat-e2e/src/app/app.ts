@@ -10,7 +10,7 @@ function makeToast(id: number, kind: Toast['kind']): Toast {
     duration: 0,
     remaining: 0,
     paused: false,
-    action: null,
+    action: { label: 'Undo', onPress: () => {} },
   };
 }
 

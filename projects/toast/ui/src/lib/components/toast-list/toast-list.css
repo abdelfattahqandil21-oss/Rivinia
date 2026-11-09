@@ -97,20 +97,24 @@
   border-inline-start-color: var(--rv-toast-warning, var(--rv-warning, #d97706));
 }
 .rv-toasts[data-rich-colors='true'] .rv-toast[data-kind='success'] {
-  background: var(--rv-toast-success, var(--rv-ok, #16a34a));
-  color: #06130a;
+  background: #14532d;
+  background: color-mix(in srgb, var(--rv-toast-success, var(--rv-ok, #16a34a)) 55%, #000000);
+  color: #ffffff;
 }
 .rv-toasts[data-rich-colors='true'] .rv-toast[data-kind='error'] {
-  background: var(--rv-toast-error, var(--rv-danger, #dc2626));
-  color: #1c0605;
+  background: #7f1d1d;
+  background: color-mix(in srgb, var(--rv-toast-error, var(--rv-danger, #dc2626)) 55%, #000000);
+  color: #ffffff;
 }
 .rv-toasts[data-rich-colors='true'] .rv-toast[data-kind='info'] {
-  background: var(--rv-toast-info, var(--rv-info, #2563eb));
-  color: #04121f;
+  background: #1e3a8a;
+  background: color-mix(in srgb, var(--rv-toast-info, var(--rv-info, #2563eb)) 55%, #000000);
+  color: #ffffff;
 }
 .rv-toasts[data-rich-colors='true'] .rv-toast[data-kind='warning'] {
-  background: var(--rv-toast-warning, var(--rv-warning, #d97706));
-  color: #1d1204;
+  background: #713f12;
+  background: color-mix(in srgb, var(--rv-toast-warning, var(--rv-warning, #d97706)) 55%, #000000);
+  color: #ffffff;
 }
 .rv-toast-icon {
   flex: none;

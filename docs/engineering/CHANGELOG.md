@@ -3,6 +3,14 @@
 **Owner:** Rivinia maintainers
 **Purpose:** dated record of repository architecture and workflow changes, separate from npm package histories.
 
+## 2026-11-09 — Phase C1 Toast rich-color contrast
+
+- Theme's four status colors are documented for indicators, not text backgrounds. Toast's previous rich-color foreground/background combinations failed 4.5:1 for error (4.04:1) and info (3.66:1).
+- Rich Toast cards now derive their background from the existing package-token → semantic-token → fallback chain, mixing the status hue with 45% black and using white text. This preserves Toast ownership and Theme interoperability without inventing Theme foreground tokens. Static Toast-owned pairs provide a safe fallback when `color-mix()` is unavailable.
+- Built-artifact Chromium coverage measures computed foreground/background contrast for all four statuses, action and dismiss labels, status icons and the focused action outline. It covers standalone fallbacks and Theme light/dark; scoped and instance status-token changes remain isolated and feed the derived rich backgrounds.
+- Verification: `pnpm exec ng build toast`; `pnpm exec ng test toast --no-watch` (35/35); standalone and Theme consumer builds; Toast compatibility E2E (Chromium: 3 passed, 1 conditional skip per build). The new contrast test was RED before the CSS correction at 4.035:1 for standalone error text, then GREEN after.
+- Custom status colors from adapters or consumers remain their responsibility to pair accessibly. Firefox, WebKit and Safari were not run for this checkpoint.
+
 ## 2026-11-09 — Phase C overlay lifecycle checkpoint
 
 - Ownership audit: Popup owns headless anchoring/dismissal; Menu and Select consume it and retain their own interaction/focus policy. Modal owns native-dialog lifecycle and its reference-counted scroll lock. Toast owns notification state and UI. No stable shared contract justifies a global OverlayManager.
