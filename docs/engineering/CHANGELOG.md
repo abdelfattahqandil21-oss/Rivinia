@@ -35,6 +35,8 @@
 - Worktree: /media/abdelfattahqandi/OWN/libs/Revinia-toast-theme-token-precedence,
   branch pkg/@rivinia/toast/theme-token-precedence, based on
   92e2328c4e9479dbb34c80d5b57e910fd80ea31d.
+- Implementation commit: f9d72d41b1ec10371fcca13dd7636f46a2ce3747
+  (local only; no remote write).
 
 ## 2026-11-03 — governance foundation
 
