@@ -3,6 +3,86 @@
 **Owner:** Rivinia maintainers
 **Purpose:** dated record of repository architecture and workflow changes, separate from npm package histories.
 
+## 2026-11-10 — Phase C3 Select projected-control keyboard ownership
+
+- RED in the built `menu-e2e` consumer: Enter on a Menu trigger projected into
+  the Select footer was canceled by Select's parent handler, and ArrowDown in
+  the child Menu moved focus to a Select option. Tab from the active Select row
+  also skipped the interactive footer.
+- Select now yields all keys from a nested menu to that menu, keeps footer
+  activation and navigation native, and retains its existing projected-input
+  arrow routing plus searchbox Enter behavior. Tab/Shift+Tab traverse the
+  filter, active option and footer in sequence; focus leaving the popup closes
+  it after the browser completes the focus transition. Public Select keyboard
+  documentation and its proposed 1.1.0 changelog now record this behavior.
+- Built-consumer coverage asserts trigger `aria-haspopup`/`aria-expanded`/
+  `aria-controls`, named rows-only menu semantics, sibling footer relationship,
+  absence of `aria-activedescendant`, axe, child Enter/Space/arrow/Escape, and
+  forward/reverse Tab movement. The actual model is a menu button (`button` →
+  `menu`), not a combobox: Chromium's CDP accessibility tree exposes the
+  projected footer action and input as independent controls outside the menu.
+  Only the roving active menu item is tabbable; the searchbox and footer
+  controls are separate sequential stops. This is consistent with the Menu
+  Button APG's DOM-focus approach, with the documented search/filter and
+  footer extension. Screen-reader behavior remains unverified. RED/GREEN
+  consumer evidence and Select unit tests (166/166) preserve the existing
+  projected-input ArrowDown contract.
+- The shared resize conformance now records platform `visualViewport:resize`
+  events as well as scroll visibility; Chromium emitted that actual event for
+  height and width changes across Select, Menu and projected-field Menu.
+
+## 2026-11-10 — Phase C1 Toast contrast measurement follow-up
+
+- Corrected the computed-color parser to handle Chromium's normalized
+  `color(srgb …)` result instead of treating channels in the 0–1 range as
+  0–255. The built-artifact test now reports the minimum across all four
+  statuses and every message, action/dismiss label, icon and focused control:
+  standalone 8.21:1, Theme light 8.21:1, Theme dark 5.10:1. All stated WCAG
+  thresholds pass.
+- The static Toast-owned `background` pairs remain outside a positive
+  `@supports (background: color-mix(...))` block; enhanced assignments are
+  only inside that gate. A PostCSS structural regression asserts the fallback
+  and four guarded status rules. Chromium's enhanced computed colors still
+  pass standalone and Theme light/dark contrast tests. This environment has no
+  engine that actually lacks `color-mix()`, so real legacy-engine computed
+  rendering remains unverified; a Chromium runtime flag did not disable the
+  feature and was not treated as evidence.
+
+## 2026-11-10 — Phase C3-C semantic gate and Toast fallback
+
+- Confirmed the Select's shipped accessibility model from source, its consumer
+  DOM and Chromium CDP accessibility tree: the trigger is a menu button, not a
+  combobox; `aria-controls` targets the named `role="menu"`; focus moves onto
+  the active menu item and roving `tabindex` leaves one menu-row Tab stop. The
+  searchbox, projected button/input and child Menu are separate siblings of
+  the option menu. This follows the APG menu-button DOM-focus approach with a
+  documented filter/footer focus-order extension; no screen reader was
+  available for assistive-technology confirmation.
+- Expanded the real consumer fixture with a plain footer button and labeled
+  input. Chromium CDP confirms both are exposed independently outside the menu;
+  keyboard checks prove their Enter/Space/arrow handling does not change the
+  selected row, and Tab traverses filter → active row → nested Menu trigger →
+  footer button → input → next page control. Tab from the nested Menu closes
+  that child, keeps Select open while focus remains in its footer, then closes
+  Select after focus exits. Exactly one Select option has `tabindex="0"`.
+- Guarded Toast's enhanced `color-mix()` backgrounds with a positive
+  `@supports` block. Four accessible static pairs remain outside it. Added a
+  PostCSS structural regression that requires all four fallbacks and guarded
+  enhancement rules. This proves stylesheet structure and Chromium's supported
+  branch; a genuinely unsupported engine is still unavailable, so legacy
+  computed rendering remains unverified.
+- Final verification: Select/Menu/Toast package builds and menu-e2e plus both
+  Toast consumer builds passed; Select unit tests 166/166 and Menu 66/66;
+  Toast standalone E2E 3 passed/1 conditional skip and Theme E2E 3 passed/1
+  conditional skip. The final Chromium Popup/Select/Menu/overlay matrix passed
+  115 with 1 existing conditional skip and 0 failures. The PostCSS fallback
+  test passed 1/1. `pnpm check:docs` reported 0 failures/40 existing prose
+  warnings; Prettier and `git diff --check` passed. Firefox/WebKit, SSR,
+  device testing and screen readers remain unverified.
+- Local commits: `ded54cb` Select keyboard/focus correction, `04c4e76` consumer
+  accessibility regressions, and `3aed098` Toast feature gate/fallback test.
+  No public API/export change, push, merge, tag, version bump or release.
+
 ## 2026-11-09 — Phase C3 anchored-popup event ownership
 
 - RED in the built `menu-e2e` consumer: Escape inside a Menu projected into a
