@@ -1,0 +1,4 @@
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css';
+@import '../../../../dist/theme/styles/tailwind.css';
+@import 'tailwindcss/utilities.css' source('..');

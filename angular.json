@@ -318,6 +318,95 @@
         }
       }
     },
+    "theme-compat-e2e": {
+      "projectType": "application",
+      "root": "projects/theme-compat-e2e",
+      "sourceRoot": "projects/theme-compat-e2e/src",
+      "prefix": "rv-fixture",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/theme-compat-e2e/src/main.ts",
+            "index": "projects/theme-compat-e2e/src/index.html",
+            "tsConfig": "projects/theme-compat-e2e/tsconfig.app.json",
+            "assets": [],
+            "outputPath": "dist/theme-compat-e2e",
+            "styles": [
+              "projects/theme-compat-e2e/src/styles/plain.css",
+              "projects/theme-compat-e2e/src/styles/token-overrides.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "1MB",
+                  "maximumError": "2MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "plain": {
+              "outputPath": "dist/theme-compat-e2e/plain",
+              "styles": [
+                "projects/theme-compat-e2e/src/styles/plain.css",
+                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+              ]
+            },
+            "tailwind": {
+              "outputPath": "dist/theme-compat-e2e/tailwind",
+              "styles": [
+                "projects/theme-compat-e2e/src/styles/tailwind.css",
+                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+              ]
+            },
+            "tailwind-no-preflight": {
+              "outputPath": "dist/theme-compat-e2e/tailwind-no-preflight",
+              "styles": [
+                "projects/theme-compat-e2e/src/styles/tailwind-no-preflight.css",
+                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+              ]
+            },
+            "tailwind-prefix": {
+              "outputPath": "dist/theme-compat-e2e/tailwind-prefix",
+              "styles": [
+                "projects/theme-compat-e2e/src/styles/tailwind-prefix.css",
+                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+              ]
+            },
+            "bootstrap": {
+              "outputPath": "dist/theme-compat-e2e/bootstrap",
+              "styles": [
+                "projects/theme-compat-e2e/src/styles/bootstrap.css",
+                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+              ]
+            },
+            "scss": {
+              "outputPath": "dist/theme-compat-e2e/scss",
+              "styles": [
+                "projects/theme-compat-e2e/src/styles/custom.scss",
+                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+              ]
+            },
+            "less": {
+              "outputPath": "dist/theme-compat-e2e/less",
+              "styles": [
+                "projects/theme-compat-e2e/src/styles/custom.less",
+                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+              ]
+            }
+          },
+          "defaultConfiguration": "production"
+        }
+      }
+    },
     "theme": {
       "projectType": "library",
       "root": "projects/theme",

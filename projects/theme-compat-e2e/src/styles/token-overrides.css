@@ -1,0 +1,19 @@
+.booking-scope[data-bs-theme='light'] {
+  --rv-bg: rgb(218 235 255);
+  --rv-fg: rgb(14 34 58);
+  color-scheme: light;
+}
+
+#instance-date {
+  --rv-datepicker-panel-bg: rgb(255 224 224);
+}
+
+#instance-select {
+  --rv-select-bg: rgb(255 224 224);
+}
+
+.rtl-scope {
+  --rv-bg: rgb(240 232 255);
+  --rv-fg: rgb(35 24 58);
+  color-scheme: light;
+}

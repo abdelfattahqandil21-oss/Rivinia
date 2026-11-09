@@ -1,0 +1,75 @@
+<main>
+  <h1>Theme compatibility fixture</h1>
+
+  <section class="fixture-scope booking-scope" data-testid="booking-scope" data-bs-theme="light">
+    <h2>Booking scope</h2>
+    <rv-select
+      id="booking-select"
+      label="Booking status"
+      popupLabel="Booking status options"
+      [options]="options"
+      [searchable]="true"
+    />
+    <rv-datepicker
+      id="booking-date"
+      label="Booking date"
+      [value]="dateValue()"
+      (valueChange)="dateValue.set($event)"
+    />
+    <rv-datetimepicker
+      id="appointment-12-hour"
+      label="Appointment"
+      [value]="dateTime12()"
+      (valueChange)="dateTime12.set($event)"
+      [hour12]="true"
+      [showSeconds]="true"
+    />
+    <rv-datetimepicker
+      id="appointment-24-hour"
+      label="Appointment 24 hour"
+      [value]="dateTime24()"
+      (valueChange)="dateTime24.set($event)"
+      [hour12]="false"
+      [showSeconds]="true"
+    />
+    <output data-testid="appointment-24-value"
+      >{{ dateTime24()?.time?.hour }}:{{ dateTime24()?.time?.minute }}:{{ dateTime24()?.time?.second }}</output
+    >
+    <rv-select
+      id="instance-select"
+      label="Instance status"
+      popupLabel="Instance status options"
+      [options]="options"
+    />
+    <rv-datepicker id="instance-date" label="Instance date" [value]="dateValue()" />
+    <rv-datepicker id="booking-disabled-date" label="Disabled booking date" [disabled]="true" />
+  </section>
+
+  <section class="fixture-scope default-scope" data-testid="default-scope" data-bs-theme="light">
+    <h2>Default scope</h2>
+    <rv-select
+      id="default-select"
+      label="Default status"
+      popupLabel="Default status options"
+      [options]="options"
+    />
+    <rv-datepicker id="default-date" label="Default date" [value]="dateValue()" />
+    <rv-datetimepicker
+      id="default-datetime"
+      label="Default appointment"
+      [value]="dateTime24()"
+      [hour12]="false"
+    />
+  </section>
+
+  <section class="fixture-scope rtl-scope" data-testid="rtl-scope" dir="rtl">
+    <h2>RTL</h2>
+    <rv-select id="rtl-select" label="الحالة" popupLabel="خيارات الحالة" [options]="options" />
+    <rv-datepicker id="rtl-date" label="التاريخ" [value]="dateValue()" />
+  </section>
+
+  <section class="utility-examples" aria-label="Framework utility examples">
+    <div id="tailwind-utility-probe" class="bg-rv-bg text-rv-fg p-4">Tailwind utility</div>
+    <div id="tailwind-prefix-probe" class="tw:bg-rv-bg tw:text-rv-fg tw:p-4">Prefixed utility</div>
+  </section>
+</main>
