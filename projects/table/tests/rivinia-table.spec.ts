@@ -161,6 +161,33 @@ describe('rows and pagination', () => {
     expect(table.pageCount()).toBe(3);
   });
 
+  it('keeps manual row order local while exposing exact or unknown absolute positions', () => {
+    const exact = makeTable(
+      {
+        manualPagination: true,
+        getRowIndex: (row) => row.id * 10,
+      },
+      EMPLOYEES.slice(2, 4),
+    ).table;
+    expect(exact.rows().map((row) => [row.index, row.absoluteIndex])).toEqual([
+      [0, 30],
+      [1, 40],
+    ]);
+    expect(exact.total()).toBe(-1);
+    expect(exact.pageCount()).toBe(-1);
+
+    const unknown = makeTable({ manualPagination: true }, EMPLOYEES.slice(2, 4)).table;
+    expect(unknown.rows().map((row) => row.absoluteIndex)).toEqual([null, null]);
+  });
+
+  it('rejects invalid manual absolute row indices in development', () => {
+    const { table } = makeTable({
+      manualPagination: true,
+      getRowIndex: () => -1,
+    });
+    expect(() => table.rows()).toThrow(/Invalid absolute row index -1/);
+  });
+
   it('treats pageSize 0 as a single page instead of crashing', () => {
     const { table } = makeTable();
     table.pageSize.set(0);

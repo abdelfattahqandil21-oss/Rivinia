@@ -3,6 +3,45 @@
 **Owner:** Rivinia maintainers
 **Purpose:** dated record of repository architecture and workflow changes, separate from npm package histories.
 
+## 2026-11-10 — Phase D Table audit (in progress)
+
+- Reproduced a selection integrity defect with a manual-pagination controller:
+  selecting row ID `1`, replacing the loaded page with IDs `3–4`, then returning
+  to IDs `1–2` lost the selection because selection pruning treated an unloaded
+  page as a removed row. The same flaw dropped excluded IDs after page changes.
+- `manualPagination` now retains selection IDs outside the loaded page; IDs
+  exposed by `selection.ids()` remain limited to loaded rows. Client-mode
+  pruning remains intact. RED was 210/211 tests before the correction; GREEN is
+  212/212 after adding include/exclude page-replacement regressions.
+- A second independent RED found that `selectAll()` with an empty exclusion set
+  serializes identically to an empty include set, so restoring `TableState`
+  lost “select all.” Reviewer-approved additive optional `TableState.selectionMode`
+  now disambiguates both empty states; `state()` emits it, `setState()` and
+  `initialState`/`resetState()` honor it, and malformed runtime values warn and
+  fall back to legacy array inference. Legacy snapshots without the field keep
+  their old behavior; an old empty/empty snapshot is inherently ambiguous.
+- Scope ownership is explicit for manual paging: Table retains IDs when a page
+  slice changes, but cannot infer tenant/query-scope changes from array
+  replacement. Consumers can use the existing `selection.clear()` on scope
+  changes. A built-package Angular consumer regression exercises this behavior.
+- Reviewer-requested Select architecture documentation now clarifies that the
+  component is a button/menu pattern (no combobox/listbox role), uses DOM focus
+  with one roving row tab stop, and keeps projected controls as siblings; it
+  links the plain-button/input accessibility-tree and keyboard tests.
+- Exact `@rivinia/table` public imports cover the selection state mode and
+  manual-page restore matrix. The production row-identity audit found and fixed
+  loss of include/exclude decisions while an ID is temporarily duplicated;
+  duplicate rows stay visible and disabled. Development rejects duplicate IDs
+  before effects, while a production-mode package smoke checks unique →
+  duplicate → unique transitions.
+- The built consumer exposed repeated `aria-rowindex` values on server-loaded
+  pages (RED: 219 passed, 1 failed). `getRowIndex(row)` now carries exact,
+  potentially noncontiguous ordinals; unknown row positions omit the index and
+  unknown result/page counts use `-1`. The built consumer covers subsequent
+  pages, a partial final page, noncontiguous rows and unknown totals. Current
+  package result is 226/226 after the fix; a separate production-mode identity
+  smoke verifies duplicate-ID retention and bulk-action gating.
+
 ## 2026-11-10 — Phase C4 cross-environment and SSR confidence
 
 - Re-ran the accepted Popup, Select, Menu and overlay-lifecycle matrix: Chromium

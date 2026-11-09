@@ -94,9 +94,15 @@ export interface TableOptions<T> {
   readonly manualFiltering?: boolean;
   /** Skip the client sort stage (the caller sorted the data). */
   readonly manualSorting?: boolean;
-  /** Skip the client page stage (the caller paged the data). */
+  /** Skip the client page stage; `data` then contains the externally loaded page. */
   readonly manualPagination?: boolean;
-  /** Total row count when the data comes from outside. */
+  /**
+   * Zero-based position in the complete result set for each externally loaded
+   * row. Return null when a cursor/noncontiguous result has no known ordinal.
+   * Used only with manualPagination; no page-index arithmetic is assumed.
+   */
+  readonly getRowIndex?: (row: T) => number | null;
+  /** Total result count when external pagination is used; return -1 if unknown. */
   readonly rowCount?: () => number;
   /** Diagnostic sink for span/clamp messages. Defaults to dev-mode console. */
   readonly warn?: (message: string) => void;
@@ -482,9 +488,9 @@ export class RiviniaTable<T> {
   readonly pageRows: Signal<readonly TableRow<T>[]>;
   /** The resolved span grid over `pageRows` x `visibleColumns`. */
   readonly spans: Signal<SpanModel>;
-  /** Client row count, or `rowCount()` when the data comes from outside. */
+  /** Client row count, or server `rowCount()`; `-1` means unknown. */
   readonly total: Signal<number>;
-  /** `ceil(total / pageSize)`; `0` for an empty table. */
+  /** `ceil(total / pageSize)`; `0` empty, `-1` unknown. */
   readonly pageCount: Signal<number>;
 
   /** Ordered multi-sort; index 0 is the primary level. */
@@ -581,10 +587,27 @@ export class RiviniaTable<T> {
       const sorted = current.manualSorting
         ? filtered
         : applySort(filtered, columns, this.sorting(), current.locale?.() ?? 'en');
-      return reindex(sorted);
+      return reindex(sorted).map((row) => {
+        if (!current.manualPagination) return row;
+        const absoluteIndex = current.getRowIndex?.(row.data) ?? null;
+        if (absoluteIndex !== null && (!Number.isSafeInteger(absoluteIndex) || absoluteIndex < 0)) {
+          if (isDevMode()) {
+            throw new Error(
+              `[rivinia/table] Invalid absolute row index ${String(absoluteIndex)}; ` +
+                'getRowIndex must return a non-negative safe integer or null.',
+            );
+          }
+          return { ...row, absoluteIndex: null };
+        }
+        return { ...row, absoluteIndex };
+      });
     });
 
-    this.total = computed(() => this.options().rowCount?.() ?? this.rows().length);
+    this.total = computed(() => {
+      const options = this.options();
+      if (options.rowCount) return options.rowCount();
+      return options.manualPagination ? -1 : this.rows().length;
+    });
     this.pageRows = computed<readonly TableRow<T>[]>(() => {
       if (this.options().manualPagination) return this.rows();
       return paginate(this.rows(), this.page(), this.pageSize()).pageRows;
@@ -592,6 +615,7 @@ export class RiviniaTable<T> {
     this.pageCount = computed(() => {
       const total = this.total();
       const size = this.pageSize();
+      if (total < 0) return -1;
       return size > 0 ? Math.ceil(total / size) : total > 0 ? 1 : 0;
     });
 

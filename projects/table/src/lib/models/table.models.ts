@@ -32,6 +32,8 @@ export interface TableRow<T> {
   readonly data: T;
   /** Position in `rows`, i.e. after filtering and sorting. */
   readonly index: number;
+  /** Zero-based position in the complete result set; null means unknown. */
+  readonly absoluteIndex?: number | null;
 }
 
 /** A rectangle of a grid, expressed in cell coordinates. */

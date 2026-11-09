@@ -72,7 +72,7 @@ interface RenderRow {
   /** Position inside the rendered page. */
   readonly rowIndex: number;
   /** 1-based position in the FULL data set; the header is row 1. */
-  readonly ariaRowIndex: number;
+  readonly ariaRowIndex: number | null;
   readonly selected: boolean;
   readonly cells: readonly RenderCell[];
 }
@@ -332,8 +332,11 @@ export class RiviniaTableComponent {
         identityValid: row.identityValid !== false && validId,
         row,
         rowIndex,
-        ariaRowIndex:
-          (Number.isFinite(row.index) ? row.index : rowIndex) + 2,
+        ariaRowIndex: row.absoluteIndex === null
+          ? null
+          : (Number.isFinite(row.absoluteIndex ?? row.index)
+            ? (row.absoluteIndex ?? row.index)
+            : rowIndex) + 2,
         selected: row.identityValid !== false && validId && selected.has(id),
         cells: this.buildCells(row, rowIndex, templates),
       };
@@ -387,8 +390,9 @@ export class RiviniaTableComponent {
    */
   protected readonly rowCount = computed(() => {
     const total = this.totalRows();
-    if (total !== undefined) return Math.max(0, Math.floor(total)) + 1;
+    if (total !== undefined) return total < 0 ? -1 : Math.floor(total) + 1;
     const rows = this.rows();
+    if (rows.some((row) => row.absoluteIndex !== undefined)) return -1;
     let highest = rows.length;
     for (const row of rows) {
       if (Number.isFinite(row.index) && row.index + 1 > highest) {

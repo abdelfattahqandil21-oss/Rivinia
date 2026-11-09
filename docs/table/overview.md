@@ -15,6 +15,12 @@ A concise map of the package capabilities and their boundaries.
   geometry.
 - **One pipeline.** Filter → sort → page → selection, in that order, every step
   a signal, so a page never recomputes more than it must.
+- **Server pages keep honest row positions.** With `manualPagination`, provide
+  `getRowIndex(row)` when the server knows each row's zero-based position in the
+  complete result. Cursor or noncontiguous results can provide per-row values;
+  return `null` (or omit the callback) when a position is unknown. Rivinia then
+  omits `aria-rowindex` and reports `aria-rowcount="-1"` when the total is
+  unknown, rather than guessing from the page number.
 - **Selection by id, never by index.** It survives sorting, filtering and
   paging, and an action always receives the row it was rendered for.
   `selectAllOnPage()` is page-scoped on purpose.
@@ -34,7 +40,6 @@ A concise map of the package capabilities and their boundaries.
   which beats the built-in default; sizes are `rem`, so the grid follows the
   browser's text size.
 - **Zero runtime dependencies.** Angular peers only.
-
 
 ## Why another table
 

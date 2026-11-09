@@ -10,6 +10,9 @@
   arrays. Older states without the field retain their prior inference behavior.
 - Preserve include/exclude decisions for temporarily ambiguous duplicate IDs;
   ambiguous rows remain visible but cannot be selected or activated.
+- Add `getRowIndex` for exact manual-page row positions. Unknown positions omit
+  `aria-rowindex`, and unknown row totals use the ARIA `-1` value instead of an
+  invented page offset.
 
 ## 1.0.4
 

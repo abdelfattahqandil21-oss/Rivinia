@@ -477,6 +477,7 @@ interface TableOptions<T> {
   manualSorting?: boolean;
   manualFiltering?: boolean;
   manualPagination?: boolean;
+  getRowIndex?: (row: T) => number | null;        // exact zero-based server ordinal; null if unknown
   rowCount?: () => number;                       // when data comes from outside
   onCommit?: (change: CellChange<T>) => boolean | void | Promise<boolean>;  // 0.2.0
   labels?: Partial<TableLabels>;
@@ -875,7 +876,7 @@ Attributes, written by the component, tested by assertion:
 | --- | --- | --- |
 | `aria-rowcount` | grid | total rows in the full data set: header rows + filter row (if enabled) + data rows; `-1` when unknown |
 | `aria-colcount` | grid | total **rendered** columns after hide (pinned included); hidden columns are not in the index space |
-| `aria-rowindex` | row | 1-based index in the **full** set (header is row 1, the filter row is row 2 when enabled) |
+| `aria-rowindex` | row | 1-based index in the **full** set when known (header is row 1, the filter row is row 2 when enabled); omitted when unknown |
 | `aria-colindex` | cell | 1-based index in the rendered column set; the filter cell carries its column's index |
 | `aria-rowspan` | cell | explicit row count, only when > 1; never `0` |
 | `aria-colspan` | cell | explicit column count, only when > 1 |

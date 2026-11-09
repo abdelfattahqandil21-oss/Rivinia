@@ -442,6 +442,14 @@ describe('rv-table — structure and ARIA', () => {
     ]);
     expect(m.grid().getAttribute('aria-rowcount')).toBe('25');
   });
+
+  it('uses unknown row count when absolute positions are supplied without a total', () => {
+    const m = mount((host) =>
+      host.rows.set([{ ...tableRows()[1], absoluteIndex: 7 }]),
+    );
+    expect(m.rows()[0].getAttribute('aria-rowindex')).toBe('9');
+    expect(m.grid().getAttribute('aria-rowcount')).toBe('-1');
+  });
 });
 
 // ── Column geometry ───────────────────────────────────────────────────────
