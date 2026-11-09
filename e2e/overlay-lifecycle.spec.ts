@@ -190,32 +190,34 @@ test.describe('cross-package overlay lifecycle', () => {
     await expect(selectMenu.getByRole('textbox', { name: 'Footer filter' })).toHaveCount(0);
     await expect(panel.locator('[aria-activedescendant]')).toHaveCount(0);
 
-    const client = await page.context().newCDPSession(page);
-    const ax = (await client.send('Accessibility.getFullAXTree')) as {
-      nodes: Array<{
-        nodeId: string;
-        parentId?: string;
-        role?: { value?: string };
-        name?: { value?: string };
-      }>;
-    };
-    const actionNode = ax.nodes.find(
-      (node) => node.role?.value === 'button' && node.name?.value === 'Footer action',
-    );
-    const filterNode = ax.nodes.find(
-      (node) => node.role?.value === 'textbox' && node.name?.value === 'Footer filter',
-    );
-    expect(actionNode).toBeDefined();
-    expect(filterNode).toBeDefined();
-    const parents = new Map(ax.nodes.map((node) => [node.nodeId, node]));
-    for (const control of [actionNode, filterNode]) {
-      let parent = control?.parentId ? parents.get(control.parentId) : undefined;
-      while (parent) {
-        expect(parent.role?.value).not.toBe('menu');
-        parent = parent.parentId ? parents.get(parent.parentId) : undefined;
+    if (page.context().browser()?.browserType().name() === 'chromium') {
+      const client = await page.context().newCDPSession(page);
+      const ax = (await client.send('Accessibility.getFullAXTree')) as {
+        nodes: Array<{
+          nodeId: string;
+          parentId?: string;
+          role?: { value?: string };
+          name?: { value?: string };
+        }>;
+      };
+      const actionNode = ax.nodes.find(
+        (node) => node.role?.value === 'button' && node.name?.value === 'Footer action',
+      );
+      const filterNode = ax.nodes.find(
+        (node) => node.role?.value === 'textbox' && node.name?.value === 'Footer filter',
+      );
+      expect(actionNode).toBeDefined();
+      expect(filterNode).toBeDefined();
+      const parents = new Map(ax.nodes.map((node) => [node.nodeId, node]));
+      for (const control of [actionNode, filterNode]) {
+        let parent = control?.parentId ? parents.get(control.parentId) : undefined;
+        while (parent) {
+          expect(parent.role?.value).not.toBe('menu');
+          parent = parent.parentId ? parents.get(parent.parentId) : undefined;
+        }
       }
+      await client.detach();
     }
-    await client.detach();
 
     await page.locator('#select-footer-menu-trigger').click();
     const results = await new AxeBuilder({ page }).include('#overlay-select').analyze();

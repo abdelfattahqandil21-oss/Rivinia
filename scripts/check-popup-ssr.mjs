@@ -1,6 +1,6 @@
 /**
- * pnpm check:popup-ssr — the last of S3's seven suite bullets: a server render
- * of both popups does not use `window` or `document`.
+ * pnpm check:popup-ssr — plain-Node SSR smoke for Popup, Select, Menu, Modal,
+ * and Toast. It verifies the browser-only paths remain inert without DOM globals.
  *
  * This cannot be proved in a browser, and the shared Playwright suite
  * (`e2e/popup/conformance.spec.ts`) says so in its header: a browser always has
@@ -30,10 +30,11 @@
  * DOM-ish globals for third-party libraries, which would mask the very thing
  * under test.
  *
- * The code under test is the built library bundle (`dist/select`, `dist/menu`),
- * so this checks what ships, not source. Build first; the check never builds:
+ * The code under test is the built library bundles (`dist/select`, `dist/menu`,
+ * `dist/modal`, `dist/toast`), so this checks what ships, not source. Build
+ * first; the check never builds:
  *
- *   pnpm build:select && pnpm build:menu
+ *   pnpm build:select && pnpm build:menu && pnpm build:modal && pnpm build:toast
  */
 import { register } from 'node:module';
 
@@ -58,10 +59,14 @@ const [
   { Component, provideZonelessChangeDetection },
   { bootstrapApplication },
   { provideServerRendering, renderApplication },
+  { RiviniaModalDialog },
+  { RiviniaToastList },
 ] = await Promise.all([
   import('@angular/core'),
   import('@angular/platform-browser'),
   import('@angular/platform-server'),
+  import('@rivinia/modal/ui'),
+  import('@rivinia/toast/ui'),
 ]);
 const { RiviniaMenu } = await import('@rivinia/menu');
 const { RiviniaSelectComponent } = await import('@rivinia/select/ui');
@@ -78,6 +83,17 @@ const { RiviniaMenuComponent, RiviniaMenuItem } = await import('@rivinia/menu/ui
 async function render(template, { unsafe = false, opened = false } = {}) {
   class Host {
     menu;
+    toastItems = [
+      {
+        id: 1,
+        kind: 'info',
+        message: 'Server notification',
+        duration: 0,
+        remaining: 0,
+        paused: false,
+        action: null,
+      },
+    ];
     constructor() {
       if (unsafe) this.probe = document.createElement('div');
       if (opened) {
@@ -89,7 +105,13 @@ async function render(template, { unsafe = false, opened = false } = {}) {
   Component({
     selector: 'ssr-host',
     standalone: true,
-    imports: [RiviniaSelectComponent, RiviniaMenuComponent, RiviniaMenuItem],
+    imports: [
+      RiviniaSelectComponent,
+      RiviniaMenuComponent,
+      RiviniaMenuItem,
+      RiviniaModalDialog,
+      RiviniaToastList,
+    ],
     template,
   })(Host);
   try {
@@ -118,12 +140,14 @@ async function render(template, { unsafe = false, opened = false } = {}) {
 
 const SELECT = `<rv-select id="ssr-select" label="Invoice status" popupLabel="Invoice status options" [options]="[{value:'paid',label:'Paid'},{value:'due',label:'Due'}]" [searchable]="true" />`;
 const MENU = `<rv-menu id="ssr-menu" menuLabel="Actions"><button rv-menu-trigger>Menu</button><div rv-menu-panel><button rvMenuItem id="s1">One</button></div></rv-menu>`;
+const MODAL_OPEN = `<rv-modal-dialog ariaLabel="SSR dialog" [open]="true"><button>Dialog action</button></rv-modal-dialog>`;
+const TOAST_LIST = `<rv-toast-list [toasts]="toastItems" [richColors]="true" />`;
 // `[menu]` is public, so the same panel is reachable in its open state from a
 // server render — the state in which the popup registers its globals.
 const MENU_OPEN = `<rv-menu id="ssr-menu-open" [menu]="menu" menuLabel="Actions"><button rv-menu-trigger>Menu</button><div rv-menu-panel><button rvMenuItem id="o1">One</button></div></rv-menu>`;
 const count = (text, needle) => (text.split(needle).length - 1).toString();
 
-console.log('check:popup-ssr — server render of both popups, plain Node, no DOM');
+console.log('check:popup-ssr — server render of overlay components, plain Node, no DOM');
 console.log(
   `globals as a server sees them: typeof window = ${typeof window}, typeof document = ${typeof document}`,
 );
@@ -242,6 +266,42 @@ console.log(
     'rv-menu (open): the top-layer probe reports unsupported instead of crashing',
     /data-top-layer="false"/.test(result.body),
     `data-top-layer="false" count: ${count(result.body, 'data-top-layer="false"')}`,
+  );
+}
+
+// 7. Modal's requested-open input is inert on the server: native dialog APIs,
+//    focus movement and scroll locking are deferred to the browser.
+{
+  const result = await render(MODAL_OPEN);
+  check(
+    'rv-modal: renders server-side while requested open',
+    result.threw === null,
+    `threw: ${result.threw ? result.error.slice(0, 220) : 'no'}`,
+  );
+  check(
+    'rv-modal: markup remains closed without browser APIs',
+    /class="rv-modal"[^>]*data-state="closed"/.test(result.body) &&
+      !/<dialog[^>]*\sopen(?:=|\s|>)/.test(result.body),
+    `closed state: ${/data-state="closed"/.test(result.body)}, native open: ${/<dialog[^>]*\sopen(?:=|\s|>)/.test(result.body)}`,
+  );
+}
+
+// 8. Presentational ToastList renders supplied snapshots without attempting
+//    browser-only popover promotion or exit-timer behavior.
+{
+  const result = await render(TOAST_LIST);
+  check(
+    'rv-toast-list: renders server-side',
+    result.threw === null,
+    `threw: ${result.threw ? result.error.slice(0, 220) : 'no'}`,
+  );
+  check(
+    'rv-toast-list: snapshot is accessible and not promoted',
+    /role="region"[^>]*aria-label="Notifications"/.test(result.body) &&
+      /role="status"/.test(result.body) &&
+      /Server notification/.test(result.body) &&
+      !/popover="manual"/.test(result.body),
+    `region ${/role="region"[^>]*aria-label="Notifications"/.test(result.body)}, status ${/role="status"/.test(result.body)}, message ${/Server notification/.test(result.body)}, promoted ${/popover="manual"/.test(result.body)}`,
   );
 }
 

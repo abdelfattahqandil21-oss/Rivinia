@@ -46,7 +46,8 @@ test.describe('focus contract — Tab traversal', () => {
     );
     await page.goto('/two');
     const trigger = page.getByRole('button', { name: 'First' });
-    const previous = page.getByRole('link', { name: 'Styled' });
+    // Overlay lifecycle is the final navigation stop before the page's menu.
+    const previous = page.getByRole('link', { name: 'Overlay lifecycle' });
 
     await trigger.click();
     await expect(page.getByRole('menu', { name: 'First menu' })).toBeVisible();

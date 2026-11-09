@@ -106,7 +106,8 @@ repository comes from a headed run on WebKit 27.2 after that install.
 | `anchor-scope` | cannot be forced on an engine that supports it; the failure it prevents is measured and recorded at `select-popup.css:232` | this document + the prelude test in both CSS spec files |
 | `Intl.ListFormat` | `Intl.ListFormat` set to `undefined` inside a unit test, then restored | `projects/select/tests/select-multi-summary.spec.ts:422` — asserts `'Alpha, Beta, Gamma'` |
 | `color-mix()`, `:has()`, `dvh` | not forced — no engine on the supported floor is missing them | not tested; the row above states what would happen |
-| JS on the server | `window`/`document` not defined at all, in plain Node | `pnpm check:popup-ssr`, 15 checks |
+| Toast `color-mix()` | no genuinely unsupported engine is available | a PostCSS structural test verifies the four static pairs stay outside a positive `@supports` guard; consumer E2E checks the enhanced computed branch; legacy-engine computed rendering remains unverified |
+| JS on the server | `window`/`document` not defined at all, in plain Node | `pnpm check:popup-ssr`, 19 checks across Popup, Select, Menu, Modal and Toast |
 
 **Not tested**: real Safari, macOS or iOS — WebKit is the engine Playwright
 drives, not the product; see `docs/releases/1.0/HUMAN-CHECKS.md`. Browsers between the two

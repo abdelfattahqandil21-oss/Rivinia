@@ -3,6 +3,37 @@
 **Owner:** Rivinia maintainers
 **Purpose:** dated record of repository architecture and workflow changes, separate from npm package histories.
 
+## 2026-11-10 — Phase C4 cross-environment and SSR confidence
+
+- Re-ran the accepted Popup, Select, Menu and overlay-lifecycle matrix: Chromium
+  115 passed / 1 conditional skip; WebKit 116/116; Firefox 111 passed / 5
+  skipped. Firefox skips four mobile scroll/drag cases because Playwright does
+  not support `isMobile` for Firefox; one additional existing case is
+  WebKit-only. Firefox desktop scroll, keyboard, RTL, outside-touch dismissal
+  and Select footer semantics passed. Playwright documents the `isMobile`
+  platform limitation in its [Browser API](https://playwright.dev/docs/api/class-browser).
+- Chromium and WebKit ran all mobile emulation cases. Firefox mobile diagnostics
+  showed `innerHeight` (891) diverging from the configured 664px viewport while
+  `isMobile` was enabled, and scroll positions reverted; desktop Firefox uses
+  the intended 664px viewport. This is an emulation limitation, not evidence
+  that the library's mobile behavior fails in Firefox.
+- Extended `check:popup-ssr` from Popup/Select/Menu coverage to Modal and Toast:
+  a requested-open Modal stays closed without browser APIs, and Toast renders
+  its accessible status region without promotion into a browser popover. All
+  19 SSR assertions passed, including the expected negative control. Popup,
+  Modal, Toast, Select and Menu unit results are 12/12, 56/56, 35/35, 166/166
+  and 66/66 respectively (see the focused C3 entries for earlier package runs).
+- Corrected the WebKit focus fixture's expected preceding navigation link after
+  the overlay-lifecycle route was added. This was a stale test expectation;
+  no product behavior changed in C4.
+- `pnpm check:docs` reports 0 failures and 40 existing prose warnings. The
+  Toast static fallback is structurally guarded and its enhanced Chromium
+  computed colors passed the recorded contrast matrix, but a genuinely
+  unsupported `color-mix()` engine remains unavailable. Real Safari/iOS,
+  assistive-technology testing and physical-device checks also remain open.
+- No public API/export or production behavior changed in C4. Local verification
+  and commits only; no push, merge, release, tag or version change.
+
 ## 2026-11-10 — Phase C3 Select projected-control keyboard ownership
 
 - RED in the built `menu-e2e` consumer: Enter on a Menu trigger projected into

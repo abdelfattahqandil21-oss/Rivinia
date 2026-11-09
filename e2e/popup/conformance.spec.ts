@@ -747,7 +747,12 @@ test.describe('mobile touch-scroll dismissal reproduction', () => {
 
     test(`${adapter.name}: page scroll alone keeps the visible trigger's panel attached`, async ({
       page,
+      browserName,
     }) => {
+      test.skip(
+        browserName === 'firefox',
+        'Playwright does not support isMobile in Firefox; its mobile viewport reports mismatched innerHeight and cannot validate this mobile-scroll scenario. Desktop Firefox scroll coverage remains active above.',
+      );
       await gotoHost(page, adapter);
       await makeScrollable(page);
       await page.locator(adapter.trigger).click();
@@ -770,9 +775,7 @@ test.describe('mobile touch-scroll dismissal reproduction', () => {
         { trigger: adapter.trigger, panel: adapter.panel },
       );
       await page.evaluate(() => window.scrollBy(0, 40));
-      await page.evaluate(
-        () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
-      );
+      await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(before.scrollY);
       await expect(panel).toBeVisible();
       await settlePopupMotion(page, adapter.panel);
       const after = await page.evaluate(
@@ -800,7 +803,12 @@ test.describe('mobile touch-scroll dismissal reproduction', () => {
 
     test(`${adapter.name}: a drag-scroll with a visible trigger keeps the panel attached`, async ({
       page,
+      browserName,
     }) => {
+      test.skip(
+        browserName === 'firefox',
+        'Playwright does not support isMobile in Firefox; its mobile viewport reports mismatched innerHeight and cannot validate this touch-drag scroll scenario. Desktop Firefox scroll coverage remains active above.',
+      );
       await gotoHost(page, adapter);
       await makeScrollable(page);
       await page.locator(adapter.trigger).click();
@@ -859,6 +867,7 @@ test.describe('mobile touch-scroll dismissal reproduction', () => {
       await page.evaluate(
         () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
       );
+      await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(before.scrollY);
 
       await expect(panel).toBeVisible();
       await settlePopupMotion(page, adapter.panel);
