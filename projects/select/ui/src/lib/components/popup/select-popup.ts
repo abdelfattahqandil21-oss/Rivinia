@@ -368,6 +368,8 @@ export class SelectPopupComponent {
         panel: () => this.self.nativeElement.querySelector('.rv-select-popup-panel'),
         editableFocusInsidePanel: () => this.editableFocusInsidePanel(),
         dismiss: () => this.doClose(false),
+        reposition: () => this.reposition(),
+        triggerRect: () => this.triggerEl()?.getBoundingClientRect() ?? null,
         onCleanup,
       }, this.destroyRef);
     });
@@ -454,31 +456,45 @@ export class SelectPopupComponent {
         return;
       }
       this.mirrorAnchorInline(root);
-      popover.showPopover();
-      const trigger = this.triggerEl()?.getBoundingClientRect();
-      if (!trigger) {
-        this.positioned.set(true);
-        return;
-      }
-      // The JS positioning path is used where CSS anchor placement is not
-      // enabled. Keep the select popup trigger-sized in that path as well; the
-      // stylesheet's min-width still sets the floor, so `offsetWidth` below is
-      // measured after that floor has been applied.
-      root.style.width = `${trigger.width}px`;
-      const at = computePopupPosition(
-        { left: trigger.left, top: trigger.top, width: trigger.width, height: trigger.height },
-        { width: root.offsetWidth, height: root.offsetHeight },
-        this.placement(),
-        { width: window.innerWidth, height: window.innerHeight },
-        this.isRtl() ? 'rtl' : 'ltr',
-      );
-      root.style.left = `${at.left}px`;
-      root.style.top = `${at.top}px`;
-      this.flipped.set(at.flipped);
+      if (!root.matches(':popover-open')) popover.showPopover();
+      this.applyPosition(root);
       this.positioned.set(true);
     } catch {
       this.positioned.set(true);
     }
+  }
+
+  /** Re-measure the open panel without changing its open, focus, or scroll state. */
+  private reposition(): void {
+    if (!this.controller().open() || typeof window === 'undefined' || !this.topLayerSupported) {
+      return;
+    }
+    const root = this.self.nativeElement.querySelector('.rv-select-popup-panel') as HTMLElement | null;
+    if (!root) return;
+    try {
+      this.applyPosition(root);
+    } catch {
+      // A transiently detached trigger/panel is retried on the next viewport event.
+    }
+  }
+
+  /** Shared geometry path for opening and viewport movement. */
+  private applyPosition(root: HTMLElement): void {
+    const trigger = this.triggerEl()?.getBoundingClientRect();
+    if (!trigger) return;
+    // Keep the select popup trigger-sized in the JS path; the stylesheet's
+    // minimum width is applied before offsetWidth is measured.
+    root.style.width = `${trigger.width}px`;
+    const at = computePopupPosition(
+      { left: trigger.left, top: trigger.top, width: trigger.width, height: trigger.height },
+      { width: root.offsetWidth, height: root.offsetHeight },
+      this.placement(),
+      { width: window.innerWidth, height: window.innerHeight },
+      this.isRtl() ? 'rtl' : 'ltr',
+    );
+    root.style.left = `${at.left}px`;
+    root.style.top = `${at.top}px`;
+    this.flipped.set(at.flipped);
   }
 
   /**

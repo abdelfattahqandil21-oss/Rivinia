@@ -1,6 +1,6 @@
 import { DestroyRef, EnvironmentInjector, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { bindPopupDismissal, computePopupPosition } from './popup-core';
 
 describe('computePopupPosition', () => {
@@ -44,44 +44,183 @@ describe('computePopupPosition', () => {
 });
 
 describe('bindPopupDismissal', () => {
-  it('binds the three listeners and removes them with the host DestroyRef', () => {
+  const frames = new Map<number, FrameRequestCallback>();
+  let nextFrame = 1;
+  let originalWidthDescriptor: PropertyDescriptor | undefined;
+
+  function makeFrameEvent(type: string, init: Record<string, unknown> = {}): Event {
+    const event = new Event(type, { bubbles: true, cancelable: true });
+    for (const [key, value] of Object.entries(init)) {
+      Object.defineProperty(event, key, { configurable: true, value });
+    }
+    return event;
+  }
+
+  function installFrameQueue(): void {
+    frames.clear();
+    nextFrame = 1;
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      const id = nextFrame++;
+      frames.set(id, callback);
+      return id;
+    });
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id) => {
+      frames.delete(id);
+    });
+  }
+
+  function flushFrames(): void {
+    const queued = [...frames.entries()];
+    frames.clear();
+    for (const [id, callback] of queued) callback(id * 16);
+  }
+
+  function bind(overrides: Record<string, unknown> = {}) {
     const host = document.createElement('div');
     const panel = document.createElement('div');
+    const outside = document.createElement('button');
+    const container = document.createElement('section');
     host.append(panel);
+    container.append(host, outside);
+    document.body.append(container);
     const dismiss = vi.fn();
-    const originalWidth = window.innerWidth;
-    const editable = { value: false };
     let cleanup!: () => void;
-    const fakeDestroyRef = { onDestroy(callback: () => void) { cleanup = callback; } } as DestroyRef;
-
-    runInInjectionContext(TestBed.inject(EnvironmentInjector), () => {
-      bindPopupDismissal({
+    const destroyRef = { onDestroy(callback: () => void) { cleanup = callback; } } as DestroyRef;
+    const triggerRect = { value: new DOMRect(20, 20, 80, 30) };
+    bindPopupDismissal(
+      {
         document,
         window,
         host: () => host,
         panel: () => panel,
-        editableFocusInsidePanel: () => editable.value,
+        editableFocusInsidePanel: () => false,
         dismiss,
-      }, fakeDestroyRef);
-    });
+        triggerRect: () => triggerRect.value,
+        reposition: vi.fn(),
+        ...overrides,
+      } as Parameters<typeof bindPopupDismissal>[0],
+      destroyRef,
+    );
+    return { host, panel, outside, container, dismiss, cleanup, triggerRect };
+  }
 
-    document.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }));
-    expect(dismiss).toHaveBeenCalledTimes(1);
-    dismiss.mockClear();
-    panel.dispatchEvent(new Event('scroll', { bubbles: true }));
-    expect(dismiss).not.toHaveBeenCalled();
+  beforeEach(() => {
+    installFrameQueue();
+    originalWidthDescriptor = Object.getOwnPropertyDescriptor(window, 'innerWidth');
+  });
 
-    editable.value = true;
-    window.dispatchEvent(new Event('resize'));
-    expect(dismiss).not.toHaveBeenCalled();
-    Object.defineProperty(window, 'innerWidth', { configurable: true, value: originalWidth + 1 });
-    window.dispatchEvent(new Event('resize'));
+  afterEach(() => {
+    document.body.querySelectorAll('section').forEach((container) => container.remove());
+    if (originalWidthDescriptor) {
+      Object.defineProperty(window, 'innerWidth', originalWidthDescriptor);
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('keeps legacy consumers on close-on-scroll when both anchor callbacks are omitted', () => {
+    const { dismiss, cleanup } = bind({ reposition: undefined, triggerRect: undefined });
+    window.dispatchEvent(new Event('scroll'));
     expect(dismiss).toHaveBeenCalledTimes(1);
     cleanup();
-    dismiss.mockClear();
-    window.dispatchEvent(new Event('resize'));
+  });
+
+  it('coalesces outside scrolls into one reposition and stays open while the trigger is visible', () => {
+    const reposition = vi.fn();
+    const { dismiss, cleanup } = bind({ reposition });
+    window.dispatchEvent(new Event('scroll'));
+    window.dispatchEvent(new Event('scroll'));
+    expect(frames.size).toBe(1);
+    flushFrames();
+    expect(reposition).toHaveBeenCalledTimes(1);
     expect(dismiss).not.toHaveBeenCalled();
-    Object.defineProperty(window, 'innerWidth', { configurable: true, value: originalWidth });
+    cleanup();
+  });
+
+  it('dismisses after reposition only when the trigger is wholly outside the viewport', () => {
+    const reposition = vi.fn();
+    const { dismiss, cleanup, triggerRect } = bind({ reposition });
+    triggerRect.value = new DOMRect(20, -40, 80, 30);
+    window.dispatchEvent(new Event('scroll'));
+    flushFrames();
+    expect(reposition).toHaveBeenCalledOnce();
+    expect(dismiss).toHaveBeenCalledOnce();
+    cleanup();
+  });
+
+  it('repositions on height-only resize but closes on a width change', () => {
+    const reposition = vi.fn();
+    const { dismiss, cleanup } = bind({ reposition });
+    window.dispatchEvent(new Event('resize'));
+    flushFrames();
+    expect(reposition).toHaveBeenCalledOnce();
+    expect(dismiss).not.toHaveBeenCalled();
+
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      value: window.innerWidth + 1,
+    });
+    window.dispatchEvent(new Event('resize'));
+    expect(dismiss).toHaveBeenCalledOnce();
+    cleanup();
+  });
+
+  it('does not close on touch down, drag, or cancellation, and closes on a short outside tap', () => {
+    const { dismiss, outside, cleanup } = bind();
+    outside.dispatchEvent(makeFrameEvent('pointerdown', {
+      pointerId: 7,
+      pointerType: 'touch',
+      clientX: 20,
+      clientY: 20,
+    }));
+    expect(dismiss).not.toHaveBeenCalled();
+    outside.dispatchEvent(makeFrameEvent('pointermove', {
+      pointerId: 7,
+      pointerType: 'touch',
+      clientX: 40,
+      clientY: 20,
+    }));
+    outside.dispatchEvent(makeFrameEvent('pointerup', { pointerId: 7, pointerType: 'touch' }));
+    expect(dismiss).not.toHaveBeenCalled();
+
+    outside.dispatchEvent(makeFrameEvent('pointerdown', {
+      pointerId: 8,
+      pointerType: 'touch',
+      clientX: 20,
+      clientY: 20,
+    }));
+    outside.dispatchEvent(makeFrameEvent('pointercancel', { pointerId: 8, pointerType: 'touch' }));
+    expect(dismiss).not.toHaveBeenCalled();
+
+    outside.dispatchEvent(makeFrameEvent('pointerdown', {
+      pointerId: 9,
+      pointerType: 'touch',
+      clientX: 20,
+      clientY: 20,
+    }));
+    expect(dismiss).not.toHaveBeenCalled();
+    outside.dispatchEvent(makeFrameEvent('pointerup', { pointerId: 9, pointerType: 'touch' }));
+    expect(dismiss).toHaveBeenCalledOnce();
+    cleanup();
+  });
+
+  it.each(['mouse', 'pen'])('closes immediately for outside %s pointerdown', (pointerType) => {
+    const { dismiss, outside, cleanup } = bind();
+    outside.dispatchEvent(makeFrameEvent('pointerdown', { pointerType }));
+    expect(dismiss).toHaveBeenCalledOnce();
+    cleanup();
+  });
+
+  it('cancels a pending animation frame and releases listeners when closed', () => {
+    const reposition = vi.fn();
+    const { dismiss, cleanup } = bind({ reposition });
+    window.dispatchEvent(new Event('scroll'));
+    expect(frames.size).toBe(1);
+    cleanup();
+    expect(frames.size).toBe(0);
+    flushFrames();
+    expect(reposition).not.toHaveBeenCalled();
+    window.dispatchEvent(new Event('scroll'));
+    expect(dismiss).not.toHaveBeenCalled();
   });
 
   it('is a no-op for a null server browser context', () => {

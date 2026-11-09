@@ -90,21 +90,45 @@ const ADAPTERS = [SELECT, MENU, PROJECTED_MENU];
  */
 const PHONE = { width: 390, height: 664 } as const;
 
-const POPUP_GLOBALS = ['document:pointerdown', 'window:scroll', 'window:resize'] as const;
+const POPUP_GLOBALS = [
+  'document:pointerdown',
+  'document:pointermove',
+  'document:pointerup',
+  'document:pointercancel',
+  'window:scroll',
+  'window:resize',
+  'visualViewport:scroll',
+  'visualViewport:resize',
+] as const;
 
 /**
  * Wrap `addEventListener`/`removeEventListener` on the page and keep a running
- * balance of the three globals a popup owns. Installed as an init script because
+ * balance of the global listeners a popup owns. Installed as an init script because
  * the app registers its listeners during boot: a script evaluated after
  * `goto()` would miss them and the balance would start from a lie.
  */
 const listenerLedger = () => {
   const balance = new Map<string, number>();
-  for (const key of ['document:pointerdown', 'window:scroll', 'window:resize']) {
+  for (const key of [
+    'document:pointerdown',
+    'document:pointermove',
+    'document:pointerup',
+    'document:pointercancel',
+    'window:scroll',
+    'window:resize',
+    'visualViewport:scroll',
+    'visualViewport:resize',
+  ]) {
     balance.set(key, 0);
   }
   const label = (target: EventTarget) =>
-    target === window ? 'window' : target === document ? 'document' : null;
+    target === window
+      ? 'window'
+      : target === document
+        ? 'document'
+        : target === window.visualViewport
+          ? 'visualViewport'
+          : null;
   const add = EventTarget.prototype.addEventListener;
   const remove = EventTarget.prototype.removeEventListener;
   EventTarget.prototype.addEventListener = function (
@@ -134,6 +158,23 @@ const listenerLedger = () => {
   };
   (window as unknown as Record<string, unknown>).__listenerLedger = () =>
     Object.fromEntries(balance);
+  const pendingFrames = new Set<number>();
+  const requestFrame = window.requestAnimationFrame.bind(window);
+  const cancelFrame = window.cancelAnimationFrame.bind(window);
+  window.requestAnimationFrame = (callback) => {
+    let id = 0;
+    id = requestFrame((time) => {
+      pendingFrames.delete(id);
+      callback(time);
+    });
+    pendingFrames.add(id);
+    return id;
+  };
+  window.cancelAnimationFrame = (id) => {
+    pendingFrames.delete(id);
+    cancelFrame(id);
+  };
+  (window as unknown as Record<string, unknown>).__pendingAnimationFrames = () => pendingFrames.size;
 };
 
 /** A fresh page with the component under test centered in the viewport. */
@@ -237,6 +278,12 @@ function activeElementKind(page: Page): Promise<string> {
   });
 }
 
+async function settlePopupMotion(page: Page, selector: string): Promise<void> {
+  await page.locator(selector).evaluate(async (panel) => {
+    await Promise.all(panel.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+  });
+}
+
 for (const adapter of ADAPTERS) {
   test.describe(`popup conformance: ${adapter.name}`, () => {
     test('outside pointerdown closes without stealing focus back to the trigger', async ({
@@ -282,25 +329,49 @@ for (const adapter of ADAPTERS) {
       expect(await activeElementKind(page)).toContain('trigger');
     });
 
-    test('scroll outside the panel closes it', async ({ page }) => {
+    test('page scroll keeps the panel attached while its trigger stays visible', async ({ page }) => {
       await gotoHost(page, adapter);
       await makeScrollable(page);
       await openAndEnter(page, adapter);
+      const panel = page.locator(adapter.panel);
+      await settlePopupMotion(page, adapter.panel);
+      const before = await page.evaluate(
+        ({ trigger, panel }) => {
+          const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();
+          const panelBox = document.querySelector(panel)!.getBoundingClientRect();
+          return { scrollY, triggerTop: triggerBox.top, panelTop: panelBox.top, gap: panelBox.top - triggerBox.bottom };
+        },
+        { trigger: adapter.trigger, panel: adapter.panel },
+      );
 
-      // Prove the document really moved before asserting anything closed by it:
-      // a scroll that lands on its own limit fires no event, and the test would
-      // pass by never producing the condition it claims to check.
-      const moved = await page.evaluate(() => {
-        const before = window.scrollY;
-        window.scrollBy(0, before > 120 ? -120 : 120);
-        return { before, after: window.scrollY };
-      });
-      if (moved.after === moved.before) {
-        throw new Error(
-          `the fixture cannot scroll (scrollY stuck at ${moved.before}) — the assertion would be vacuous`,
-        );
+      await page.evaluate(() => window.scrollBy(0, 40));
+      await expect(panel).toBeVisible();
+      await settlePopupMotion(page, adapter.panel);
+      const after = await page.evaluate(
+        ({ trigger, panel }) => {
+          const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();
+          const panelBox = document.querySelector(panel)!.getBoundingClientRect();
+          return { scrollY, triggerTop: triggerBox.top, panelTop: panelBox.top, gap: panelBox.top - triggerBox.bottom };
+        },
+        { trigger: adapter.trigger, panel: adapter.panel },
+      );
+      expect(after.scrollY).toBeGreaterThan(before.scrollY);
+      expect(after.triggerTop).toBeLessThan(before.triggerTop);
+      expect(Math.abs(after.gap - before.gap)).toBeLessThanOrEqual(1);
+      expect(Math.abs((after.panelTop - before.panelTop) - (after.triggerTop - before.triggerTop))).toBeLessThanOrEqual(1);
+    });
+
+    test('scrolling the trigger completely out of view closes it', async ({ page }) => {
+      await gotoHost(page, adapter);
+      await makeScrollable(page);
+      await openAndEnter(page, adapter);
+      const trigger = page.locator(adapter.trigger);
+      await page.evaluate(() => window.scrollBy(0, 600));
+      const box = await trigger.boundingBox();
+      const viewportHeight = page.viewportSize()?.height ?? 0;
+      if (!box || (box.bottom > 0 && box.top < viewportHeight)) {
+        throw new Error('the trigger must be fully outside the viewport before asserting dismissal');
       }
-
       await expect(page.locator(adapter.panel)).toHaveCount(0);
     });
 
@@ -319,9 +390,29 @@ for (const adapter of ADAPTERS) {
       await expect(page.locator(adapter.panel)).toBeVisible();
     });
 
+    test('closing cancels pending positioning work and removes every listener', async ({ page }) => {
+      await gotoHost(page, adapter);
+      const before = await page.evaluate(() => window.__listenerLedger());
+      await openAndEnter(page, adapter);
+      const open = await page.evaluate(() => window.__listenerLedger());
+      expect(
+        POPUP_GLOBALS.map((key) => `${key}=${open[key]}`).join(' '),
+        'each popup dismissal and viewport listener is registered once',
+      ).toBe(POPUP_GLOBALS.map((key) => `${key}=1`).join(' '));
+
+      await page.evaluate((selector) => {
+        window.dispatchEvent(new Event('scroll'));
+        const panel = document.querySelector(selector);
+        panel?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      }, adapter.panel);
+      await expect(page.locator(adapter.panel)).toHaveCount(0);
+      expect(await page.evaluate(() => window.__listenerLedger())).toEqual(before);
+      expect(await page.evaluate(() => window.__pendingAnimationFrames())).toBe(0);
+    });
+
     test('destroying the open panel removes every global listener', async ({ page }) => {
-      // Counted on the page itself: every add on `window`/`document` of the
-      // three types the popups use, minus every matching remove. The baseline is
+      // Counted on the page itself: every add on `window`, `document` or
+      // `visualViewport` of the events the popups use, minus every matching remove. The baseline is
       // read BEFORE the panel is ever opened, and the panel is then destroyed
       // while still open, so a cleanup that only runs on close cannot pass.
       await gotoHost(page, adapter);
@@ -333,12 +424,11 @@ for (const adapter of ADAPTERS) {
 
       await openAndEnter(page, adapter);
       const open = await page.evaluate(() => window.__listenerLedger());
-      // Per key, not summed: a total of 3 also matches a panel that added
-      // `scroll` twice and never registered `resize`, and that panel leaks and
-      // mis-listens while this assertion still reads "exactly three".
+      // Per key so duplicate registrations cannot cancel missing listeners in
+      // the total.
       expect(
         POPUP_GLOBALS.map((key) => `${key}=${open[key]}`).join(' '),
-        'an open panel registers each of pointerdown + scroll + resize exactly once',
+        'an open panel registers every dismissal and viewport listener exactly once',
       ).toBe(POPUP_GLOBALS.map((key) => `${key}=1`).join(' '));
 
       // A route change destroys the component. The panel never gets a chance to
@@ -367,34 +457,34 @@ for (const adapter of ADAPTERS) {
       expect(await page.evaluate(() => window.__listenerLedger())).toEqual(before);
     });
 
-    if (adapter.editable) {
-      test('a height-only resize keeps the panel open for every editable it hosts', async ({
-        page,
-      }) => {
-        // S4: the on-screen keyboard shrinks the viewport height without
-        // changing a word about where the panel is anchored. Closing then would
-        // take the filter away from the user mid-word. The exemption recognizes
-        // three kinds of editable, so each one the fixture offers is driven:
-        // one case that only ever focused the `<input>` would stay green with
-        // the `<textarea>` and `contenteditable` branches deleted.
-        await openOnPhone(page, adapter);
-        const fields = [adapter.editable!, ...(adapter.alsoEditable ?? [])];
-        for (const [index, selector] of fields.entries()) {
-          await page.locator(selector).focus();
-          await resizeWithoutScrolling(page, PHONE.width, PHONE.height - 100 * (index + 1));
-          await expect(
-            page.locator(adapter.panel),
-            `${selector} owns the caret, so the height-only resize must not close the panel`,
-          ).toBeVisible();
-        }
-      });
-    } else {
-      test('a height-only resize closes a panel that has nothing editable', async ({ page }) => {
-        await openOnPhone(page, adapter);
-        await resizeWithoutScrolling(page, PHONE.width, PHONE.height - 100);
-        await expect(page.locator(adapter.panel)).toHaveCount(0);
-      });
-    }
+    test('a height-only resize keeps the panel open and attached', async ({ page }) => {
+      await openOnPhone(page, adapter);
+      if (adapter.editable) await page.locator(adapter.editable).focus();
+      await settlePopupMotion(page, adapter.panel);
+      const before = await page.evaluate(
+        ({ trigger, panel }) => {
+          const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();
+          const panelBox = document.querySelector(panel)!.getBoundingClientRect();
+          return { triggerTop: triggerBox.top, panelTop: panelBox.top, gap: panelBox.top - triggerBox.bottom };
+        },
+        { trigger: adapter.trigger, panel: adapter.panel },
+      );
+
+      await resizeWithoutScrolling(page, PHONE.width, PHONE.height - 100);
+      const panel = page.locator(adapter.panel);
+      await expect(panel).toBeVisible();
+      await settlePopupMotion(page, adapter.panel);
+      const after = await page.evaluate(
+        ({ trigger, panel }) => {
+          const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();
+          const panelBox = document.querySelector(panel)!.getBoundingClientRect();
+          return { triggerTop: triggerBox.top, panelTop: panelBox.top, gap: panelBox.top - triggerBox.bottom };
+        },
+        { trigger: adapter.trigger, panel: adapter.panel },
+      );
+      expect(Math.abs(after.gap - before.gap)).toBeLessThanOrEqual(1);
+      expect(Math.abs((after.panelTop - before.panelTop) - (after.triggerTop - before.triggerTop))).toBeLessThanOrEqual(1);
+    });
 
     test('a width change closes it, even with the filter focused', async ({ page }) => {
       // The exemption has to LOSE here: width is the axis the anchor sits on, so
@@ -432,8 +522,182 @@ for (const adapter of ADAPTERS) {
   });
 }
 
+test.describe('mobile touch-scroll dismissal reproduction', () => {
+  test.use({
+    viewport: PHONE,
+    isMobile: true,
+    hasTouch: true,
+  });
+
+  for (const adapter of [SELECT, MENU]) {
+    test(`${adapter.name}: an outside touch tap closes on pointerup`, async ({ page }) => {
+      await gotoHost(page, adapter);
+      await page.locator(adapter.trigger).click();
+      const panel = page.locator(adapter.panel);
+      await expect(panel).toBeVisible();
+
+      await page.evaluate((root) => {
+        const target = document.elementFromPoint(4, innerHeight - 4)!;
+        if (document.querySelector(root)!.contains(target)) {
+          throw new Error('tap target must be outside the popup host');
+        }
+        target.dispatchEvent(new PointerEvent('pointerdown', {
+          bubbles: true,
+          pointerId: 23,
+          pointerType: 'touch',
+          isPrimary: true,
+          clientX: 4,
+          clientY: innerHeight - 4,
+        }));
+      }, adapter.root);
+      await expect(panel).toBeVisible();
+
+      await page.evaluate(() => {
+        const target = document.elementFromPoint(4, innerHeight - 4)!;
+        target.dispatchEvent(new PointerEvent('pointerup', {
+          bubbles: true,
+          pointerId: 23,
+          pointerType: 'touch',
+          isPrimary: true,
+          clientX: 4,
+          clientY: innerHeight - 4,
+        }));
+      });
+      await expect(panel).toHaveCount(0);
+    });
+
+    test(`${adapter.name}: page scroll alone keeps the visible trigger's panel attached`, async ({
+      page,
+    }) => {
+      await gotoHost(page, adapter);
+      await makeScrollable(page);
+      await page.locator(adapter.trigger).click();
+      const panel = page.locator(adapter.panel);
+      await expect(panel).toBeVisible();
+      await settlePopupMotion(page, adapter.panel);
+
+      const before = await page.evaluate(
+        ({ trigger, panel }) => {
+          const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();
+          const panelBox = document.querySelector(panel)!.getBoundingClientRect();
+          return {
+            scrollY,
+            viewportHeight: innerHeight,
+            triggerTop: triggerBox.top,
+            panelTop: panelBox.top,
+            gap: panelBox.top - triggerBox.bottom,
+          };
+        },
+        { trigger: adapter.trigger, panel: adapter.panel },
+      );
+      await page.evaluate(() => window.scrollBy(0, 40));
+      await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+      await expect(panel).toBeVisible();
+      await settlePopupMotion(page, adapter.panel);
+      const after = await page.evaluate(
+        ({ trigger, panel }) => {
+          const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();
+          const panelBox = document.querySelector(panel)!.getBoundingClientRect();
+          return {
+            scrollY,
+            viewportHeight: innerHeight,
+            triggerTop: triggerBox.top,
+            panelTop: panelBox.top,
+            gap: panelBox.top - triggerBox.bottom,
+          };
+        },
+        { trigger: adapter.trigger, panel: adapter.panel },
+      );
+      expect(after.scrollY).toBeGreaterThan(before.scrollY);
+      expect(after.viewportHeight).toBe(before.viewportHeight);
+      expect(after.triggerTop).toBeLessThan(before.triggerTop);
+      expect(Math.abs(after.gap - before.gap)).toBeLessThanOrEqual(1);
+      expect(Math.abs((after.panelTop - before.panelTop) - (after.triggerTop - before.triggerTop))).toBeLessThanOrEqual(1);
+    });
+
+    test(`${adapter.name}: a drag-scroll with a visible trigger keeps the panel attached`, async ({
+      page,
+    }) => {
+      await gotoHost(page, adapter);
+      await makeScrollable(page);
+      await page.locator(adapter.trigger).click();
+      const panel = page.locator(adapter.panel);
+      await expect(panel).toBeVisible();
+      await settlePopupMotion(page, adapter.panel);
+
+      const before = await page.evaluate(
+        ({ root, trigger, panel }) => {
+          const host = document.querySelector(root)!;
+          const triggerEl = document.querySelector(trigger)!;
+          const panelEl = document.querySelector(panel)!;
+          const triggerBox = triggerEl.getBoundingClientRect();
+          const panelBox = panelEl.getBoundingClientRect();
+          if (!document.elementFromPoint(4, innerHeight - 4) || host.contains(document.elementFromPoint(4, innerHeight - 4))) {
+            throw new Error('touch drag start must be outside the popup host');
+          }
+          return {
+            scrollY,
+            triggerTop: triggerBox.top,
+            panelTop: panelBox.top,
+            gap: panelBox.top - triggerBox.bottom,
+          };
+        },
+        { root: adapter.root, trigger: adapter.trigger, panel: adapter.panel },
+      );
+
+      // Dispatch the touch pointer sequence that starts outside the host. A
+      // browser-generated scroll follows the drag; scrollBy keeps this repro
+      // deterministic across engines while mobile emulation supplies touch
+      // capabilities and the real popup/harness are exercised.
+      await page.evaluate(() => {
+        const target = document.elementFromPoint(4, innerHeight - 4)!;
+        const event = (type: string, clientY: number, buttons: number) =>
+          target.dispatchEvent(
+            new PointerEvent(type, {
+              bubbles: true,
+              cancelable: true,
+              pointerId: 17,
+              pointerType: 'touch',
+              isPrimary: true,
+              button: 0,
+              buttons,
+              clientX: 4,
+              clientY,
+            }),
+          );
+        event('pointerdown', innerHeight - 4, 1);
+        event('pointermove', innerHeight - 54, 1);
+        window.scrollBy(0, 40);
+        event('pointerup', innerHeight - 54, 0);
+      });
+      await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+
+      await expect(panel).toBeVisible();
+      await settlePopupMotion(page, adapter.panel);
+      const after = await page.evaluate(
+        ({ trigger, panel }) => {
+          const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();
+          const panelBox = document.querySelector(panel)!.getBoundingClientRect();
+          return {
+            scrollY,
+            triggerTop: triggerBox.top,
+            panelTop: panelBox.top,
+            gap: panelBox.top - triggerBox.bottom,
+          };
+        },
+        { trigger: adapter.trigger, panel: adapter.panel },
+      );
+      expect(after.scrollY).toBeGreaterThan(before.scrollY);
+      expect(after.triggerTop).toBeLessThan(before.triggerTop);
+      expect(Math.abs(after.gap - before.gap)).toBeLessThanOrEqual(1);
+      expect(Math.abs((after.panelTop - before.panelTop) - (after.triggerTop - before.triggerTop))).toBeLessThanOrEqual(1);
+    });
+  }
+});
+
 declare global {
   interface Window {
     __listenerLedger(): Record<string, number>;
+    __pendingAnimationFrames(): number;
   }
 }
