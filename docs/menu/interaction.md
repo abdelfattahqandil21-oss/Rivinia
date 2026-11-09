@@ -31,12 +31,12 @@ focus never left the trigger. The menu is non-modal.
 
 ## Opening, closing and the viewport
 
-Scrolling or resizing the page closes the menu so the panel does not drift from
-its trigger. One exception: a resize that changes only the **height**, with the
-caret in an editable element **you projected into the panel**, keeps it open —
-that is the on-screen keyboard, and closing would drop the field mid-word. A
-built-in menu has nothing editable, so for it every resize closes; a width
-change always closes, since width is the axis the panel is anchored on.
+Outside mouse and pen presses close immediately. A touch press closes only
+after a short tap outside; dragging to scroll does not dismiss the menu. Page
+scroll repositions an open panel while its trigger remains in the visual
+viewport, and closes it once the trigger scrolls fully out of view. Panel
+scrolling leaves the menu open. A height-only resize repositions the panel;
+changing the viewport width closes it.
 
 The automated half lives in
 [`e2e/popup/conformance.spec.ts`](../../e2e/popup/conformance.spec.ts), run

@@ -86,8 +86,9 @@ Rules:
   (CSS anchor) and `root.style.width = trigger.width` (JS). No panel code
   changes. Because the trigger no longer grows with content, the measured
   panel/trigger mismatch cannot recur.
-- `window.resize` while open still closes the popup (existing contract in
-  `select-popup.ts`); this spec does not add a live re-position.
+- Popup viewport changes are handled by the shared `@rivinia/popup` policy:
+  height-only changes reposition the open panel, while width changes close it.
+  Page scrolling also repositions while the trigger remains visible.
 
 Behaviour matrix (each row is proved separately in the browser, §6):
 

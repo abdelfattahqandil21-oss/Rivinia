@@ -1,5 +1,9 @@
 # @rivinia/select
 
+## Unreleased — proposed synchronized 1.1.0 (not published)
+
+- Multi-select picks stay open without clearing the searchable query or losing filter focus; toggling a different row does not replace the active row. Outside scroll and touch dismissal follow the shared popup visibility policy.
+
 ## 1.0.4
 
 - Update published internal dependency metadata and version-pinned documentation links for the synchronized Rivinia 1.0 patch. No public API changes.

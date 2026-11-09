@@ -9,7 +9,7 @@
 Move only generic popup mechanics whose behavior is equivalent in the two hosts:
 
 - Pure trigger/panel/viewport position calculation, logical start/end alignment, vertical flip, edge clamping, and the `flipped` result.
-- Per-open outside-pointer and outside-scroll dismissal, the S4 height-only resize exemption for an editable inside the panel, and listener cleanup.
+- Per-open outside-pointer/tap dismissal, trigger-visibility-aware scroll handling, viewport resize handling, reposition callbacks, and listener cleanup.
 - Small browser-capability/SSR-safe helpers only when both hosts use the same rule.
 
 Keep templates, CSS and anchor-positioning declarations, trigger and panel selectors, row ARIA roles, row data and state, controllers, keyboard routing, typeahead, focus entry, focus restoration, and each host's size policy in Select/Menu. CSS anchor support remains guarded in each package's own stylesheet and tested by the existing conformance/CSS suites. No Select, Menu, Theme, or i18n public export or contract changes.
@@ -19,7 +19,7 @@ Keep templates, CSS and anchor-positioning declarations, trigger and panel selec
 One package entry point, `@rivinia/popup`, with two capabilities:
 
 1. `computePopupPosition(input)` is a pure function. `input` carries trigger rect, panel size, viewport size, placement (`top|bottom` × `start|end`), explicit direction, and optional gap. It returns viewport `left`, `top`, and `flipped`. It reads no DOM or host/computed direction and has no mutable state.
-2. `bindPopupDismissal(destroyRef, options)` binds the agreed outside-pointer, outside-scroll, and S4 resize rules for one host. `options` supplies that host's `Document`/`Window` (nullable for SSR), host and panel lookup, an editable-focus predicate, and a dismissal callback. Width-at-open state is local to this binding. Cleanup is registered to the supplied Angular `DestroyRef`.
+2. `bindPopupDismissal(destroyRef, options)` binds outside-pointer/touch, scroll, and resize rules for one host. `options` supplies that host's `Document`/`Window` (nullable for SSR), host and panel lookup, optional reposition and trigger-rect callbacks, and a dismissal callback. A short outside touch tap closes; a touch drag does not. Scroll repositions while the trigger remains visible and closes it after the trigger leaves the visual viewport. Height-only resize repositions; width change closes. Cleanup is registered to the supplied Angular `DestroyRef`.
 
 The host supplies its own DOM lookups and callback; the core owns no selectors, component state, templates, styles, or global registry. These two surfaces cross the same public entry-point seam for host calls and tests.
 

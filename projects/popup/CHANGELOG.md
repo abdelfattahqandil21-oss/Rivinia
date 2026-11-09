@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — proposed synchronized 1.1.0 (not published)
+
+- Update shared dismissal: page scroll repositions while the trigger remains visible, touch drags do not close the popup, height-only viewport changes reposition, and width changes close.
+
 ## 1.0.4
 
 - Update published internal dependency metadata and version-pinned documentation links for the synchronized Rivinia 1.0 patch. No public API changes.

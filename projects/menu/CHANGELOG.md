@@ -1,5 +1,9 @@
 # @rivinia/menu
 
+## Unreleased — proposed synchronized 1.1.0 (not published)
+
+- Shared popup dismissal now repositions during page scroll while the trigger is visible, ignores touch-drag dismissal, and repositions after height-only viewport changes.
+
 ## 1.0.4
 
 - Update published internal dependency metadata and version-pinned documentation links for the synchronized Rivinia 1.0 patch. No public API changes.

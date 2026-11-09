@@ -91,24 +91,18 @@ only you can fill them.
 - **The RTL rows read in reverse order**: a DOM-order bug, not a screen-reader
   quirk.
 
-## S4 — real device resize
+## S4 — real device popup dismissal and viewport
 
 **Status: not tested on a real device.** The rule is implemented and automated
-(`e2e/popup/conformance.spec.ts` — six of its twenty-four cases are resize cases),
-but every one of them is Playwright moving `viewport`, not a phone. A real
-device is the only place where a keyboard opening can change the viewport while
+(`e2e/popup/conformance.spec.ts` covers all three popup hosts and the dismissal
+and viewport cases), but every one of them is Playwright moving `viewport`, not
+a phone. A real device is the only place where a keyboard opening can change the viewport while
 the finger is in the panel, and where the browser chrome collapses on scroll.
 
-The policy being tested, from [D86](../../decisions/D086-no-popup-dedupe-before-1-0-a-conformance-suite-instead.md) (S4, recorded PROVISIONAL):
-the popup listens for `resize` and compares `window.innerWidth` with the width
-captured when it opened. A resize that **does not** change the width closes the
-popup **only when the focus is inside an editable element in the panel** — the
-select filter box, or an `<input>`, `<textarea>` or `contenteditable` block a
-consumer projects into a menu panel; the automated suite drives all three kinds on
-a 390-by-664 viewport, which is a phone's logical width, not a desktop window. A
-width change always closes. The built-in menu closes on every resize because its
-rows are buttons and it has nothing editable to exempt; the same menu hosting
-projected content is exempt exactly like the select.
+The policy from [D99](../../decisions/D099-popup-dismissal-and-multiselect-state.md):
+height-only viewport changes reposition; width changes close. Page scroll
+repositions while the trigger is visible and closes after it leaves the visual
+viewport. A short outside touch tap closes; a drag does not.
 
 ### Steps (repeat per device: one phone, one tablet, portrait and landscape)
 
@@ -119,59 +113,52 @@ projected content is exempt exactly like the select.
    behind the keyboard.
 3. With the keyboard still up, type `out`. Expect the rows to filter and the
    panel to stay open and correctly placed.
-4. Rotate the device to landscape. Expect the panel to **close** and focus to
-   return to the trigger — never to stay open at a stale position. Note the two
-   widths as you do it: the rule keys on `window.innerWidth`, not on an
-   orientation event, so a rotation that left the width unchanged with the caret
-   in the filter would be a _correct_ pass for the code and a finding against the
-   rule. If a panel survives a rotation, report the before and after widths.
+4. Rotate the device to landscape. If the viewport width changes, expect the
+   panel to **close** and focus to return to the trigger. If only height changes,
+   expect it to stay open and reposition. Record the before/after dimensions.
 5. Rotate back, reopen the select, and now close the keyboard by tapping the
    panel's own row area (`← Back`/swipe-down varies). Expect no jitter, no
    panel that repositions after the fact, and no panel that closes because the
    keyboard went away.
 6. Open the select, then scroll the **page** with a finger, outside the panel.
-   Expect it to close. Then reopen and scroll **inside** the row list. Expect it
-   to stay open and to keep its placement.
+   Expect it to stay attached while the trigger remains visible, then close once
+   the trigger is fully outside the visual viewport. Reopen and scroll **inside**
+   the row list; expect it to stay open.
 7. On iOS, repeat step 5 with the Safari tab bar: open the select and scroll the
    page down far enough for the chrome to collapse and expand. Chrome collapse
-   is a `resize` with no width change and no editable focus — expect the panel
-   to close once, not to flicker open/closed as the chrome animates.
-8. Counter-case: open `#plain-menu` and trigger any keyboard-independent resize
-   (fold the device, or on a tablet switch apps so the window resizes). Expect
-   the menu to close cleanly, with no orphaned listeners: after closing, the
-   page must scroll without the menu reappearing or the trigger stealing focus.
+   changes the visual viewport. Expect repositioning without dismissal while the
+   trigger remains visible.
+8. Open `#plain-menu` and trigger a width-changing resize. Expect the menu to
+   close cleanly, with no orphaned listeners: after closing, the page must scroll
+   without the menu reappearing or the trigger stealing focus.
 9. `/content`, the menu with a consumer filter box projected into its panel: tap
    the filter, let the keyboard open. Expect the panel to **stay open** exactly
-   like the select — this is the same rule reached through the menu's own code,
-   and the automated suite only proves it in a browser, not under a real
-   keyboard. Then repeat with the two other fields in the same panel, the note
-   `<textarea>` and the `contenteditable` block: the suite exempts all three and a
-   real keyboard is the one event no emulation produces.
+   like the select; height-only changes no longer depend on which field has
+   focus. Repeat with the note `<textarea>` and the `contenteditable` block to
+   confirm they remain usable while the viewport changes.
 
 ### Pass means
 
 - The panel survives the keyboard opening **and** survives typing under it.
-- The panel dies on an orientation flip, and dies once — not repeatedly.
+- A width-changing orientation flip closes the panel once; height-only changes
+  keep it open and reposition it.
 - Nothing about closing leaves a listener behind: after any close, page scroll,
   tapping elsewhere and reopening all behave normally.
-- The built-in menu, which has nothing editable inside, never stays open across
-  a resize; the same menu with a projected field does, and both are the one rule.
+- Select and both menu variants follow the same resize and dismissal policy.
 
 ### This forces a change
 
 - **The panel stays open but is clipped behind the keyboard, or is positioned
   off-screen** — the "keep it open" half of the policy is wrong for that engine.
-  The fix is to close it on the keyboard event and reopen under the new viewport,
-  not to widen the exception.
-- **The panel closes when the keyboard opens** on a device where the keyboard
-  changes `window.innerWidth` (a font-size or density shift does this): the
-  width comparison is the wrong axis for that engine. Record device + browser +
-  version; this is the case the automated suite cannot see.
+  Record the device and browser details; placement may need a device-specific
+  follow-up.
+- **The panel closes on a height-only viewport change**: record device, browser,
+  and version; this is the case the automated suite cannot see.
 - **The panel closes and focus does not return to the trigger**, or the trigger
   is left in an expanded state: a close-path regression, file it against the
   device.
-- **Rotating twice leaves the panel permanently stuck open**: the width snapshot
-  is not being re-bound.
+- **A width-changing rotation leaves the panel open**: report the viewport
+  dimensions and browser version.
 
 ## S7 — Safari
 
@@ -218,8 +205,8 @@ you repeat the steps on a real device.
 - **The panel clipped, or under the page content**: Safari's `popover`/anchor
   positioning differs; the fallback placement code has to be reached on this
   engine, and that is a product fix, not a documentation note.
-- **Any S4 step disagreeing with Chromium and Firefox**: record the version, and
-  revisit whether the resize policy should be width-based at all.
+- **Any S4 step disagreeing with Chromium and Firefox**: record the version and
+  revisit viewport event handling.
 
 ## S8 — the soak
 

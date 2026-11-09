@@ -103,3 +103,4 @@ Status labels summarize explicit status wording in the record at its recorded da
 | [D96](D096-popup-ships-in-the-1-0-rc-4-release-line.md) | Popup ships in the 1.0 release line at rc.4 | Recorded | 2026-11-05 | Popup / Release |
 | [D97](D097-all-libraries-share-the-1-0-rc-line.md) | all Rivinia libraries share the 1.0 RC line | Owner-approved for local RC preparation | 2026-11-05 | Release / Packages |
 | [D98](D098-package-docs-follow-the-topic-page-template-and-ship-in-a-synchronized-docs-patch.md) | package consumer docs follow the topic-page template; docs ship in a synchronized patch | Owner-approved for local 1.0.1 preparation | 2026-11-06 | Documentation / Release |
+| [D99](D099-popup-dismissal-and-multiselect-state.md) | popup dismissal follows visible triggers and multi picks preserve query and focus | Recorded | 2026-11-09 | Popup / Select |

@@ -19,19 +19,18 @@ Single/multi share the same model:
   **label** starts with what you typed. The `hint` is deliberately not part of the
   index, so a keyboard-shortcut hint never causes a match.
 - **Single mode** closes on pick; **multi mode** toggles with a check mark and
-  stays open.
+  stays open. In searchable multi mode a pointer pick also preserves the query
+  and filter focus; the active row remains unchanged.
 - Opening focuses the filter box (when searchable) or the first enabled option.
   Closing resets the filter and returns focus to the trigger.
-- **An outside scroll closes the panel** (`select-popup.ts:369-378`). Scrolling
-  inside the panel is exempt. This is the same reasoning as the resize rule
-  below: the alternative is a panel that drifts off its trigger.
-- **A resize closes the panel** — except one that changes only the height, with
-  the caret in the filter box: that is the on-screen keyboard, and taking the
-  filter away mid-word is worse than a panel that keeps its placement. Any width
-  change closes, because width is the axis the panel is anchored on. This is the
-  policy recorded as PROVISIONAL in
-  [`docs/releases/1.0/HUMAN-CHECKS.md`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/main/docs/releases/1.0/HUMAN-CHECKS.md)
-  (S4) — it still needs a real device.
+- Outside mouse/pen presses close immediately. Touch closes only for a short
+  outside tap; a touch drag used to scroll does not dismiss the panel.
+- Page scrolling repositions the panel while its trigger remains in the visual
+  viewport; scrolling the panel itself leaves it open. The panel closes once
+  its trigger is fully outside that viewport. Height-only viewport changes
+  reposition without closing; a width change closes.
+- Real-device behavior still needs confirmation; see
+  [`docs/releases/1.0/HUMAN-CHECKS.md`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/main/docs/releases/1.0/HUMAN-CHECKS.md).
 
 ## Accessibility
 
