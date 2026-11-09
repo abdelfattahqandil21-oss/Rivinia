@@ -2,7 +2,7 @@
 
 Understand top-layer rendering and list management.
 
-[Back to @rivinia/toast README](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/toast/v1.0.1/projects/toast/README.md)
+[Back to @rivinia/toast README](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/toast/v1.0.4/projects/toast/README.md)
 
 ## The list is in the top layer
 
@@ -27,7 +27,6 @@ separate cards. The list is a transparent, borderless column.
 
 Where the browser has no `showPopover` the list stays in the document and a
 `z-index` decides its order. The feature is detected, not assumed.
-
 
 ## The list must be MANAGED
 

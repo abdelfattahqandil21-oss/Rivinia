@@ -2,7 +2,7 @@
 
 Package-specific tokens and the shared Rivinia theme entry point.
 
-[Back to @rivinia/toast README](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/toast/v1.0.1/projects/toast/README.md)
+[Back to @rivinia/toast README](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/toast/v1.0.4/projects/toast/README.md)
 
 ### The library's own tokens
 
@@ -18,13 +18,15 @@ Package-specific tokens and the shared Rivinia theme entry point.
 | `--rv-toast-width`  | `22rem`                       | the list       |
 | `--rv-toast-z`      | `1000`                        | the list       |
 
-The kind colours chain to the semantic layer too:
+The kind colors use the package token first, then the inherited semantic token,
+then the built-in fallback. The component does not declare status defaults on
+the list, so a Theme value or a scoped `--rv-*` override can reach each toast:
 
-| Token                | Semantic token |
-| -------------------- | -------------- |
-| `--rv-toast-success` | `--rv-ok`      |
-| `--rv-toast-error`   | `--rv-danger`  |
-| `--rv-toast-info`    | `--rv-info`    |
-| `--rv-toast-warning` | `--rv-warning` |
+| Token                | No-Theme fallback | Semantic token |
+| -------------------- | ----------------- | -------------- |
+| `--rv-toast-success` | `#16a34a`         | `--rv-ok`      |
+| `--rv-toast-error`   | `#dc2626`         | `--rv-danger`  |
+| `--rv-toast-info`    | `#2563eb`         | `--rv-info`    |
+| `--rv-toast-warning` | `#d97706`         | `--rv-warning` |
 
-For shared semantic tokens and styling-stack setup, see [https://github.com/abdelfattahqandil21-oss/Rivinia theming guide](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/theme/v1.0.1/docs/theme/README.md).
+For shared semantic tokens and styling-stack setup, see [https://github.com/abdelfattahqandil21-oss/Rivinia theming guide](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/theme/v1.0.4/docs/theme/README.md).

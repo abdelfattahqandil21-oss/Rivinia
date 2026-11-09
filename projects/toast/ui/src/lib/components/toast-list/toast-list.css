@@ -13,10 +13,6 @@
   --rv-toast-width: 22rem;
   --rv-toast-duration: 180ms;
   --rv-toast-easing: cubic-bezier(0.21, 1.02, 0.73, 1);
-  --rv-toast-success: #34c759;
-  --rv-toast-error: #ff453a;
-  --rv-toast-info: #0a84ff;
-  --rv-toast-warning: #ff9f0a;
   position: fixed;
   z-index: var(--rv-toast-z, 1000);
   /*

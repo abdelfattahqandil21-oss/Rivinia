@@ -2,7 +2,7 @@
 
 Find the public entry points, symbols, and exports.
 
-[Back to @rivinia/toast README](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/toast/v1.0.1/projects/toast/README.md)
+[Back to @rivinia/toast README](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/toast/v1.0.4/projects/toast/README.md)
 
 ## API and behavior
 
@@ -44,7 +44,6 @@ Important details:
   to the caller (and, in managed UI use, Angular's `ErrorHandler`).
 - No routing policy is built in. To clear timed notifications on navigation,
   subscribe to your router in app code and call `dismiss(id)` as appropriate.
-
 
 ## License
 

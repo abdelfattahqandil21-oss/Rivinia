@@ -2,7 +2,7 @@
 
 Render a modal with the optional UI entry point.
 
-[Back to @rivinia/toast README](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/toast/v1.0.1/projects/toast/README.md)
+[Back to @rivinia/toast README](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/toast/v1.0.4/projects/toast/README.md)
 
 ## Install and configure
 
@@ -35,7 +35,6 @@ export const appConfig: ApplicationConfig = {
 All provider fields are optional. Defaults are 5000 ms, five active toasts,
 an unbounded queue, and `dismiss-oldest` overflow. `ng add` also accepts
 `--duration` and `--max-visible`.
-
 
 ## Use with the optional UI
 

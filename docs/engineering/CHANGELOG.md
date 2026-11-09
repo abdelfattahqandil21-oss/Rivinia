@@ -11,6 +11,31 @@
 - `pnpm check:skills`, `pnpm check:governance`, `pnpm check:readmes`, `pnpm check:pack` and `pnpm check:docs` passed; the documentation check reported 41 existing prose warnings and zero failures. Fresh dry-run and actual local npm packs for all eleven 1.0.4 dist packages contained no `.agents/skills`, `SKILL.md`, compatibility sidecars or source ZIP.
 - No package source, public exports, package dependencies, versions, release tags or registry artifacts changed. No publish, push or merge occurred.
 
+## 2026-11-09 — Toast status-token inheritance restored
+
+- Root cause: .rv-toasts declared the four --rv-toast-* status colors on the
+  list itself, shadowing inherited --rv-ok, --rv-danger, --rv-info and
+  --rv-warning values. This regressed D46's read-site token chains.
+- Removed those four declarations; retained the package-token → semantic-token
+  → built-in fallback chain and documented each no-Theme fallback.
+- Added a built-artifact Angular consumer with standalone and Theme-enabled
+  configurations. System Chrome reproduced the issue before the fix; after it,
+  standalone and Theme profiles each passed 2 browser checks with the
+  inapplicable profile-specific check skipped. The tests cover light/dark
+  Theme values, global/scoped/instance overrides, rich colors, sibling
+  isolation, status content and the manual popover top layer.
+- Toast's 35 unit tests, production builds for Toast and Theme, both consumer
+  builds, check:skills, check:governance and check:docs passed. Theme build
+  emitted an existing conflicting default export-condition warning.
+  check:docs reported 41 existing prose warnings and no failures. Firefox,
+  WebKit and native Safari were not run.
+- Updated Toast topic-page links to the existing immutable 1.0.4 package tags;
+  verified target tags and paths without changing a tag, package version or
+  release artifact. No public API or package dependency changed.
+- Worktree: /media/abdelfattahqandi/OWN/libs/Revinia-toast-theme-token-precedence,
+  branch pkg/@rivinia/toast/theme-token-precedence, based on
+  92e2328c4e9479dbb34c80d5b57e910fd80ea31d.
+
 ## 2026-11-03 — governance foundation
 
 - Added version-aware package ownership, release group, documentation, AI skill, testing, task memory, worktree and changelog policies.

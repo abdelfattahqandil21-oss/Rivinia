@@ -1,0 +1,20 @@
+:host {
+  display: block;
+  font:
+    16px/1.4 system-ui,
+    sans-serif;
+}
+
+main {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+#scope-a {
+  --rv-ok: rgb(18, 52, 86);
+}
+
+#scope-b {
+  --rv-ok: rgb(68, 85, 102);
+}

@@ -407,6 +407,51 @@
         }
       }
     },
+    "toast-compat-e2e": {
+      "projectType": "application",
+      "root": "projects/toast/testing/compat-e2e",
+      "sourceRoot": "projects/toast/testing/compat-e2e/src",
+      "prefix": "rv-fixture",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/toast/testing/compat-e2e/src/main.ts",
+            "index": "projects/toast/testing/compat-e2e/src/index.html",
+            "tsConfig": "projects/toast/testing/compat-e2e/tsconfig.app.json",
+            "assets": [],
+            "outputPath": "dist/toast-compat-e2e/browser",
+            "styles": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "1MB",
+                  "maximumError": "2MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "standalone": {
+              "outputPath": "dist/toast-compat-e2e/standalone",
+              "styles": []
+            },
+            "theme": {
+              "outputPath": "dist/toast-compat-e2e/theme",
+              "styles": ["dist/theme/styles/theme.css"]
+            }
+          },
+          "defaultConfiguration": "production"
+        }
+      }
+    },
     "theme": {
       "projectType": "library",
       "root": "projects/theme",

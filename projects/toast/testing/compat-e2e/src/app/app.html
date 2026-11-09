@@ -1,0 +1,17 @@
+<main>
+  <h1>Toast status token compatibility</h1>
+  <rv-toast-list id="default-list" [toasts]="statuses" [showCloseButton]="false" />
+  <rv-toast-list id="rich-list" [toasts]="statuses" [richColors]="true" [showCloseButton]="false" />
+  <section id="scope-a">
+    <rv-toast-list [toasts]="success" [showCloseButton]="false" />
+  </section>
+  <section id="scope-b">
+    <rv-toast-list [toasts]="success" [showCloseButton]="false" />
+  </section>
+  <rv-toast-list
+    id="instance-override"
+    [toasts]="success"
+    [showCloseButton]="false"
+    [style.--rv-toast-success]="'rgb(200, 1, 2)'"
+  />
+</main>
