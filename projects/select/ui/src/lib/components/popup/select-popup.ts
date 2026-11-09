@@ -634,6 +634,9 @@ export class SelectPopupComponent {
   }
 
   protected onPanelKey(event: KeyboardEvent): void {
+    // A projected child popup may already own and handle Escape. Respect its
+    // cancellation so the same key press cannot dismiss this parent panel too.
+    if (event.key === 'Escape' && event.defaultPrevented) return;
     const c = this.controller();
     switch (event.key) {
       case 'Escape':

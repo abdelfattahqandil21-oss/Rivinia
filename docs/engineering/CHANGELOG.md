@@ -3,6 +3,29 @@
 **Owner:** Rivinia maintainers
 **Purpose:** dated record of repository architecture and workflow changes, separate from npm package histories.
 
+## 2026-11-09 — Phase C3 anchored-popup event ownership
+
+- RED in the built `menu-e2e` consumer: Escape inside a Menu projected into a
+  Select footer closed both the Menu and its parent Select, and focus fell back
+  to the Select trigger. Select's key handler consumed the same bubbling Escape
+  after the child Menu had already called `preventDefault()`.
+- Select now respects a canceled Escape specifically. Other keys keep the
+  existing Select contract: projected controls may prevent an arrow key while
+  Select still routes it to its active row. Menu already honors canceled key
+  events. No Popup core changes or global overlay stack were needed.
+- Added a consumer regression proving the child closes and regains focus first,
+  the parent stays open, and a second Escape closes the parent. Added a Menu
+  nesting control plus shared conformance coverage for a pointer gesture that
+  starts inside and ends outside; extended owner-destroy coverage to include a
+  pending reposition frame.
+- GREEN: `pnpm exec ng build select`; `pnpm exec ng build menu-e2e`;
+  `pnpm exec ng test select --no-watch` (166/166); focused nested Escape
+  consumer tests (2/2); owner-destroy cleanup tests (3/3); combined Popup,
+  Select and overlay lifecycle Chromium suites (64/64). A prior combined run
+  exposed an existing RTL geometry check racing the panel entrance animation;
+  the test now waits for that animation to finish and retains its 1px geometry
+  assertions. Firefox and WebKit were not run.
+
 ## 2026-11-09 — Phase C1 Toast rich-color contrast
 
 - Theme's four status colors are documented for indicators, not text backgrounds. Toast's previous rich-color foreground/background combinations failed 4.5:1 for error (4.04:1) and info (3.66:1).

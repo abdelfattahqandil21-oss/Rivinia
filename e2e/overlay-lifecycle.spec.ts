@@ -55,6 +55,47 @@ test.describe('cross-package overlay lifecycle', () => {
     await expect(page.getByRole('menu', { name: 'Overlay test menu' })).toHaveCount(0);
   });
 
+  test('Escape closes only the nested menu that owns focus', async ({ page }) => {
+    await page.getByRole('button', { name: 'Open menu' }).click();
+    await page.getByRole('menuitem', { name: 'Open nested menu' }).click();
+    const outerMenu = page.getByRole('menu', { name: 'Overlay test menu' });
+    const innerMenu = page.getByRole('menu', { name: 'Nested overlay test menu' });
+    await expect(innerMenu).toBeVisible();
+    await page.getByRole('menuitem', { name: 'Nested menu item' }).focus();
+
+    await page.keyboard.press('Escape');
+
+    await expect(innerMenu).toHaveCount(0);
+    await expect(outerMenu).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'Open nested menu' })).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await expect(outerMenu).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Open menu' })).toBeFocused();
+  });
+
+  test('Escape in a Select footer menu leaves the owning Select open', async ({ page }) => {
+    const selectTrigger = page.locator('#overlay-select .rv-select-trigger');
+    await selectTrigger.click();
+    const selectMenu = page.getByRole('menu', { name: 'Overlay select' });
+    await expect(selectMenu).toBeVisible();
+
+    await page.locator('#select-footer-menu-trigger').click();
+    const footerMenu = page.getByRole('menu', { name: 'Select footer menu' });
+    await expect(footerMenu).toBeVisible();
+    await page.getByRole('menuitem', { name: 'Footer menu item' }).focus();
+
+    await page.keyboard.press('Escape');
+
+    await expect(footerMenu).toHaveCount(0);
+    await expect(selectMenu).toBeVisible();
+    await expect(page.locator('#select-footer-menu-trigger')).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await expect(selectMenu).toHaveCount(0);
+    await expect(selectTrigger).toBeFocused();
+  });
+
   test('keeps a modal-owned toast interactive while the dialog is open', async ({ page }) => {
     await page.getByRole('button', { name: 'Open modal' }).click();
     await page

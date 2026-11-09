@@ -44,10 +44,25 @@ import { RiviniaToastList } from '@rivinia/toast/ui';
       <button rv-menu-trigger id="menu-trigger">Open menu</button>
       <div rv-menu-panel>
         <button rvMenuItem id="menu-item">Menu item</button>
+        <rv-menu menuLabel="Nested overlay test menu">
+          <button rv-menu-trigger id="nested-menu-trigger" role="menuitem">Open nested menu</button>
+          <div rv-menu-panel>
+            <button rvMenuItem id="nested-menu-item">Nested menu item</button>
+          </div>
+        </rv-menu>
       </div>
     </rv-menu>
 
-    <rv-select id="overlay-select" label="Overlay select" [options]="options" />
+    <rv-select id="overlay-select" label="Overlay select" [options]="options">
+      <div rv-select-popup-footer>
+        <rv-menu menuLabel="Select footer menu">
+          <button rv-menu-trigger id="select-footer-menu-trigger">Open footer menu</button>
+          <div rv-menu-panel>
+            <button rvMenuItem id="select-footer-menu-item">Footer menu item</button>
+          </div>
+        </rv-menu>
+      </div>
+    </rv-select>
     <p data-testid="toast-action">action={{ toastActionPressed() }}</p>
   `,
 })

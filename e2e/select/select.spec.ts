@@ -382,6 +382,11 @@ test.describe('select: RTL placement', () => {
     await trigger.click();
     const panel = page.locator('#rtl-select .rv-select-popup-panel');
     await expect(panel).toBeVisible();
+    await panel.evaluate(async (element) => {
+      await Promise.all(
+        element.getAnimations().map((animation) => animation.finished.catch(() => undefined)),
+      );
+    });
 
     const t = await trigger.boundingBox();
     const p = await panel.boundingBox();

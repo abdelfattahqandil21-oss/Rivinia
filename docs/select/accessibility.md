@@ -23,6 +23,8 @@ Single/multi share the same model:
   and filter focus; the active row remains unchanged.
 - Opening focuses the filter box (when searchable) or the first enabled option.
   Closing resets the filter and returns focus to the trigger.
+- Escape already canceled by a projected child popup is left to that child, so
+  the parent Select stays open and nested popups close one layer per key press.
 - Outside mouse/pen presses close immediately. Touch closes only for a short
   outside tap; a touch drag used to scroll does not dismiss the panel.
 - Page scrolling repositions the panel while its trigger remains in the visual

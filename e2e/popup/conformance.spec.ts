@@ -418,6 +418,24 @@ for (const adapter of ADAPTERS) {
       expect(after).not.toContain('trigger');
     });
 
+    test('a pointer gesture that starts inside and ends outside keeps the panel open', async ({
+      page,
+    }) => {
+      await gotoHost(page, adapter);
+      await openAndEnter(page, adapter);
+      const row = page.locator(adapter.row).first();
+      const box = await row.boundingBox();
+      const viewport = page.viewportSize();
+      if (!box || !viewport) throw new Error('the open popup row or viewport is unavailable');
+
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(2, viewport.height - 8);
+      await page.mouse.up();
+
+      await expect(page.locator(adapter.panel)).toBeVisible();
+    });
+
     test('Escape closes and returns focus to the trigger', async ({ page }) => {
       await gotoHost(page, adapter);
       await openFromKeyboard(page, adapter);
@@ -558,6 +576,12 @@ for (const adapter of ADAPTERS) {
         'an open panel registers every dismissal and viewport listener exactly once',
       ).toBe(POPUP_GLOBALS.map((key) => `${key}=1`).join(' '));
 
+      const pendingBeforeDestroy = await page.evaluate(() => {
+        window.dispatchEvent(new Event('resize'));
+        return window.__pendingAnimationFrames();
+      });
+      expect(pendingBeforeDestroy).toBe(1);
+
       // A route change destroys the component. The panel never gets a chance to
       // close itself, so only the effect cleanup can release the listeners.
       // `__probeMarker` is the guard against the vacuous pass this test would
@@ -582,6 +606,7 @@ for (const adapter of ADAPTERS) {
       await page.waitForTimeout(50);
 
       expect(await page.evaluate(() => window.__listenerLedger())).toEqual(before);
+      expect(await page.evaluate(() => window.__pendingAnimationFrames())).toBe(0);
     });
 
     test('a height-only resize keeps the panel open and attached', async ({ page }) => {
