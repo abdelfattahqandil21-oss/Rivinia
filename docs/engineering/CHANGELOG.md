@@ -3,6 +3,17 @@
 **Owner:** Rivinia maintainers
 **Purpose:** dated record of repository architecture and workflow changes, separate from npm package histories.
 
+## 2026-11-09 — Phase C overlay lifecycle checkpoint
+
+- Ownership audit: Popup owns headless anchoring/dismissal; Menu and Select consume it and retain their own interaction/focus policy. Modal owns native-dialog lifecycle and its reference-counted scroll lock. Toast owns notification state and UI. No stable shared contract justifies a global OverlayManager.
+- A built-artifact consumer exposed a Modal cleanup defect: the last scroll-lock release removed consumer-owned `scrollbar-gutter`. Modal now snapshots and restores the original value and priority while preserving nested lock counting. RED was a Chromium consumer assertion (`stable both-edges` became `auto`); GREEN is recorded in the commits below.
+- The consumer matrix covers Menu followed by Modal with one Escape per layer, Modal focus restoration, a ToastList rendered inside the active dialog with a working action, repeated open/close, immediate owner destruction and destruction during exit animation. Toast documentation now states why the single active list belongs inside the dialog for modal-owned notifications. A warning in Datepicker API prose that exposed internal `DatepickerPanelRegistry` was replaced with an implementation-neutral description.
+- Verification: Popup, Menu, Select, Modal and Toast production builds passed; `menu-e2e` production build passed; `pnpm exec ng test modal --no-watch` passed 56/56; the five new Chromium overlay consumer checks passed 5/5; `pnpm check:docs` reported 0 failures and 40 remaining prose warnings (down from 41). Prettier and `git diff --check` passed.
+- The broader Popup/Select Chromium run reported 53 passes and one failure in `e2e/popup/conformance.spec.ts`: resizing with the Menu item focused changed `scrollY` from 665 to 647, so its `resizeWithoutScrolling` guard correctly rejected attributing the close to width alone. Popup unit tests cover width-close behavior; this browser case remains unresolved and must be isolated before claiming that scenario passed.
+- Remaining Phase C work: audit Theme toggle/token ownership; classify the 40 heuristic documentation warnings; complete Toast token-order and contrast follow-ups (the built-in rich error/info foregrounds measure about 4.04:1 and 3.66:1 on their backgrounds); run the Popup browser scenario with a clean causal setup. Firefox, WebKit and Safari are unverified.
+- Worktree: `/media/abdelfattahqandi/OWN/libs/Revinia-phase-c-overlays`, branch `pkg/repo/phase-c-overlay-lifecycle`, base `7105d740f4de240c5ace5bfd5a9ff93f00987243`, current checkpoint HEAD `6dd779cb7263c49550fac368575fe2ef008e161a`.
+- Commits: `ce6c5a1` (`fix(modal): restore existing scrollbar gutter`) and `6dd779c` (`test(overlays): verify cross-package modal lifecycle`), local only. No API, package version, release state or remote changed.
+
 ## 2026-11-09 — Package maintainer skills and documentation guidance
 
 - Added one package-scoped maintainer skill for each current library under `.agents/skills/`, plus exact 1.0.4 compatibility sidecars. The checklists were adapted to current public entry points and clearly separate implemented APIs from proposals.
