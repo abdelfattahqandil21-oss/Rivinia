@@ -24,8 +24,8 @@ test.describe('focus contract — Tab traversal', () => {
     await page.goto('/two');
     const first = page.getByRole('button', { name: 'First' });
     // Document order: nav links … then the 'First' trigger. The stop directly
-    // before it is the LAST nav link.
-    const previous = page.getByRole('link', { name: 'Styled' });
+    // before it is the overlay lifecycle route.
+    const previous = page.getByRole('link', { name: 'Overlay lifecycle' });
 
     await first.click();
     await expect(page.getByRole('menu', { name: 'First menu' })).toBeVisible();
@@ -36,8 +36,14 @@ test.describe('focus contract — Tab traversal', () => {
     await expect(first).not.toBeFocused();
   });
 
-  test('after pointer-open dismissal, Shift+Tab starts from the trigger in WebKit', async ({ page, browserName }) => {
-    test.skip(browserName !== 'webkit', 'This locks the WebKit top-layer sequential-focus workaround.');
+  test('after pointer-open dismissal, Shift+Tab starts from the trigger in WebKit', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'webkit',
+      'This locks the WebKit top-layer sequential-focus workaround.',
+    );
     await page.goto('/two');
     const trigger = page.getByRole('button', { name: 'First' });
     const previous = page.getByRole('link', { name: 'Styled' });

@@ -282,9 +282,19 @@ async function resizeWithAnchorInViewport(
             trigger.top >= bottom,
         });
       };
-      window.addEventListener('scroll', () => record('window'), true);
-      document.addEventListener('scroll', () => record('document'), true);
-      window.visualViewport?.addEventListener('scroll', () => record('visualViewport'), true);
+      window.addEventListener('scroll', () => record('window:scroll'), true);
+      document.addEventListener('scroll', () => record('document:scroll'), true);
+      window.visualViewport?.addEventListener(
+        'scroll',
+        () => record('visualViewport:scroll'),
+        true,
+      );
+      window.addEventListener('resize', () => record('window:resize'), true);
+      window.visualViewport?.addEventListener(
+        'resize',
+        () => record('visualViewport:resize'),
+        true,
+      );
       (window as unknown as Record<string, unknown>).__popupResizeScrollTrace = trace;
     },
     { triggerSelector: adapter.trigger, panelSelector: adapter.panel },
@@ -351,7 +361,7 @@ async function resizeWithAnchorInViewport(
         requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
       ),
   );
-  const scrollTrace = await page.evaluate(
+  const viewportTrace = await page.evaluate(
     () =>
       (window as unknown as Record<string, unknown>).__popupResizeScrollTrace as Array<{
         event: string;
@@ -359,13 +369,16 @@ async function resizeWithAnchorInViewport(
         triggerOutsideViewport: boolean;
       }>,
   );
-  const scrollDismissals = scrollTrace.filter(
-    (event) => event.panelOpen && event.triggerOutsideViewport,
+  const scrollDismissals = viewportTrace.filter(
+    (event) => event.event.endsWith(':scroll') && event.panelOpen && event.triggerOutsideViewport,
   );
   if (scrollDismissals.length > 0) {
     throw new Error(
       `viewport resizing scrolled the open Popup's trigger out of view; scroll could dismiss it; events=${JSON.stringify(scrollDismissals)}`,
     );
+  }
+  if (!viewportTrace.some((event) => event.event === 'visualViewport:resize')) {
+    throw new Error('the real visualViewport resize event did not fire for this viewport change');
   }
   const after = await snapshot();
   if (after.triggerOutsideViewport) {

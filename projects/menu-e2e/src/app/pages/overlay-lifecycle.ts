@@ -53,7 +53,7 @@ import { RiviniaToastList } from '@rivinia/toast/ui';
       </div>
     </rv-menu>
 
-    <rv-select id="overlay-select" label="Overlay select" [options]="options">
+    <rv-select id="overlay-select" label="Overlay select" [options]="options" [searchable]="true">
       <div rv-select-popup-footer>
         <rv-menu menuLabel="Select footer menu">
           <button rv-menu-trigger id="select-footer-menu-trigger">Open footer menu</button>
@@ -61,8 +61,12 @@ import { RiviniaToastList } from '@rivinia/toast/ui';
             <button rvMenuItem id="select-footer-menu-item">Footer menu item</button>
           </div>
         </rv-menu>
+        <button id="select-footer-action" type="button">Footer action</button>
+        <label for="select-footer-filter">Footer filter</label>
+        <input id="select-footer-filter" type="text" />
       </div>
     </rv-select>
+    <button id="after-select" type="button">After select</button>
     <p data-testid="toast-action">action={{ toastActionPressed() }}</p>
   `,
 })
