@@ -15,12 +15,15 @@
   selected row. Client page-size changes now preserve the previous first row
   when possible and clamp to the last known page. Manual pagination restarts
   at page 0 rather than assuming offset-based server paging.
+- Built-package consumer RED: shrinking a six-row client result to three rows
+  while on page 2 left the page out of range and empty. Client pagination now
+  clamps to page 1, while manual pagination remains consumer-owned.
 - Added built-output consumer coverage for page-size changes with selection and
   rendered ARIA positions, controlled response reordering (newer response wins
   even when the older response resolves later), and an empty server response
   replacing prior rows. Core coverage combines sort/filter/page/selection
   restore and verifies manual transformations leave data changes to the
-  consumer. The full Table suite is 234/234 after these changes.
+  consumer. The full Table suite is pending after the shrink reconciliation.
 
 ## 2026-11-10 — Phase D Table audit (in progress)
 

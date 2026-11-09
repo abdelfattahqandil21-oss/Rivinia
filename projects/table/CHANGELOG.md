@@ -15,6 +15,8 @@
   invented page offset.
 - Keep the first visible row anchored when client page size changes; manual
   pagination restarts at page 0 rather than assuming offset-based server pages.
+- Clamp an invalid client page to the last available page when its result set
+  shrinks; manual pagination remains consumer-owned.
 
 ## 1.0.4
 

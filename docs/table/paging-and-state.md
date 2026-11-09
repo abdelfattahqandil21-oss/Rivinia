@@ -16,4 +16,7 @@ page-size change keeps the previous first visible row in view when possible
 and clamps to the last known page if the new size leaves that row beyond the
 result. With `manualPagination`, a page-size change resets to 0 because the
 controller cannot assume that the server uses offset pagination. An explicitly
-restored out-of-range page remains empty until the consumer changes it.
+restored out-of-range page remains empty until the consumer changes it or the
+client-side result shrinks and makes that page invalid; then the page clamps to
+the last available page. Manual pagination leaves page reconciliation to the
+consumer because a loaded page does not describe the full result set.

@@ -83,9 +83,10 @@ class ManualPageConsumer {
 })
 class ClientPaginationConsumer {
   readonly columns = COLUMNS;
+  readonly data = signal<readonly Employee[]>(EMPLOYEES);
   readonly table = createTable<Employee>(() => ({
     columns: () => COLUMNS,
-    data: () => EMPLOYEES,
+    data: () => this.data(),
     pageSize: 2,
     selection: { mode: 'multi' },
   }));
@@ -299,6 +300,36 @@ describe('@rivinia/table built-package consumer', () => {
     expect(host.table.selection.ids()).toEqual([5]);
     expect(dataRows(root)[1].getAttribute('aria-selected')).toBe('true');
     expect(dataRows(root).map((row) => row.getAttribute('aria-rowindex'))).toEqual(['5', '6']);
+    fixture.destroy();
+  });
+
+  it('clamps a client page when the current dataset shrinks', () => {
+    const { fixture, host } = mountClient();
+    host.table.page.set(2);
+    fixture.detectChanges();
+    expect(host.table.pageRows().map((row) => row.id)).toEqual([5]);
+
+    host.data.set(EMPLOYEES.slice(0, 3));
+    fixture.detectChanges();
+    expect(host.table.page()).toBe(1);
+    expect(host.table.pageRows().map((row) => row.id)).toEqual([3]);
+    expect(host.table.total()).toBe(3);
+
+    host.data.set([]);
+    fixture.detectChanges();
+    expect(host.table.page()).toBe(0);
+    expect(host.table.pageRows()).toEqual([]);
+    fixture.destroy();
+  });
+
+  it('leaves manual page reconciliation to the consumer when its total shrinks', () => {
+    const { fixture, host } = mount();
+    host.table.page.set(2);
+    host.rowCount.set(3);
+    host.loadedPage.set([]);
+    fixture.detectChanges();
+    expect(host.table.page()).toBe(2);
+    expect(host.table.pageRows()).toEqual([]);
     fixture.destroy();
   });
 

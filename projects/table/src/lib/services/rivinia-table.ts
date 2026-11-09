@@ -400,8 +400,10 @@ class RiviniaSelection<T> implements RiviniaTableSelection {
 }
 
 function isValidRowId(id: unknown): id is TableRowId {
-  return (typeof id === 'string' && id.trim().length > 0) ||
-    (typeof id === 'number' && Number.isFinite(id));
+  return (
+    (typeof id === 'string' && id.trim().length > 0) ||
+    (typeof id === 'number' && Number.isFinite(id))
+  );
 }
 
 function buildRows<T>(data: readonly T[], getId: (row: T) => TableRowId): readonly TableRow<T>[] {
@@ -416,7 +418,7 @@ function buildRows<T>(data: readonly T[], getId: (row: T) => TableRowId): readon
       if (isDevMode()) {
         throw new Error(
           `[rivinia/table] Invalid row ID ${String(id)} at row index ${index}; ` +
-          'IDs must be non-empty strings or finite numbers.',
+            'IDs must be non-empty strings or finite numbers.',
         );
       }
     } else {
@@ -434,11 +436,11 @@ function buildRows<T>(data: readonly T[], getId: (row: T) => TableRowId): readon
     if (isDevMode()) {
       throw new Error(
         `[rivinia/table] Duplicate row ID ${JSON.stringify(id)} at row indices ${positions.join(', ')}; ` +
-        'IDs must be unique and stable within the active data set.',
+          'IDs must be unique and stable within the active data set.',
       );
     }
   }
-  return rows.map((row, index) => invalid.has(index) ? { ...row, identityValid: false } : row);
+  return rows.map((row, index) => (invalid.has(index) ? { ...row, identityValid: false } : row));
 }
 
 /**
@@ -571,37 +573,6 @@ export class RiviniaTable<T> {
       initial.pageSize ?? options().pageSize ?? DEFAULT_PAGE_SIZE,
     );
     this.pageSize = signal(this.defaultPageSize);
-    this.page = linkedSignal<string, number>({
-      source: () =>
-        JSON.stringify([
-          this.filters(),
-          this.sorting(),
-          this.globalSearch(),
-          this.pageSize(),
-        ]),
-      computation: (signature, previous) => {
-        if (previous === undefined) return normalizePage(initial.page ?? 0);
-        const current = JSON.parse(signature) as [unknown, unknown, unknown, number];
-        const before = JSON.parse(previous.source) as [unknown, unknown, unknown, number];
-        if (JSON.stringify(current.slice(0, 3)) !== JSON.stringify(before.slice(0, 3))) {
-          return 0;
-        }
-
-        const previousSize = Number.isFinite(before[3]) ? Math.floor(before[3]) : 0;
-        const currentSize = Number.isFinite(current[3]) ? Math.floor(current[3]) : 0;
-        if (previousSize === currentSize) return previous.value;
-        if (this.options().manualPagination) return 0;
-        if (previousSize <= 0 || currentSize <= 0) return 0;
-
-        const firstVisibleIndex = previous.value * previousSize;
-        const nextPage = Math.floor(firstVisibleIndex / currentSize);
-        const total = this.total();
-        if (total < 0) return nextPage;
-        const lastPage = Math.max(0, Math.ceil(total / currentSize) - 1);
-        return Math.min(nextPage, lastPage);
-      },
-    });
-
     this.rows = computed<readonly TableRow<T>[]>(() => {
       const current = this.options();
       const data = current.data?.() ?? [];
@@ -634,6 +605,57 @@ export class RiviniaTable<T> {
       const options = this.options();
       if (options.rowCount) return options.rowCount();
       return options.manualPagination ? -1 : this.rows().length;
+    });
+    this.page = linkedSignal<string, number>({
+      source: () =>
+        JSON.stringify([
+          this.filters(),
+          this.sorting(),
+          this.globalSearch(),
+          this.pageSize(),
+          this.options().manualPagination ? null : this.rows().length,
+        ]),
+      computation: (signature, previous) => {
+        if (previous === undefined) return normalizePage(initial.page ?? 0);
+        const current = JSON.parse(signature) as [unknown, unknown, unknown, number, number | null];
+        const before = JSON.parse(previous.source) as [
+          unknown,
+          unknown,
+          unknown,
+          number,
+          number | null,
+        ];
+        if (JSON.stringify(current.slice(0, 3)) !== JSON.stringify(before.slice(0, 3))) {
+          return 0;
+        }
+
+        const previousSize = Number.isFinite(before[3]) ? Math.floor(before[3]) : 0;
+        const currentSize = Number.isFinite(current[3]) ? Math.floor(current[3]) : 0;
+        if (previousSize !== currentSize) {
+          if (this.options().manualPagination) return 0;
+          if (previousSize <= 0 || currentSize <= 0) return 0;
+
+          const firstVisibleIndex = previous.value * previousSize;
+          const nextPage = Math.floor(firstVisibleIndex / currentSize);
+          const total = this.total();
+          if (total < 0) return nextPage;
+          const lastPage = Math.max(0, Math.ceil(total / currentSize) - 1);
+          return Math.min(nextPage, lastPage);
+        }
+
+        const previousTotal = before[4];
+        const currentTotal = current[4];
+        if (
+          currentTotal !== null &&
+          previousTotal !== null &&
+          currentTotal < previousTotal &&
+          currentSize > 0
+        ) {
+          const lastPage = Math.max(0, Math.ceil(currentTotal / currentSize) - 1);
+          return Math.min(previous.value, lastPage);
+        }
+        return previous.value;
+      },
     });
     this.pageRows = computed<readonly TableRow<T>[]>(() => {
       if (this.options().manualPagination) return this.rows();
