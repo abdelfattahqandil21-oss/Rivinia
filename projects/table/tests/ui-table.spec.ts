@@ -789,6 +789,30 @@ describe('rv-table — selection and activation', () => {
     expect(m.rows()[1].getAttribute('aria-selected')).toBe('true');
   });
 
+  it('disables every selection and activation path for an ambiguous identity', () => {
+    const m = mount((host) => {
+      host.selectable.set(true);
+      host.rows.set(tableRows().map((row, index) =>
+        index === 0 ? { ...row, identityValid: false } : row,
+      ));
+    });
+
+    expect(m.rows()[0].hasAttribute('aria-selected')).toBe(false);
+    expect(m.rows()[0].querySelector('.rv-table-select')).toBeNull();
+    click(m.cell(0, 0) as HTMLElement);
+    m.settle();
+    expect(m.host.selected().size).toBe(0);
+    expect(m.host.selectionEvents).toEqual([]);
+
+    focusOn(m.cell(0, 0) as HTMLElement);
+    m.settle();
+    press(document.activeElement as HTMLElement, 'Enter');
+    m.settle();
+    m.rows()[0].dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    m.settle();
+    expect(m.host.activated).toEqual([]);
+  });
+
   it('activates the row on Enter and on a double-click', () => {
     const m = mount();
     focusOn(m.cell(2, 1) as HTMLElement);

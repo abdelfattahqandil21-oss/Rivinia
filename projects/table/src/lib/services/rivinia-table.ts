@@ -142,9 +142,39 @@ interface SelectionState {
   readonly ids: ReadonlySet<TableRowId>;
 }
 
+interface SelectionSnapshot {
+  readonly mode: TableSelectionMode;
+  readonly ids: readonly TableRowId[];
+}
+
+function selectionFromState(
+  state: Partial<Pick<TableState, 'selectionMode' | 'selected' | 'excluded'>>,
+  warn: (message: string) => void,
+): SelectionSnapshot {
+  const selected = state.selected ?? [];
+  const excluded = state.excluded ?? [];
+  const requestedMode: unknown = state.selectionMode;
+  let mode: TableSelectionMode;
+
+  if (requestedMode === 'include' || requestedMode === 'exclude') {
+    mode = requestedMode;
+  } else {
+    if (requestedMode !== undefined) {
+      warn('Invalid selectionMode; inferring it from the legacy selected/excluded arrays.');
+    }
+    // Legacy snapshots inferred exclude mode only from a non-empty exclusion
+    // list. Empty legacy arrays cannot recover whether select-all was active.
+    mode = excluded.length > 0 ? 'exclude' : 'include';
+  }
+
+  return { mode, ids: mode === 'exclude' ? excluded : selected };
+}
+
 interface SelectionConfig<T> {
   readonly rows: Signal<readonly TableRow<T>[]>;
   readonly pageRows: Signal<readonly TableRow<T>[]>;
+  /** The source contains only one externally paged slice, not the full result set. */
+  readonly preserveMissingRows: boolean;
   readonly kind: TableSelectionKind;
   readonly defaultScope: TableSelectionScope;
   readonly initial: { readonly mode: TableSelectionMode; readonly ids: readonly TableRowId[] };
@@ -154,7 +184,7 @@ const NO_IDS: ReadonlySet<TableRowId> = new Set<TableRowId>();
 const EMPTY_SELECTION: SelectionState = { mode: 'include', ids: NO_IDS };
 
 /**
- * Drops ids that no longer exist in `rows`.
+ * Drops ids that no longer exist in the complete result set.
  *
  * This is the rule that keeps a filtered-out row from staying "selected" and
  * reappearing as part of a batch action the user cannot see. It returns the
@@ -167,11 +197,19 @@ function pruneSelection(
 ): SelectionState {
   if (state.ids.size === 0) return state;
   const present = new Set<TableRowId>();
-  for (const row of rows) if (row.identityValid !== false) present.add(row.id);
+  const ambiguous = new Set<TableRowId>();
+  for (const row of rows) {
+    if (row.identityValid === false) ambiguous.add(row.id);
+    else present.add(row.id);
+  }
   let dropped = false;
   const next = new Set<TableRowId>();
   for (const id of state.ids) {
-    if (present.has(id)) next.add(id);
+    // Keep a user's decision while a production build suppresses rows whose
+    // identity is ambiguous. Dropping an exclude exception here would select
+    // that row if the duplicate later disappeared; dropping an include ID
+    // would silently forget the selection.
+    if (present.has(id) || ambiguous.has(id)) next.add(id);
     else dropped = true;
   }
   return dropped ? { mode: state.mode, ids: next } : state;
@@ -206,25 +244,31 @@ class RiviniaSelection<T> implements RiviniaTableSelection {
 
   private readonly rows: Signal<readonly TableRow<T>[]>;
   private readonly pageRows: Signal<readonly TableRow<T>[]>;
+  private readonly preserveMissingRows: boolean;
   private readonly defaultScope: TableSelectionScope;
   private readonly initial: SelectionState;
   /**
-   * A linked signal, not a plain one: when the row set changes the ids are
-   * pruned IN THE SAME READ, so no stale id can survive a filter change and
-   * no effect (or injection context) is needed to do it.
+   * A linked signal, not a plain one: when the full client result set changes,
+   * ids are pruned in the same read. Manual pagination retains IDs outside the
+   * loaded slice because their absence does not mean the row left the result.
+   * No effect or injection context is needed.
    */
   private readonly state: WritableSignal<SelectionState>;
 
   constructor(config: SelectionConfig<T>) {
     this.rows = config.rows;
     this.pageRows = config.pageRows;
+    this.preserveMissingRows = config.preserveMissingRows;
     this.defaultScope = config.defaultScope;
     this.initial = { mode: config.initial.mode, ids: new Set(config.initial.ids) };
     this.enabled = config.kind !== 'none';
     this.multiple = config.kind === 'multi';
     this.state = linkedSignal<readonly TableRow<T>[], SelectionState>({
       source: config.rows,
-      computation: (rows, previous) => pruneSelection(previous?.value ?? this.initial, rows),
+      computation: (rows, previous) => {
+        const state = previous?.value ?? this.initial;
+        return this.preserveMissingRows ? state : pruneSelection(state, rows);
+      },
     });
     this.mode = computed(() => this.state().mode);
     this.ids = computed(() => this.selectedIds());
@@ -309,12 +353,13 @@ class RiviniaSelection<T> implements RiviniaTableSelection {
   toState(): {
     readonly selected: readonly TableRowId[];
     readonly excluded: readonly TableRowId[];
+    readonly selectionMode: TableSelectionMode;
   } {
     const state = this.state();
     if (state.mode === 'exclude') {
-      return { selected: [], excluded: [...state.ids] };
+      return { selected: [], excluded: [...state.ids], selectionMode: state.mode };
     }
-    return { selected: [...state.ids], excluded: [] };
+    return { selected: [...state.ids], excluded: [], selectionMode: state.mode };
   }
 
   /** Restores a saved view. Pruned immediately so a stale id never leaks. */
@@ -323,9 +368,8 @@ class RiviniaSelection<T> implements RiviniaTableSelection {
     readonly ids: readonly TableRowId[];
   }): void {
     if (!this.enabled) return;
-    this.state.set(
-      pruneSelection({ mode: selection.mode, ids: new Set(selection.ids) }, this.rows()),
-    );
+    const next = { mode: selection.mode, ids: new Set(selection.ids) };
+    this.state.set(this.preserveMissingRows ? next : pruneSelection(next, this.rows()));
   }
 
   private selectedIds(): readonly TableRowId[] {
@@ -474,6 +518,7 @@ export class RiviniaTable<T> {
     toState(): {
       readonly selected: readonly TableRowId[];
       readonly excluded: readonly TableRowId[];
+      readonly selectionMode: TableSelectionMode;
     };
     restore(selection: {
       readonly mode: TableSelectionMode;
@@ -553,14 +598,11 @@ export class RiviniaTable<T> {
     const selection = new RiviniaSelection<T>({
       rows: this.rows,
       pageRows: this.pageRows,
+      preserveMissingRows: options().manualPagination === true,
       kind: selectionOptions?.mode ?? 'none',
       defaultScope: selectionOptions?.selectAllScope ?? 'filtered',
       initial: {
-        // `excluded` wins when both are present: it is the only field that can
-        // mean "everything except", and it is the narrower statement.
-        mode: (initial.excluded?.length ?? 0) > 0 ? 'exclude' : 'include',
-        ids:
-          (initial.excluded?.length ?? 0) > 0 ? (initial.excluded ?? []) : (initial.selected ?? []),
+        ...selectionFromState(initial, this.warn),
       },
     });
     this.selection = selection;
@@ -599,6 +641,7 @@ export class RiviniaTable<T> {
         pinnedEnd: columns.filter((column) => column.pinned === 'end').map((column) => column.id),
         selected: selected.selected,
         excluded: selected.excluded,
+        selectionMode: selected.selectionMode,
       };
     });
   }
@@ -617,13 +660,12 @@ export class RiviniaTable<T> {
     // `page.set` flushes the linked computation first, so the explicit page
     // survives the reset that the lines above just triggered.
     if (patch.page !== undefined) this.page.set(normalizePage(patch.page));
-    if (patch.selected !== undefined || patch.excluded !== undefined) {
-      const excluded = patch.excluded ?? [];
-      this.selectionImpl.restore(
-        excluded.length > 0
-          ? { mode: 'exclude', ids: excluded }
-          : { mode: 'include', ids: patch.selected ?? [] },
-      );
+    if (
+      patch.selected !== undefined ||
+      patch.excluded !== undefined ||
+      patch.selectionMode !== undefined
+    ) {
+      this.selectionImpl.restore(selectionFromState(patch, this.warn));
     }
   }
 
@@ -635,12 +677,7 @@ export class RiviniaTable<T> {
     this.globalSearch.set(initial.search ?? '');
     this.pageSize.set(this.defaultPageSize);
     this.page.set(normalizePage(initial.page ?? 0));
-    const excluded = initial.excluded ?? [];
-    this.selectionImpl.restore(
-      excluded.length > 0
-        ? { mode: 'exclude', ids: excluded }
-        : { mode: 'include', ids: initial.selected ?? [] },
-    );
+    this.selectionImpl.restore(selectionFromState(initial, this.warn));
   }
 
   /**

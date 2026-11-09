@@ -491,6 +491,7 @@ export class RiviniaTableComponent {
   }
 
   protected onRowActivate(item: RenderRow): void {
+    if (!item.identityValid) return;
     this.rowActivate.emit(item.row);
   }
 

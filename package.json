@@ -26,6 +26,7 @@
     "test:theme-compat": "node scripts/theme-compat-test.mjs",
     "test:schematics": "vitest run projects/http/schematics projects/toast/schematics projects/i18n/schematics projects/modal/schematics projects/env/schematics",
     "test:theme": "vitest run projects/theme/tests",
+    "test:table:prod-identity": "node scripts/table-prod-identity-smoke.mjs",
     "check:docs": "node scripts/check-docs.mjs",
     "check:theme": "node scripts/check-theme-package.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",

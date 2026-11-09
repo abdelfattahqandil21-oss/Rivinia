@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { signal } from '@angular/core';
-import type { TableColumn } from '../src/lib/models/table.models';
-import type { TableOptions } from '../src/lib/services/rivinia-table';
-import { createTable } from '../src/lib/services/rivinia-table';
-import { tableColumn } from '../src/lib/utils/table-column';
-import { readCellValue } from '../src/lib/utils/table-pipeline';
+import type { TableColumn, TableOptions, TableState } from '@rivinia/table';
+import { createTable, readCellValue, tableColumn } from '@rivinia/table';
 
 /*
  * The controller is a chain of `computed`s over plain signals, constructed
@@ -321,12 +318,65 @@ describe('request and state', () => {
 
     table.setState({ selected: [4, 2] });
     expect(table.selection.ids()).toEqual([2, 4]);
+    const includedState = table.state();
+    table.selection.clear();
+    table.setState(includedState);
+    expect(table.selection.ids()).toEqual([2, 4]);
 
     table.setState({ excluded: [5] });
     expect(table.selection.mode()).toBe('exclude');
     expect(table.selection.count()).toBe(5);
     expect(table.selection.isSelected(5)).toBe(false);
     expect(table.state()).toMatchObject({ selected: [], excluded: [5] });
+    const excludedState = table.state();
+    table.selection.clear();
+    table.setState(excludedState);
+    expect(table.selection.mode()).toBe('exclude');
+    expect(table.selection.isSelected(5)).toBe(false);
+  });
+
+  it('round-trips select-all when the exclusion set is empty', () => {
+    const { table } = makeTable({ selection: { mode: 'multi' } });
+    const emptyInclude = table.state();
+    table.setState(emptyInclude);
+    expect(table.selection.mode()).toBe('include');
+    expect(table.selection.isSelected(1)).toBe(false);
+
+    table.selection.selectAll('all');
+    const saved: TableState = table.state();
+
+    table.selection.clear();
+    table.setState(saved);
+
+    expect(table.selection.mode()).toBe('exclude');
+    expect(table.selection.isSelected(1)).toBe(true);
+  });
+
+  it('resetState restores an empty exclude-mode initial selection', () => {
+    const { table } = makeTable({
+      selection: { mode: 'multi' },
+      initialState: { selectionMode: 'exclude' },
+    });
+
+    expect(table.selection.mode()).toBe('exclude');
+    table.selection.clear();
+    table.resetState();
+    expect(table.selection.mode()).toBe('exclude');
+    expect(table.selection.isSelected(1)).toBe(true);
+  });
+
+  it('warns and falls back to legacy inference for an invalid runtime mode', () => {
+    const messages: string[] = [];
+    const { table } = makeTable({
+      selection: { mode: 'multi' },
+      warn: (message) => messages.push(message),
+    });
+
+    table.setState({ selectionMode: 'unknown' as 'include', selected: [1] });
+
+    expect(table.selection.mode()).toBe('include');
+    expect(table.selection.isSelected(1)).toBe(true);
+    expect(messages[0]).toContain('Invalid selectionMode');
   });
 
   it('returns to the initial view from resetState', () => {
@@ -398,6 +448,75 @@ describe('selection', () => {
 
     expect(table.selection.ids()).toEqual([1, 3]);
     expect(table.selection.count()).toBe(2);
+  });
+
+  it('keeps selected ids when manual pagination replaces the loaded page', () => {
+    const { table, data } = makeTable(
+      {
+        manualPagination: true,
+        rowCount: () => EMPLOYEES.length,
+        selection: { mode: 'multi' },
+      },
+      EMPLOYEES.slice(0, 2),
+    );
+
+    table.selection.select(1);
+    table.page.set(1);
+    data.set(EMPLOYEES.slice(2, 4));
+    expect(table.selection.ids()).toEqual([]);
+    expect(table.state().selected).toEqual([1]);
+    const saved = table.state();
+    expect(saved.selectionMode).toBe('include');
+
+    table.selection.clear();
+    table.setState(saved);
+
+    table.page.set(0);
+    data.set(EMPLOYEES.slice(0, 2));
+    expect(table.selection.ids()).toEqual([1]);
+    expect(table.selection.isSelected(1)).toBe(true);
+  });
+
+  it('keeps excluded ids when manual pagination replaces the loaded page', () => {
+    const { table, data } = makeTable(
+      {
+        manualPagination: true,
+        rowCount: () => EMPLOYEES.length,
+        selection: { mode: 'multi' },
+      },
+      EMPLOYEES.slice(0, 2),
+    );
+
+    table.selection.selectAll('all');
+    table.selection.deselect(2);
+    table.page.set(1);
+    data.set(EMPLOYEES.slice(2, 4));
+    expect(table.state().excluded).toEqual([2]);
+    const saved = table.state();
+    expect(saved.selectionMode).toBe('exclude');
+
+    table.selection.clear();
+    table.setState(saved);
+
+    table.page.set(0);
+    data.set(EMPLOYEES.slice(0, 2));
+    expect(table.selection.isSelected(2)).toBe(false);
+  });
+
+  it('restores selection before manually paged data arrives', () => {
+    const data = signal<readonly Employee[]>([]);
+    const table = createTable<Employee>(() => ({
+      columns: () => COLUMNS,
+      data,
+      manualPagination: true,
+      selection: { mode: 'multi' },
+    }));
+
+    table.setState({ selectionMode: 'include', selected: [1] });
+    expect(table.state().selected).toEqual([1]);
+    expect(table.selection.ids()).toEqual([]);
+    data.set(EMPLOYEES.slice(0, 2));
+    expect(table.selection.isSelected(1)).toBe(true);
   });
 
   it('drops ids that leave the result set, so a hidden row is never acted on', () => {

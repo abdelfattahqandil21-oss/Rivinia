@@ -134,7 +134,7 @@
                 (click)="onCellClick(item, cell, $event)"
                 (focus)="onCellFocus(item.rowIndex, cell.columnIndex)"
               >
-                @if (selectable() && isFirst) {
+                @if (selectable() && item.identityValid && isFirst) {
                   <!--
                     Decorative, deliberately: `aria-selected` on the row is the
                     semantics, and a second real checkbox would announce the

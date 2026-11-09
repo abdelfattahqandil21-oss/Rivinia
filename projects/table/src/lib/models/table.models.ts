@@ -158,4 +158,9 @@ export interface TableState {
   /** Row ids, and the ids explicitly excluded from the set. */
   readonly selected: readonly TableRowId[];
   readonly excluded: readonly TableRowId[];
+  /**
+   * Makes empty include and empty exclude sets unambiguous. Optional only so
+   * saved states written before this field was added remain readable.
+   */
+  readonly selectionMode?: 'include' | 'exclude';
 }
