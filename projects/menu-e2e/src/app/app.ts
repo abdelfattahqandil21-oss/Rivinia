@@ -14,6 +14,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       <a routerLink="/edge" routerLinkActive="on">Edge</a>
       <a routerLink="/content" routerLinkActive="on">Content</a>
       <a routerLink="/styled" routerLinkActive="on">Styled</a>
+      <a routerLink="/overlay-lifecycle" routerLinkActive="on">Overlay lifecycle</a>
     </nav>
     <main><router-outlet /></main>
   `,

@@ -18,7 +18,11 @@ element at the toast's position is the toast, not the dialog.
 
 A manual popover is not modal: it does not trap focus, does not make the page
 inert, and does not close on an outside click — so it behaves exactly like
-the list it replaces.
+the list it replaces. A modal `<dialog>` still makes the rest of the document
+inert, including a global toast list outside that dialog. For an actionable or
+announced notification owned by an open modal, render the one active
+`RiviniaToastList` inside that dialog's content; see the [Modal composition
+example](../modal/typed-modals.md#showing-a-toast-inside-an-open-modal).
 
 **The popover's user-agent styles are reset.** A popover gets a background, a
 border, padding and `overflow: auto` from the UA, which puts a shared canvas

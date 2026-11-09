@@ -38,7 +38,6 @@ import { RiviniaCalendar, buildMonth, type RiviniaDate } from '@rivinia/datepick
 Importing `RiviniaDatepickerComponent` from `@rivinia/datepicker` is a compile
 error.
 
-
 ## API
 
 ### `<rv-datepicker>`
@@ -187,7 +186,7 @@ a sibling label is the markup that does not need the workaround.
 
 Each `<rv-datepicker>` provides its **own** calendar state, so two adjacent
 pickers never share a focused day, a month, or a value. Opening one closes the
-other — the coordination is a root service (`DatepickerPanelRegistry`), so it
+other — a root-scoped coordinator handles open-panel ownership, so it
 works for keyboard activation too, which fires no pointer event. Clicking
 anywhere outside closes without stealing focus; tabbing out of the control also
 closes its panel while leaving focus at the new target. Escape closes and

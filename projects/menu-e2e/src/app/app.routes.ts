@@ -8,6 +8,7 @@ import { RtlPage } from './pages/rtl';
 import { SelectPage } from './pages/select';
 import { StyledPage } from './pages/styled';
 import { TwoPage } from './pages/two';
+import { OverlayLifecyclePage } from './pages/overlay-lifecycle';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'basic' },
@@ -20,4 +21,5 @@ export const routes: Routes = [
   { path: 'select', component: SelectPage },
   { path: 'styled', component: StyledPage },
   { path: 'content', component: ContentPage },
+  { path: 'overlay-lifecycle', component: OverlayLifecyclePage },
 ];
