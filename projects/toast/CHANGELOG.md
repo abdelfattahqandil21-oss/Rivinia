@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — proposed synchronized 1.1.0 (not published)
+
+- Rich-color Toasts now derive a dark status-tinted background with a white foreground, preserving the existing status token precedence while meeting the built-in palette contrast thresholds. The enhancement is guarded by `@supports`; accessible Toast-owned background pairs remain active when `color-mix()` is unsupported. Consumer-supplied status colors remain the consumer's contrast responsibility.
+
 ## 1.0.4
 
 - Update published internal dependency metadata and version-pinned documentation links for the synchronized Rivinia 1.0 patch. No public API changes.
@@ -19,4 +23,3 @@
 ## 1.0.0
 
 - First stable release of the notification queue, action handling, and optional UI list.
-

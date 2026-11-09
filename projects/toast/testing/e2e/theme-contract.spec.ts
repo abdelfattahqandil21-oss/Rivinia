@@ -2,13 +2,14 @@ import { expect, test } from '@playwright/test';
 
 function contrastRatio(foreground: string, background: string): number {
   const luminance = (color: string) => {
-    const channels = color
-      .match(/[\d.]+/g)
-      ?.slice(0, 3)
-      .map(Number);
+    const normalized = color.match(/^color\(srgb\s+([\d.e+-]+)\s+([\d.e+-]+)\s+([\d.e+-]+)/i);
+    const rgb = color.match(/^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i);
+    const channels = normalized
+      ? normalized.slice(1).map(Number)
+      : rgb?.slice(1).map((channel) => Number(channel) / 255);
     if (!channels || channels.length !== 3) throw new Error(`Unexpected computed color: ${color}`);
     const [red, green, blue] = channels.map((channel) => {
-      const srgb = channel / 255;
+      const srgb = channel;
       return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
     });
     return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
@@ -165,53 +166,70 @@ test('rich status text, controls, icons, and focus indicators meet contrast thre
         .evaluate((root, value) => root.setAttribute('data-rv-theme', value), mode);
     }
 
-    const action = page.locator('#rich-list .rv-toast-action').first();
-    await action.focus();
     const rows = await page.locator('#rich-list .rv-toast').evaluateAll((elements) =>
       elements.map((row) => {
         const foreground = (element: Element) => getComputedStyle(element).color;
         const message = row.querySelector('.rv-toast-message')!;
         const icon = row.querySelector('.rv-toast-icon')!;
         const buttons = [...row.querySelectorAll('button')];
-        const focused = row.querySelector(':focus-visible');
-        const outline = focused ? getComputedStyle(focused) : null;
         return {
           kind: row.getAttribute('data-kind'),
           background: getComputedStyle(row).backgroundColor,
           message: foreground(message),
           icon: foreground(icon),
           buttons: buttons.map(foreground),
-          focusedOutline: outline
-            ? {
-                color: outline.outlineColor,
-                style: outline.outlineStyle,
-                width: outline.outlineWidth,
-              }
-            : null,
         };
       }),
     );
 
+    const messageRatios: number[] = [];
+    const controlRatios: number[] = [];
+    const iconRatios: number[] = [];
+    const focusRatios: number[] = [];
     for (const row of rows) {
-      expect(
-        contrastRatio(row.message, row.background),
-        `${mode} ${row.kind} message foreground/background`,
-      ).toBeGreaterThanOrEqual(4.5);
-      expect(
-        contrastRatio(row.icon, row.background),
-        `${mode} ${row.kind} status icon/background`,
-      ).toBeGreaterThanOrEqual(3);
+      messageRatios.push(contrastRatio(row.message, row.background));
+      iconRatios.push(contrastRatio(row.icon, row.background));
       for (const button of row.buttons) {
-        expect(
-          contrastRatio(button, row.background),
-          `${mode} ${row.kind} action/dismiss label/background`,
-        ).toBeGreaterThanOrEqual(4.5);
+        controlRatios.push(contrastRatio(button, row.background));
       }
     }
 
-    const focused = rows[0]?.focusedOutline;
-    expect(focused?.style).toBe('solid');
-    expect(Number.parseFloat(focused?.width ?? '0')).toBeGreaterThanOrEqual(2);
-    expect(contrastRatio(focused?.color ?? '', rows[0]!.background)).toBeGreaterThanOrEqual(3);
+    const buttons = page.locator('#rich-list .rv-toast button');
+    for (let index = 0; index < (await buttons.count()); index += 1) {
+      const button = buttons.nth(index);
+      await button.focus();
+      const focus = await button.evaluate((element) => {
+        const style = getComputedStyle(element);
+        const row = element.closest('.rv-toast')!;
+        return {
+          kind: row.getAttribute('data-kind'),
+          background: getComputedStyle(row).backgroundColor,
+          color: style.outlineColor,
+          style: style.outlineStyle,
+          width: style.outlineWidth,
+        };
+      });
+      expect(focus.style, `${mode} ${focus.kind} control focus outline`).toBe('solid');
+      expect(Number.parseFloat(focus.width)).toBeGreaterThanOrEqual(2);
+      focusRatios.push(contrastRatio(focus.color, focus.background));
+    }
+
+    expect(Math.min(...messageRatios), `${mode} minimum message contrast`).toBeGreaterThanOrEqual(
+      4.5,
+    );
+    expect(Math.min(...controlRatios), `${mode} minimum control contrast`).toBeGreaterThanOrEqual(
+      4.5,
+    );
+    expect(Math.min(...iconRatios), `${mode} minimum icon contrast`).toBeGreaterThanOrEqual(3);
+    expect(
+      Math.min(...focusRatios),
+      `${mode} minimum focus-indicator contrast`,
+    ).toBeGreaterThanOrEqual(3);
+    console.info(
+      `[toast contrast ${mode}] min text=${Math.min(...messageRatios).toFixed(2)}:1 ` +
+        `controls=${Math.min(...controlRatios).toFixed(2)}:1 ` +
+        `icons=${Math.min(...iconRatios).toFixed(2)}:1 ` +
+        `focus=${Math.min(...focusRatios).toFixed(2)}:1`,
+    );
   }
 });

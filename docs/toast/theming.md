@@ -33,8 +33,9 @@ With `richColors=true`, each status token is mixed with 45% black for the card
 background and the card uses white foreground text. This keeps the Theme's
 status hue and package-token override while making the built-in light and dark
 Theme palettes readable as text backgrounds. The shipped Theme pairs measure
-at least 5.1:1 in both schemes. Browsers without `color-mix()` use an accessible
-Toast-owned background pair instead. Rich-color values supplied by another
+at least 5.1:1 in both schemes. A positive `@supports` query gates the
+`color-mix()` enhancement; browsers without it retain the accessible static
+Toast-owned background pairs. Rich-color values supplied by another
 styling adapter or by a consumer are their responsibility to keep accessible;
 Toast does not infer a foreground from arbitrary colors.
 
