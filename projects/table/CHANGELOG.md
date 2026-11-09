@@ -13,6 +13,8 @@
 - Add `getRowIndex` for exact manual-page row positions. Unknown positions omit
   `aria-rowindex`, and unknown row totals use the ARIA `-1` value instead of an
   invented page offset.
+- Keep the first visible row anchored when client page size changes; manual
+  pagination restarts at page 0 rather than assuming offset-based server pages.
 
 ## 1.0.4
 

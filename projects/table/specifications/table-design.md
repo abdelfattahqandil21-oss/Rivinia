@@ -527,8 +527,11 @@ interface TableState {
 feature, without a service or persistence assumption — the consumer stores it.
 
 **Page reset uses `linkedSignal`** (verified stable, `@publicApi 20.0` in the
-installed `core.d.ts`): `page` is linked to the filter/sort signature, so it
-returns to 0 when the result set changes, while the user can still set it.
+installed `core.d.ts`): `page` returns to 0 when the filter/sort/search query
+changes, while an explicit page can still be set. Changing page size in client
+mode preserves the previous first visible row and clamps to the last known
+page. With `manualPagination`, page size resets to 0 because the table cannot
+assume the server's offset model.
 
 ### 4.4 Row model
 

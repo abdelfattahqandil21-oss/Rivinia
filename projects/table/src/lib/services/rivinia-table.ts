@@ -502,7 +502,9 @@ export class RiviniaTable<T> {
   /**
    * 0-based page. A linked signal: it returns to 0 when the filter, sort or
    * search changes (the result set changed under the user), while an explicit
-   * `set()` still wins until the next such change.
+   * `set()` still wins until the next such change. Changing page size keeps
+   * the previous first visible row on client pages; manual pages reset to 0
+   * because the controller cannot assume that the server uses offset paging.
    */
   readonly page: WritableSignal<number>;
   readonly pageSize: WritableSignal<number>;
@@ -570,9 +572,34 @@ export class RiviniaTable<T> {
     );
     this.pageSize = signal(this.defaultPageSize);
     this.page = linkedSignal<string, number>({
-      source: () => JSON.stringify([this.filters(), this.sorting(), this.globalSearch()]),
-      computation: (_signature, previous) =>
-        previous === undefined ? normalizePage(initial.page ?? 0) : 0,
+      source: () =>
+        JSON.stringify([
+          this.filters(),
+          this.sorting(),
+          this.globalSearch(),
+          this.pageSize(),
+        ]),
+      computation: (signature, previous) => {
+        if (previous === undefined) return normalizePage(initial.page ?? 0);
+        const current = JSON.parse(signature) as [unknown, unknown, unknown, number];
+        const before = JSON.parse(previous.source) as [unknown, unknown, unknown, number];
+        if (JSON.stringify(current.slice(0, 3)) !== JSON.stringify(before.slice(0, 3))) {
+          return 0;
+        }
+
+        const previousSize = Number.isFinite(before[3]) ? Math.floor(before[3]) : 0;
+        const currentSize = Number.isFinite(current[3]) ? Math.floor(current[3]) : 0;
+        if (previousSize === currentSize) return previous.value;
+        if (this.options().manualPagination) return 0;
+        if (previousSize <= 0 || currentSize <= 0) return 0;
+
+        const firstVisibleIndex = previous.value * previousSize;
+        const nextPage = Math.floor(firstVisibleIndex / currentSize);
+        const total = this.total();
+        if (total < 0) return nextPage;
+        const lastPage = Math.max(0, Math.ceil(total / currentSize) - 1);
+        return Math.min(nextPage, lastPage);
+      },
     });
 
     this.rows = computed<readonly TableRow<T>[]>(() => {

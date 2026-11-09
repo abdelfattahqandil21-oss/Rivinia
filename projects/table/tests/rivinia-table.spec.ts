@@ -246,6 +246,7 @@ describe('sorting, filtering and search', () => {
 
     table.filters.set([{ column: 'city', value: 'Cairo' }]);
     expect(table.page()).toBe(0);
+    expect(pageIds(table)).toEqual([1, 3]);
   });
 
   it('returns to page 0 when the sort or the search changes', () => {
@@ -270,11 +271,101 @@ describe('sorting, filtering and search', () => {
     expect(pageIds(table)).toEqual([6]);
   });
 
+  it('keeps selection attached to row IDs while sorting changes visual positions', () => {
+    const { table } = makeTable({ selection: { mode: 'multi' } });
+    table.selection.select(1);
+    table.sorting.set([{ column: 'salary', direction: 'desc' }]);
+
+    expect(ids(table)).toEqual([3, 6, 5, 1, 4, 2]);
+    expect(table.selection.isSelected(1)).toBe(true);
+    expect(table.selection.ids()).toEqual([1]);
+    expect(table.state().selected).toEqual([1]);
+  });
+
+  it('restores a combined sort, filter, page size, page and selection coherently', () => {
+    const { table } = makeTable({ selection: { mode: 'multi' } });
+    const saved: TableState = {
+      ...table.state(),
+      sort: [{ column: 'salary', direction: 'desc' }],
+      filters: [{ column: 'city', value: 'Cairo' }],
+      page: 1,
+      pageSize: 1,
+      selectionMode: 'include',
+      selected: [6],
+    };
+
+    table.setState(saved);
+    expect(table.page()).toBe(1);
+    expect(pageIds(table)).toEqual([6]);
+    expect(table.selection.ids()).toEqual([6]);
+
+    table.selection.clear();
+    table.setState(saved);
+    expect(table.state()).toMatchObject(saved);
+    expect(pageIds(table)).toEqual([6]);
+  });
+
+  it('keeps a valid page anchor when page size changes and clamps past the result end', () => {
+    const { table } = makeTable();
+    table.pageSize.set(2);
+    table.page.set(2);
+    expect(pageIds(table)).toEqual([5, 6]);
+
+    table.pageSize.set(3);
+    expect(table.page()).toBe(1);
+    expect(pageIds(table)).toEqual([4, 5, 6]);
+
+    table.page.set(10);
+    table.pageSize.set(4);
+    expect(table.page()).toBe(1);
+    expect(pageIds(table)).toEqual([5, 6]);
+  });
+
+  it('restarts manual pagination when page size changes instead of assuming offsets', () => {
+    const { table } = makeTable({
+      manualPagination: true,
+      rowCount: () => 100,
+    });
+    table.page.set(3);
+    table.pageSize.set(50);
+
+    expect(table.page()).toBe(0);
+    expect(table.request()).toMatchObject({ page: 0, pageSize: 50 });
+  });
+
   it('skips the client sort and filter stages when the caller owns them', () => {
     const { table } = makeTable({ manualFiltering: true, manualSorting: true });
     table.filters.set([{ column: 'city', value: 'Giza' }]);
     table.sorting.set([{ column: 'salary', direction: 'asc' }]);
     expect(ids(table)).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+
+  it('keeps manual sort, filter and page data consumer-owned while exposing the request', () => {
+    const { table } = makeTable(
+      {
+        manualFiltering: true,
+        manualSorting: true,
+        manualPagination: true,
+        rowCount: () => 100,
+        pageSize: 2,
+      },
+      EMPLOYEES.slice(2, 4),
+    );
+    table.filters.set([{ column: 'city', value: 'Cairo' }]);
+    table.sorting.set([{ column: 'salary', direction: 'desc' }]);
+    table.globalSearch.set('remote query');
+    table.page.set(1);
+
+    expect(ids(table)).toEqual([3, 4]);
+    expect(pageIds(table)).toEqual([3, 4]);
+    expect(table.total()).toBe(100);
+    expect(table.request()).toEqual({
+      page: 1,
+      pageSize: 2,
+      sort: [{ column: 'salary', direction: 'desc' }],
+      filters: [{ column: 'city', value: 'Cairo' }],
+      search: 'remote query',
+    });
   });
 
   it('trusts rowCount and skips slicing when pagination is manual', () => {

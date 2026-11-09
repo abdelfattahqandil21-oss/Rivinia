@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { createTable, tableColumn } from '@rivinia/table';
 import type { TableColumn } from '@rivinia/table';
+import type { TableRequest } from '@rivinia/table';
 import { RiviniaTableComponent } from '@rivinia/table/ui';
 import type { TableUiSelectionChange } from '@rivinia/table/ui';
 import { describe, expect, it } from 'vitest';
@@ -65,6 +66,87 @@ class ManualPageConsumer {
   }
 }
 
+@Component({
+  selector: 'rv-table-client-pagination-consumer',
+  imports: [RiviniaTableComponent],
+  template: `
+    <rv-table
+      ariaLabel="Client paged employees"
+      [columns]="columns"
+      [rows]="table.pageRows()"
+      [totalRows]="table.total()"
+      [selectable]="true"
+      [selected]="selected()"
+      (selectionChange)="onSelectionChange($event)"
+    />
+  `,
+})
+class ClientPaginationConsumer {
+  readonly columns = COLUMNS;
+  readonly table = createTable<Employee>(() => ({
+    columns: () => COLUMNS,
+    data: () => EMPLOYEES,
+    pageSize: 2,
+    selection: { mode: 'multi' },
+  }));
+  readonly selected = computed(() => new Set(this.table.selection.ids()));
+
+  onSelectionChange(change: TableUiSelectionChange): void {
+    if (change.row !== null) this.table.selection.toggle(change.row.id);
+  }
+}
+
+interface PageResponse {
+  readonly items: readonly Employee[];
+  readonly total: number;
+}
+
+class AsyncServerConsumer {
+  readonly columns = COLUMNS;
+  readonly loadedRows = signal<readonly Employee[]>([]);
+  readonly rowCount = signal(-1);
+  readonly table = createTable<Employee>(() => ({
+    columns: () => COLUMNS,
+    data: () => this.loadedRows(),
+    manualFiltering: true,
+    manualSorting: true,
+    manualPagination: true,
+    rowCount: () => this.rowCount(),
+    selection: { mode: 'multi' },
+  }));
+  readonly pending: Array<{
+    readonly request: TableRequest;
+    readonly resolve: (response: PageResponse) => void;
+  }> = [];
+  private generation = 0;
+
+  load(): Promise<void> {
+    const generation = ++this.generation;
+    const request = this.table.request();
+    return new Promise<PageResponse>((resolve) => this.pending.push({ request, resolve })).then(
+      (response) => {
+        if (generation !== this.generation) return;
+        this.loadedRows.set(response.items);
+        this.rowCount.set(response.total);
+      },
+    );
+  }
+}
+
+@Component({
+  selector: 'rv-table-async-server-consumer',
+  imports: [RiviniaTableComponent],
+  template: `
+    <rv-table
+      ariaLabel="Asynchronously loaded employees"
+      [columns]="columns"
+      [rows]="table.pageRows()"
+      [totalRows]="table.total()"
+    />
+  `,
+})
+class AsyncServerConsumerComponent extends AsyncServerConsumer {}
+
 function mount(): {
   readonly fixture: ComponentFixture<ManualPageConsumer>;
   readonly host: ManualPageConsumer;
@@ -72,6 +154,36 @@ function mount(): {
 } {
   TestBed.configureTestingModule({ imports: [ManualPageConsumer] });
   const fixture = TestBed.createComponent(ManualPageConsumer);
+  fixture.detectChanges();
+  return {
+    fixture,
+    host: fixture.componentInstance,
+    root: fixture.nativeElement as HTMLElement,
+  };
+}
+
+function mountClient(): {
+  readonly fixture: ComponentFixture<ClientPaginationConsumer>;
+  readonly host: ClientPaginationConsumer;
+  readonly root: HTMLElement;
+} {
+  TestBed.configureTestingModule({ imports: [ClientPaginationConsumer] });
+  const fixture = TestBed.createComponent(ClientPaginationConsumer);
+  fixture.detectChanges();
+  return {
+    fixture,
+    host: fixture.componentInstance,
+    root: fixture.nativeElement as HTMLElement,
+  };
+}
+
+function mountAsync(): {
+  readonly fixture: ComponentFixture<AsyncServerConsumerComponent>;
+  readonly host: AsyncServerConsumerComponent;
+  readonly root: HTMLElement;
+} {
+  TestBed.configureTestingModule({ imports: [AsyncServerConsumerComponent] });
+  const fixture = TestBed.createComponent(AsyncServerConsumerComponent);
   fixture.detectChanges();
   return {
     fixture,
@@ -169,6 +281,71 @@ describe('@rivinia/table built-package consumer', () => {
     fixture.detectChanges();
     expect(dataRows(root).map((row) => row.hasAttribute('aria-rowindex'))).toEqual([false, false]);
     expect(root.querySelector('[role="grid"]')?.getAttribute('aria-rowcount')).toBe('-1');
+    fixture.destroy();
+  });
+
+  it('preserves the first visible row and selection when page size changes', () => {
+    const { fixture, host, root } = mountClient();
+    host.table.page.set(2);
+    fixture.detectChanges();
+    clickRow(root, 0);
+    fixture.detectChanges();
+    expect(host.table.selection.ids()).toEqual([5]);
+
+    host.table.pageSize.set(3);
+    fixture.detectChanges();
+    expect(host.table.page()).toBe(1);
+    expect(host.table.pageRows().map((row) => row.id)).toEqual([4, 5]);
+    expect(host.table.selection.ids()).toEqual([5]);
+    expect(dataRows(root)[1].getAttribute('aria-selected')).toBe('true');
+    expect(dataRows(root).map((row) => row.getAttribute('aria-rowindex'))).toEqual(['5', '6']);
+    fixture.destroy();
+  });
+
+  it('lets the consumer discard late server responses after a newer query wins', async () => {
+    const { fixture, host, root } = mountAsync();
+    host.table.page.set(3);
+    host.table.filters.set([{ column: 'name', value: 'A' }]);
+    const stale = host.load();
+    host.table.filters.set([{ column: 'name', value: 'Mona' }]);
+    const current = host.load();
+
+    expect(host.pending.map((entry) => entry.request.page)).toEqual([0, 0]);
+    expect(host.pending.map((entry) => entry.request.filters[0]?.value)).toEqual(['A', 'Mona']);
+
+    host.pending[1].resolve({ items: [EMPLOYEES[1]], total: 1 });
+    await current;
+    fixture.detectChanges();
+    host.pending[0].resolve({ items: [EMPLOYEES[0]], total: 1 });
+    await stale;
+    fixture.detectChanges();
+
+    expect(host.table.rows().map((row) => row.id)).toEqual([2]);
+    expect(dataRows(root)[0].querySelector('[role="gridcell"]')?.textContent?.trim()).toContain(
+      'Mona',
+    );
+    fixture.destroy();
+  });
+
+  it('renders an empty server result instead of retaining the previous query rows', async () => {
+    const { fixture, host, root } = mountAsync();
+    host.table.filters.set([{ column: 'name', value: 'Mona' }]);
+    const first = host.load();
+    host.pending[0].resolve({ items: [EMPLOYEES[1]], total: 1 });
+    await first;
+    fixture.detectChanges();
+    expect(dataRows(root)).toHaveLength(1);
+
+    host.table.filters.set([{ column: 'name', value: 'Nobody' }]);
+    const empty = host.load();
+    host.pending[1].resolve({ items: [], total: 0 });
+    await empty;
+    fixture.detectChanges();
+
+    expect(host.table.rows()).toEqual([]);
+    expect(host.table.total()).toBe(0);
+    expect(host.table.pageCount()).toBe(0);
+    expect(dataRows(root)).toEqual([]);
     fixture.destroy();
   });
 });

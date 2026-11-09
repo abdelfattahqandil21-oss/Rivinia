@@ -3,6 +3,25 @@
 **Owner:** Rivinia maintainers
 **Purpose:** dated record of repository architecture and workflow changes, separate from npm package histories.
 
+## 2026-11-10 — Phase D2 Table query/pagination composition (in progress)
+
+- Ownership map: Table builds stable row IDs, applies client filtering/search
+  unless `manualFiltering`, applies client sorting unless `manualSorting`, then
+  slices unless `manualPagination`; spans consume `pageRows`. `request()` is a
+  serializable description only. The consumer owns fetches, loading and
+  out-of-order response policy; Table has no HTTP request lifecycle to cancel.
+- Built-package consumer RED: on client page 2 at size 2, changing to size 3
+  left `page` at 2, producing an empty page and hiding the previously visible,
+  selected row. Client page-size changes now preserve the previous first row
+  when possible and clamp to the last known page. Manual pagination restarts
+  at page 0 rather than assuming offset-based server paging.
+- Added built-output consumer coverage for page-size changes with selection and
+  rendered ARIA positions, controlled response reordering (newer response wins
+  even when the older response resolves later), and an empty server response
+  replacing prior rows. Core coverage combines sort/filter/page/selection
+  restore and verifies manual transformations leave data changes to the
+  consumer. The full Table suite is 234/234 after these changes.
+
 ## 2026-11-10 — Phase D Table audit (in progress)
 
 - Reproduced a selection integrity defect with a manual-pagination controller:
