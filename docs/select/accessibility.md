@@ -60,6 +60,37 @@ The shipped DOM (measured in Chromium; the accessibility tree is committed under
   scroll with the rows and the filter box still sticks to the top edge;
 - focus physically moves into the list, so there is no `aria-activedescendant`.
 
+### Interaction ownership and focus model
+
+There is intentionally **no `role="combobox"` and no `role="listbox"`** in
+this widget. The visible trigger is the named button that owns the expanded
+state and controls the popup menu. The rows container owns `role="menu"`; its
+single- and multi-select rows are menu items (`menuitemradio` and
+`menuitemcheckbox`). This follows the menu-button interaction model, not the
+combobox pattern that keeps focus on a combobox and points to an active option
+with `aria-activedescendant`.
+
+DOM focus moves to the active menu item, with one row at `tabindex="0"` and
+the other rows at `-1`. The searchable filter and projected footer remain
+independent controls beside the menu, so the menu does not claim an input or a
+button as one of its children. Tab and Shift+Tab traverse those controls in
+their natural order; focus leaving the panel closes it. The footer can contain
+a plain button, input, or nested Menu without changing the menu's row-only
+ownership.
+
+The real-consumer checks in
+[`e2e/select/a11y.spec.ts`](../../e2e/select/a11y.spec.ts#L89) verify the
+trigger-to-menu relationship and that only menu-item roles are inside the
+menu. [`e2e/overlay-lifecycle.spec.ts`](../../e2e/overlay-lifecycle.spec.ts#L165)
+checks the actual relationships; its Chromium accessibility-tree assertion
+also confirms the projected plain button and textbox remain independent
+controls. Separate cases verify their native keyboard behavior and the filter →
+active row → footer Tab sequence with a single tabbable row
+([plain controls](../../e2e/overlay-lifecycle.spec.ts#L227),
+[Tab order](../../e2e/overlay-lifecycle.spec.ts#L255)). These browser/axe checks
+do not replace screen-reader testing; that remains a release-readiness gap
+below.
+
 Consequences to be aware of:
 
 - Screen readers announce a menu, not a listbox and not a native `<select>`. If
