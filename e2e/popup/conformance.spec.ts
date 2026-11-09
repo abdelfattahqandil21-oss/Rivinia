@@ -174,7 +174,8 @@ const listenerLedger = () => {
     pendingFrames.delete(id);
     cancelFrame(id);
   };
-  (window as unknown as Record<string, unknown>).__pendingAnimationFrames = () => pendingFrames.size;
+  (window as unknown as Record<string, unknown>).__pendingAnimationFrames = () =>
+    pendingFrames.size;
 };
 
 /** A fresh page with the component under test centered in the viewport. */
@@ -248,22 +249,128 @@ async function openFromKeyboard(page: Page, adapter: Adapter): Promise<void> {
 }
 
 /**
- * Resize the phone viewport and prove the change did not also scroll the
- * document.
- *
- * A document scroll closes the panel by design, so a clamped scroll offset
- * would close it for a reason this suite is not testing — and the "stays open"
- * case would fail while the "closes" case would pass with the policy deleted.
- * Throwing here is what keeps both tests measuring the resize rule.
+ * Resize while keeping the anchor inside the visual viewport. Per D99, page
+ * scroll repositions an anchored popup and dismisses it only after the trigger
+ * leaves the viewport; a changed scrollY alone is not a dismissal cause.
  */
-async function resizeWithoutScrolling(page: Page, width: number, height: number): Promise<void> {
-  const before = await page.evaluate(() => window.scrollY);
+async function resizeWithAnchorInViewport(
+  page: Page,
+  adapter: Adapter,
+  width: number,
+  height: number,
+): Promise<void> {
+  await page.evaluate(
+    ({ triggerSelector, panelSelector }) => {
+      const trace: Array<{ event: string; panelOpen: boolean; triggerOutsideViewport: boolean }> =
+        [];
+      const record = (event: string) => {
+        const trigger = document.querySelector(triggerSelector)?.getBoundingClientRect();
+        const panel = document.querySelector(panelSelector);
+        const viewport = window.visualViewport;
+        const left = viewport?.offsetLeft ?? 0;
+        const top = viewport?.offsetTop ?? 0;
+        const right = left + (viewport?.width ?? innerWidth);
+        const bottom = top + (viewport?.height ?? innerHeight);
+        trace.push({
+          event,
+          panelOpen: panel?.matches(':popover-open') ?? false,
+          triggerOutsideViewport:
+            !trigger ||
+            trigger.right <= left ||
+            trigger.left >= right ||
+            trigger.bottom <= top ||
+            trigger.top >= bottom,
+        });
+      };
+      window.addEventListener('scroll', () => record('window'), true);
+      document.addEventListener('scroll', () => record('document'), true);
+      window.visualViewport?.addEventListener('scroll', () => record('visualViewport'), true);
+      (window as unknown as Record<string, unknown>).__popupResizeScrollTrace = trace;
+    },
+    { triggerSelector: adapter.trigger, panelSelector: adapter.panel },
+  );
+
+  const snapshot = () =>
+    page.evaluate((triggerSelector) => {
+      const rect = (element: Element | null) => {
+        if (!element) return null;
+        const {
+          x,
+          y,
+          width: elementWidth,
+          height: elementHeight,
+        } = element.getBoundingClientRect();
+        return { x, y, width: elementWidth, height: elementHeight };
+      };
+      const active = document.activeElement;
+      const panel = active?.closest('.rv-menu-panel, .rv-select-popup-panel') ?? null;
+      const trigger = document.querySelector(triggerSelector);
+      const triggerBox = trigger?.getBoundingClientRect() ?? null;
+      const viewport = window.visualViewport;
+      const left = viewport?.offsetLeft ?? 0;
+      const top = viewport?.offsetTop ?? 0;
+      const right = left + (viewport?.width ?? innerWidth);
+      const bottom = top + (viewport?.height ?? innerHeight);
+      return {
+        window: { width: innerWidth, height: innerHeight, scrollY },
+        visualViewport: window.visualViewport
+          ? {
+              width: visualViewport.width,
+              height: visualViewport.height,
+              offsetTop: visualViewport.offsetTop,
+              pageTop: visualViewport.pageTop,
+            }
+          : null,
+        document: {
+          clientHeight: document.documentElement.clientHeight,
+          scrollHeight: document.documentElement.scrollHeight,
+        },
+        active: active
+          ? {
+              tag: active.tagName,
+              id: active.id,
+              className: (active as HTMLElement).className,
+              rect: rect(active),
+            }
+          : null,
+        trigger: rect(trigger),
+        triggerOutsideViewport:
+          !triggerBox ||
+          triggerBox.right <= left ||
+          triggerBox.left >= right ||
+          triggerBox.bottom <= top ||
+          triggerBox.top >= bottom,
+        panel: rect(panel),
+      };
+    }, adapter.trigger);
+  const before = await snapshot();
   await page.setViewportSize({ width, height });
-  await page.waitForTimeout(120);
-  const after = await page.evaluate(() => window.scrollY);
-  if (after !== before) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  const scrollTrace = await page.evaluate(
+    () =>
+      (window as unknown as Record<string, unknown>).__popupResizeScrollTrace as Array<{
+        event: string;
+        panelOpen: boolean;
+        triggerOutsideViewport: boolean;
+      }>,
+  );
+  const scrollDismissals = scrollTrace.filter(
+    (event) => event.panelOpen && event.triggerOutsideViewport,
+  );
+  if (scrollDismissals.length > 0) {
     throw new Error(
-      `the viewport change also scrolled the document (${before} -> ${after}): the panel could have closed on the scroll rule`,
+      `viewport resizing scrolled the open Popup's trigger out of view; scroll could dismiss it; events=${JSON.stringify(scrollDismissals)}`,
+    );
+  }
+  const after = await snapshot();
+  if (after.triggerOutsideViewport) {
+    throw new Error(
+      `the viewport change moved the trigger outside the visual viewport; scroll could dismiss the popup; geometry=${JSON.stringify({ before, after })}`,
     );
   }
 }
@@ -280,7 +387,9 @@ function activeElementKind(page: Page): Promise<string> {
 
 async function settlePopupMotion(page: Page, selector: string): Promise<void> {
   await page.locator(selector).evaluate(async (panel) => {
-    await Promise.all(panel.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+    await Promise.all(
+      panel.getAnimations().map((animation) => animation.finished.catch(() => undefined)),
+    );
   });
 }
 
@@ -329,7 +438,9 @@ for (const adapter of ADAPTERS) {
       expect(await activeElementKind(page)).toContain('trigger');
     });
 
-    test('page scroll keeps the panel attached while its trigger stays visible', async ({ page }) => {
+    test('page scroll keeps the panel attached while its trigger stays visible', async ({
+      page,
+    }) => {
       await gotoHost(page, adapter);
       await makeScrollable(page);
       await openAndEnter(page, adapter);
@@ -339,7 +450,12 @@ for (const adapter of ADAPTERS) {
         ({ trigger, panel }) => {
           const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();
           const panelBox = document.querySelector(panel)!.getBoundingClientRect();
-          return { scrollY, triggerTop: triggerBox.top, panelTop: panelBox.top, gap: panelBox.top - triggerBox.bottom };
+          return {
+            scrollY,
+            triggerTop: triggerBox.top,
+            panelTop: panelBox.top,
+            gap: panelBox.top - triggerBox.bottom,
+          };
         },
         { trigger: adapter.trigger, panel: adapter.panel },
       );
@@ -351,14 +467,21 @@ for (const adapter of ADAPTERS) {
         ({ trigger, panel }) => {
           const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();
           const panelBox = document.querySelector(panel)!.getBoundingClientRect();
-          return { scrollY, triggerTop: triggerBox.top, panelTop: panelBox.top, gap: panelBox.top - triggerBox.bottom };
+          return {
+            scrollY,
+            triggerTop: triggerBox.top,
+            panelTop: panelBox.top,
+            gap: panelBox.top - triggerBox.bottom,
+          };
         },
         { trigger: adapter.trigger, panel: adapter.panel },
       );
       expect(after.scrollY).toBeGreaterThan(before.scrollY);
       expect(after.triggerTop).toBeLessThan(before.triggerTop);
       expect(Math.abs(after.gap - before.gap)).toBeLessThanOrEqual(1);
-      expect(Math.abs((after.panelTop - before.panelTop) - (after.triggerTop - before.triggerTop))).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(after.panelTop - before.panelTop - (after.triggerTop - before.triggerTop)),
+      ).toBeLessThanOrEqual(1);
     });
 
     test('scrolling the trigger completely out of view closes it', async ({ page }) => {
@@ -370,7 +493,9 @@ for (const adapter of ADAPTERS) {
       const box = await trigger.boundingBox();
       const viewportHeight = page.viewportSize()?.height ?? 0;
       if (!box || (box.bottom > 0 && box.top < viewportHeight)) {
-        throw new Error('the trigger must be fully outside the viewport before asserting dismissal');
+        throw new Error(
+          'the trigger must be fully outside the viewport before asserting dismissal',
+        );
       }
       await expect(page.locator(adapter.panel)).toHaveCount(0);
     });
@@ -390,7 +515,9 @@ for (const adapter of ADAPTERS) {
       await expect(page.locator(adapter.panel)).toBeVisible();
     });
 
-    test('closing cancels pending positioning work and removes every listener', async ({ page }) => {
+    test('closing cancels pending positioning work and removes every listener', async ({
+      page,
+    }) => {
       await gotoHost(page, adapter);
       const before = await page.evaluate(() => window.__listenerLedger());
       await openAndEnter(page, adapter);
@@ -465,12 +592,16 @@ for (const adapter of ADAPTERS) {
         ({ trigger, panel }) => {
           const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();
           const panelBox = document.querySelector(panel)!.getBoundingClientRect();
-          return { triggerTop: triggerBox.top, panelTop: panelBox.top, gap: panelBox.top - triggerBox.bottom };
+          return {
+            triggerTop: triggerBox.top,
+            panelTop: panelBox.top,
+            gap: panelBox.top - triggerBox.bottom,
+          };
         },
         { trigger: adapter.trigger, panel: adapter.panel },
       );
 
-      await resizeWithoutScrolling(page, PHONE.width, PHONE.height - 100);
+      await resizeWithAnchorInViewport(page, adapter, PHONE.width, PHONE.height - 100);
       const panel = page.locator(adapter.panel);
       await expect(panel).toBeVisible();
       await settlePopupMotion(page, adapter.panel);
@@ -478,15 +609,21 @@ for (const adapter of ADAPTERS) {
         ({ trigger, panel }) => {
           const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();
           const panelBox = document.querySelector(panel)!.getBoundingClientRect();
-          return { triggerTop: triggerBox.top, panelTop: panelBox.top, gap: panelBox.top - triggerBox.bottom };
+          return {
+            triggerTop: triggerBox.top,
+            panelTop: panelBox.top,
+            gap: panelBox.top - triggerBox.bottom,
+          };
         },
         { trigger: adapter.trigger, panel: adapter.panel },
       );
       expect(Math.abs(after.gap - before.gap)).toBeLessThanOrEqual(1);
-      expect(Math.abs((after.panelTop - before.panelTop) - (after.triggerTop - before.triggerTop))).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(after.panelTop - before.panelTop - (after.triggerTop - before.triggerTop)),
+      ).toBeLessThanOrEqual(1);
     });
 
-    test('a width change closes it, even with the filter focused', async ({ page }) => {
+    test('a width change closes it while focus remains inside the panel', async ({ page }) => {
       // The exemption has to LOSE here: width is the axis the anchor sits on, so
       // the coordinates are stale no matter where the caret is. Without the
       // focus step this would pass even if the width check were deleted — and
@@ -495,7 +632,7 @@ for (const adapter of ADAPTERS) {
       await openOnPhone(page, adapter);
       if (adapter.editable) await page.locator(adapter.editable).focus();
 
-      await resizeWithoutScrolling(page, PHONE.height, PHONE.width);
+      await resizeWithAnchorInViewport(page, adapter, PHONE.height, PHONE.width);
       await expect(page.locator(adapter.panel)).toHaveCount(0);
     });
 
@@ -541,27 +678,31 @@ test.describe('mobile touch-scroll dismissal reproduction', () => {
         if (document.querySelector(root)!.contains(target)) {
           throw new Error('tap target must be outside the popup host');
         }
-        target.dispatchEvent(new PointerEvent('pointerdown', {
-          bubbles: true,
-          pointerId: 23,
-          pointerType: 'touch',
-          isPrimary: true,
-          clientX: 4,
-          clientY: innerHeight - 4,
-        }));
+        target.dispatchEvent(
+          new PointerEvent('pointerdown', {
+            bubbles: true,
+            pointerId: 23,
+            pointerType: 'touch',
+            isPrimary: true,
+            clientX: 4,
+            clientY: innerHeight - 4,
+          }),
+        );
       }, adapter.root);
       await expect(panel).toBeVisible();
 
       await page.evaluate(() => {
         const target = document.elementFromPoint(4, innerHeight - 4)!;
-        target.dispatchEvent(new PointerEvent('pointerup', {
-          bubbles: true,
-          pointerId: 23,
-          pointerType: 'touch',
-          isPrimary: true,
-          clientX: 4,
-          clientY: innerHeight - 4,
-        }));
+        target.dispatchEvent(
+          new PointerEvent('pointerup', {
+            bubbles: true,
+            pointerId: 23,
+            pointerType: 'touch',
+            isPrimary: true,
+            clientX: 4,
+            clientY: innerHeight - 4,
+          }),
+        );
       });
       await expect(panel).toHaveCount(0);
     });
@@ -591,7 +732,9 @@ test.describe('mobile touch-scroll dismissal reproduction', () => {
         { trigger: adapter.trigger, panel: adapter.panel },
       );
       await page.evaluate(() => window.scrollBy(0, 40));
-      await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+      await page.evaluate(
+        () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
+      );
       await expect(panel).toBeVisible();
       await settlePopupMotion(page, adapter.panel);
       const after = await page.evaluate(
@@ -612,7 +755,9 @@ test.describe('mobile touch-scroll dismissal reproduction', () => {
       expect(after.viewportHeight).toBe(before.viewportHeight);
       expect(after.triggerTop).toBeLessThan(before.triggerTop);
       expect(Math.abs(after.gap - before.gap)).toBeLessThanOrEqual(1);
-      expect(Math.abs((after.panelTop - before.panelTop) - (after.triggerTop - before.triggerTop))).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(after.panelTop - before.panelTop - (after.triggerTop - before.triggerTop)),
+      ).toBeLessThanOrEqual(1);
     });
 
     test(`${adapter.name}: a drag-scroll with a visible trigger keeps the panel attached`, async ({
@@ -632,7 +777,10 @@ test.describe('mobile touch-scroll dismissal reproduction', () => {
           const panelEl = document.querySelector(panel)!;
           const triggerBox = triggerEl.getBoundingClientRect();
           const panelBox = panelEl.getBoundingClientRect();
-          if (!document.elementFromPoint(4, innerHeight - 4) || host.contains(document.elementFromPoint(4, innerHeight - 4))) {
+          if (
+            !document.elementFromPoint(4, innerHeight - 4) ||
+            host.contains(document.elementFromPoint(4, innerHeight - 4))
+          ) {
             throw new Error('touch drag start must be outside the popup host');
           }
           return {
@@ -670,7 +818,9 @@ test.describe('mobile touch-scroll dismissal reproduction', () => {
         window.scrollBy(0, 40);
         event('pointerup', innerHeight - 54, 0);
       });
-      await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+      await page.evaluate(
+        () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
+      );
 
       await expect(panel).toBeVisible();
       await settlePopupMotion(page, adapter.panel);
@@ -690,7 +840,9 @@ test.describe('mobile touch-scroll dismissal reproduction', () => {
       expect(after.scrollY).toBeGreaterThan(before.scrollY);
       expect(after.triggerTop).toBeLessThan(before.triggerTop);
       expect(Math.abs(after.gap - before.gap)).toBeLessThanOrEqual(1);
-      expect(Math.abs((after.panelTop - before.panelTop) - (after.triggerTop - before.triggerTop))).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(after.panelTop - before.panelTop - (after.triggerTop - before.triggerTop)),
+      ).toBeLessThanOrEqual(1);
     });
   }
 });
