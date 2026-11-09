@@ -504,12 +504,13 @@ export class RiviniaSelectComponent implements FormValueControl<SelectChange> {
    * The filter box owns its keystrokes: typing, caret movement and space must
    * never reach the panel handler — otherwise the menu typeahead would steal
    * focus mid-word (measured: typed text lost). Only keys the panel must own
-   * bubble: Enter accepts the top match, Escape dismisses, arrows move focus
-   * within the list, Tab moves focus from the box into the list.
+   * bubble: Enter accepts the top match, Escape dismisses and arrows move focus
+   * within the list. Tab stays native so footers remain reachable.
    */
   protected onSearchKey(event: KeyboardEvent): void {
     switch (event.key) {
       case 'Tab':
+        if (event.shiftKey) return;
         event.preventDefault();
         event.stopPropagation();
         this.focusItem();

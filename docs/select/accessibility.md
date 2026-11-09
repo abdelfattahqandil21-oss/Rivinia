@@ -10,7 +10,8 @@ Single/multi share the same model:
 
 - **Open:** Enter / Space on the trigger, or click.
 - **Filter box (when `searchable`):** typing filters; the box owns its keystrokes
-  (spaces never leak to the typeahead). Tab moves focus **into the list**; Enter
+  (spaces never leak to the typeahead). Sequential Tab order moves from the filter
+  through the active option and any focusable footer controls; Enter
   picks the active option; Escape closes.
 - **List:** ArrowDown / ArrowUp move the active option (disabled options are
   skipped); Home / End jump to the first / last enabled option; Enter / Space
@@ -22,9 +23,14 @@ Single/multi share the same model:
   stays open. In searchable multi mode a pointer pick also preserves the query
   and filter focus; the active row remains unchanged.
 - Opening focuses the filter box (when searchable) or the first enabled option.
-  Closing resets the filter and returns focus to the trigger.
+  Tab and Shift+Tab follow the panel's native focus order, including projected
+  footer controls, and dismiss the panel when focus leaves it. Escape and
+  single-pick dismissal return focus to the trigger; closing resets the filter.
 - Escape already canceled by a projected child popup is left to that child, so
   the parent Select stays open and nested popups close one layer per key press.
+- Projected controls and nested popup menus own their keyboard events; their
+  Enter/Space and navigation keys do not activate or steal focus from a Select
+  option.
 - Outside mouse/pen presses close immediately. Touch closes only for a short
   outside tap; a touch drag used to scroll does not dismiss the panel.
 - Page scrolling repositions the panel while its trigger remains in the visual

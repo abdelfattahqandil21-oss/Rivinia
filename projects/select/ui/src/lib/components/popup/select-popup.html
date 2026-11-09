@@ -12,6 +12,7 @@
     [attr.data-positioned]="positioned()"
     [attr.data-top-layer]="topLayerSupported"
     (focusin)="onPanelFocusIn($event)"
+    (focusout)="onPanelFocusOut($event)"
     (keydown)="onPanelKey($event)"
     (scroll)="onPanelScroll($event)"
   >

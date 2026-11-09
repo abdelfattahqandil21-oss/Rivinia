@@ -2,6 +2,8 @@
 
 ## Unreleased — proposed synchronized 1.1.0 (not published)
 
+- Tab and Shift+Tab now traverse the filter, active option and focusable projected footer controls in sequence, then close the popup when focus leaves it. Footer controls and nested popup menus retain their keyboard events.
+- Projected interactive controls and nested Menu content keep keyboard ownership; Select does not expose a combobox role. The trigger remains a menu button, options use roving focus inside the named menu, and the filter and footer controls are separate focusable siblings.
 - Multi-select picks stay open without clearing the searchable query or losing filter focus; toggling a different row does not replace the active row. Outside scroll and touch dismissal follow the shared popup visibility policy.
 
 ## 1.0.4

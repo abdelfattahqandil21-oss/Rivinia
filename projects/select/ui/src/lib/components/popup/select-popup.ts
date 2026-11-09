@@ -164,8 +164,9 @@ export class SelectPopupItem {
  * ```
  *
  * Keyboard: Enter/Space/ArrowDown opens; Escape closes and refocuses the
- * trigger; arrows/Home/End move through enabled items; Tab closes and moves
- * on (non-modal by design). Outside pointer-down closes. SSR renders closed.
+ * trigger; arrows/Home/End move through enabled items; Tab follows sequential
+ * focus order and closes the panel when focus leaves it (non-modal by design).
+ * Outside pointer-down closes. SSR renders closed.
  */
 @Component({
   selector: 'rv-select-popup',
@@ -513,6 +514,22 @@ export class SelectPopupComponent {
     }
   }
 
+  /** Close after native Tab traversal moves focus out of the popup panel. */
+  protected onPanelFocusOut(event: FocusEvent): void {
+    const next = event.relatedTarget;
+    const panel = event.currentTarget as HTMLElement;
+    if (next instanceof Node && panel.contains(next)) return;
+    // A nested manual popover may briefly report a null relatedTarget while
+    // focus enters its top-layer panel. Resolve after the focus transition so
+    // that child popups do not dismiss their Select owner.
+    queueMicrotask(() => {
+      if (!panel.isConnected || !this.controller().open()) return;
+      const active = this.activeDocumentElement();
+      if (active && panel.contains(active)) return;
+      this.doClose(false);
+    });
+  }
+
   private restoreEditableFocus(): void {
     if (!this.focusedEditable?.isConnected) return;
     try {
@@ -637,6 +654,29 @@ export class SelectPopupComponent {
     // A projected child popup may already own and handle Escape. Respect its
     // cancellation so the same key press cannot dismiss this parent panel too.
     if (event.key === 'Escape' && event.defaultPrevented) return;
+    const target = event.target instanceof Element ? event.target : null;
+    const containingMenu = target?.closest('[role="menu"]');
+    const ownMenu = this.self.nativeElement.querySelector('.rv-select-popup-menu');
+    // A child popup owns all keys from its own menu, even after it closes
+    // synchronously during this bubbling event.
+    if (containingMenu && containingMenu !== ownMenu) return;
+    const isPanelRoot = target === event.currentTarget;
+    const insideOwnMenu = !!ownMenu && !!target && ownMenu.contains(target);
+    const searchbox = target?.closest('[role="searchbox"]');
+    const inFooter = target?.closest(
+      '.rv-select-popup-tail, [rv-select-popup-footer], [rvSelectPopupFooter]',
+    );
+    // Consumer footer controls keep native activation, navigation and Tab.
+    // Escape still bubbles here when no child popup claimed it.
+    if (inFooter && event.key !== 'Escape') return;
+    if (
+      (event.key === 'Enter' || event.key === ' ') &&
+      !insideOwnMenu &&
+      !searchbox &&
+      !isPanelRoot
+    ) {
+      return;
+    }
     const c = this.controller();
     switch (event.key) {
       case 'Escape':
@@ -668,19 +708,8 @@ export class SelectPopupComponent {
         event.preventDefault();
         this.pickFocused();
         break;
-      case 'Tab': {
-        // Non-modal Tab must not trap focus. The panel is still in the DOM
-        // when this event is handled (Angular removes it on the next CD), so
-        // the browser's own Tab step would re-enter the panel and then lose
-        // focus to <body> when it unmounted (measured on both Chromium and
-        // Firefox). So we close, and step focus explicitly from the trigger.
-        event.preventDefault();
-        const backwards = event.shiftKey;
-        this.doClose(false);
-        this.focusAdjacentToTrigger(backwards);
-        break;
-      }
       default:
+        if (!insideOwnMenu) return;
         this.onTypeahead(event);
         break;
     }
@@ -886,39 +915,6 @@ export class SelectPopupComponent {
     ) as HTMLElement | null;
     if (!wrap) return null;
     return (wrap.querySelector('button, a, [tabindex]') as HTMLElement | null) ?? wrap;
-  }
-
-  /**
-   * Move focus to the element before/after the trigger in document tab order.
-   *
-   * Explicit rather than delegating to the browser: the panel is still
-   * mounted when Tab is handled, so the browser's own step re-enters the panel
-   * and focus is then lost to <body> when it unmounts (measured on Chromium
-   * and Firefox). Leaves focus on the document when nothing is left in that
-   * direction.
-   */
-  private focusAdjacentToTrigger(backwards: boolean): void {
-    try {
-      const trigger = this.triggerEl();
-      const doc = trigger?.ownerDocument;
-      if (!trigger || !doc) return;
-      const selector =
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-      const stops = [...doc.querySelectorAll<HTMLElement>(selector)].filter((el) => {
-        if (el.hasAttribute('disabled') || el.getAttribute('aria-hidden') === 'true') return false;
-        // Rows inside any open panel are part of that menu, not this page flow.
-        if (el.closest('.rv-select-popup-panel')) return false;
-        return el.getClientRects().length > 0;
-      });
-      stops.sort((a, b) =>
-        a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
-      );
-      const at = stops.indexOf(trigger);
-      if (at === -1) return;
-      stops[backwards ? at - 1 : at + 1]?.focus({ preventScroll: true });
-    } catch {
-      // Focus stepping is best-effort; never break the close path.
-    }
   }
 
   private focusTrigger(): void {
