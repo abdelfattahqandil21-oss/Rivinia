@@ -5,6 +5,8 @@ import { RiviniaModalScrollLock } from '../ui/src/lib/components/modal-scroll-lo
 
 function fakeDocument() {
   const calls: string[] = [];
+  let gutter = '';
+  let gutterPriority = '';
   const bodyStyle = {
     overflow: '',
     removeProperty: vi.fn((name: string) => {
@@ -12,10 +14,22 @@ function fakeDocument() {
     }),
   };
   const rootStyle = {
-    setProperty: vi.fn((name: string) => {
+    getPropertyValue: vi.fn((name: string) => (name === 'scrollbar-gutter' ? gutter : '')),
+    getPropertyPriority: vi.fn((name: string) =>
+      name === 'scrollbar-gutter' ? gutterPriority : '',
+    ),
+    setProperty: vi.fn((name: string, value: string, priority = '') => {
+      if (name === 'scrollbar-gutter') {
+        gutter = value;
+        gutterPriority = priority;
+      }
       calls.push(`root-set:${name}`);
     }),
     removeProperty: vi.fn((name: string) => {
+      if (name === 'scrollbar-gutter') {
+        gutter = '';
+        gutterPriority = '';
+      }
       calls.push(`root-remove:${name}`);
     }),
   };
@@ -23,6 +37,7 @@ function fakeDocument() {
     doc: { body: { style: bodyStyle }, documentElement: { style: rootStyle } },
     calls,
     bodyStyle,
+    rootStyle,
   };
 }
 
@@ -61,6 +76,21 @@ describe('RiviniaModalScrollLock', () => {
     expect(bodyStyle.overflow).toBe('hidden');
     lock.release();
     expect(lock.active).toBe(0);
+  });
+
+  it('restores the consumer scrollbar gutter and its priority after the final release', () => {
+    const { doc, rootStyle } = fakeDocument();
+    const lock = setup(doc);
+    rootStyle.setProperty('scrollbar-gutter', 'stable both-edges', 'important');
+
+    lock.acquire();
+    lock.acquire();
+    lock.release();
+    expect(rootStyle.getPropertyValue('scrollbar-gutter')).toBe('stable');
+    lock.release();
+
+    expect(rootStyle.getPropertyValue('scrollbar-gutter')).toBe('stable both-edges');
+    expect(rootStyle.getPropertyPriority('scrollbar-gutter')).toBe('important');
   });
 
   it('release without acquire is a safe no-op', () => {

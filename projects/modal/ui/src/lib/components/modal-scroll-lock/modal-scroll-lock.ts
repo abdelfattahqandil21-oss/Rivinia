@@ -12,6 +12,7 @@ export class RiviniaModalScrollLock {
   private readonly _doc = inject(DOCUMENT, { optional: true });
   private _locks = 0;
   private _previousOverflow: string | null = null;
+  private _previousScrollbarGutter: { value: string; priority: string } | null = null;
 
   /** Number of active locks (diagnostics/tests). */
   get active(): number {
@@ -25,10 +26,15 @@ export class RiviniaModalScrollLock {
     if (this._locks > 1) return;
     const body = doc.body;
     this._previousOverflow = body.style.overflow || null;
+    const rootStyle = doc.documentElement.style;
+    this._previousScrollbarGutter = {
+      value: rootStyle.getPropertyValue('scrollbar-gutter'),
+      priority: rootStyle.getPropertyPriority('scrollbar-gutter'),
+    };
     body.style.overflow = 'hidden';
     // Reserve the scrollbar gutter where supported so content does not jump.
     // Overlay scrollbars ignore it; that is documented, not promised.
-    doc.documentElement.style.setProperty('scrollbar-gutter', 'stable');
+    rootStyle.setProperty('scrollbar-gutter', 'stable');
   }
 
   release(): void {
@@ -43,7 +49,11 @@ export class RiviniaModalScrollLock {
     if (this._previousOverflow === null) body.style.removeProperty('overflow');
     else body.style.overflow = this._previousOverflow;
     this._previousOverflow = null;
-    doc.documentElement.style.removeProperty('scrollbar-gutter');
+    const rootStyle = doc.documentElement.style;
+    const previousGutter = this._previousScrollbarGutter;
+    if (!previousGutter?.value) rootStyle.removeProperty('scrollbar-gutter');
+    else rootStyle.setProperty('scrollbar-gutter', previousGutter.value, previousGutter.priority);
+    this._previousScrollbarGutter = null;
   }
 
   private get document(): Document | null {
