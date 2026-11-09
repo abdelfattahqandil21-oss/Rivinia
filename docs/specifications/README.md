@@ -12,6 +12,7 @@ These documents describe proposed or implemented behavior. Their status lines ar
 | [Select variants](../../projects/select/specifications/select-variants.md) | `simple` and `premium` appearance | Approved for implementation |
 | [Table design](../../projects/table/specifications/table-design.md) | Table package design proposal | Proposal; no package or source implementation |
 | [Table spans and size](../../projects/table/specifications/table-spans-and-size.md) | Span behavior and size measurements | Design companion to table proposal |
+| [Future library and component candidates](future-library-roadmap.md) | Cross-library discovery backlog | Candidate ideas only; not approved for implementation or package admission |
 
 Package-owned specifications live with their libraries under `projects/<package>/specifications/`. This index is a cross-library map.
 

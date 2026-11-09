@@ -1,20 +1,28 @@
 # Rivinia skills inventory
 
-**Reviewed:** 2026-11-03. This is a discovery snapshot for this host, not a
+**Reviewed:** 2026-11-09. This is a discovery snapshot for this host, not a
 portable promise that every contributor has the same personal or plugin skills.
 
 ## Integration decision
 
-Keep two repository-owned skills in `.agents/skills/`: `rivinia-playbook` for
-task routing and `rivinia-release` for release procedure. This is the shared
-project path documented by Codex and OpenCode, so the skill bodies and their
-references have one canonical copy. No external skill was installed or copied.
+Keep two repository-wide skills in `.agents/skills/`: `rivinia-playbook` for
+task routing and `rivinia-release` for release procedure. Add one concise,
+package-scoped maintainer skill for each of the eleven current libraries. This
+is the shared project path documented by Codex and OpenCode, so the skill
+bodies and references have one canonical copy. Package skills are source
+checklists, not consumer API guarantees, and remain outside npm package assets.
 
 The playbook description permits automatic selection, but a Codex no-explicit-
 skill probe did not load it; root `AGENTS.md` therefore requires explicit
 invocation. OpenCode explicit invocation succeeded. The release skill is
 explicitly invocable but excluded from automatic selection in both runtimes.
 Release approval still comes from the owner, not skill selection.
+
+Package maintainers should invoke the matching `rivinia-<package>` skill after
+the playbook. Each skill is checked against the package's actual entry points
+and links to canonical docs. Its package compatibility sidecar records the
+exact baseline checked; changes to a package version or API require refreshing
+that evidence. See the [reference matrix](SKILLS-REFERENCE-MATRIX.md).
 
 ## Relevant installed skills
 

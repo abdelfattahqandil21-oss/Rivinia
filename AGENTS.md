@@ -19,7 +19,7 @@ For non-trivial work, explicitly invoke repository skill `rivinia-playbook` from
 
 ## Skills, facts and decisions
 
-Use the playbook's task-to-skill route. A skill cannot override this file or `docs/DECISIONS.md`; explicit current owner instructions can. Verify Angular/npm/tool APIs against installed types and authoritative docs, recording source/date. Experimental APIs need a risk note before becoming core dependencies. Foundational policy changes require owner approval and a `docs/DECISIONS.md` entry. Report passed, failed and not-run checks separately.
+Use the playbook's task-to-skill route. For package-scoped work, also use the matching `rivinia-<package>` maintainer skill when available. A skill cannot override this file or `docs/DECISIONS.md`; explicit current owner instructions can. Verify Angular/npm/tool APIs against installed types and authoritative docs, recording source/date. Experimental APIs need a risk note before becoming core dependencies. Foundational policy changes require owner approval and a `docs/DECISIONS.md` entry. Report passed, failed and not-run checks separately.
 
 ## Verification gates
 

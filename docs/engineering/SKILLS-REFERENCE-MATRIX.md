@@ -32,3 +32,38 @@ General-purpose skills do not receive package version metadata. Any future
 consumer skill must follow [`AI-SKILLS.md`](AI-SKILLS.md) and declare exact
 package compatibility metadata. Metadata validation is not API compatibility
 proof; examples still need exact-version package and clean-consumer builds.
+
+## Repository package maintainer skills
+
+These package-scoped skills live in `.agents/skills/`, are discovered in the
+same repository path as the playbook, and link to the package's current source
+of truth. Each has a maintainer compatibility sidecar with the exact 1.0.4
+baseline; the sidecar is traceability metadata, not evidence that every
+checklist item is implemented. Skills deliberately separate current exports
+from proposals and future candidates.
+
+At the reviewed HEAD, Menu, Popup and Select have local source changes after
+their 1.0.4 release tag, while their public entry-point files remain unchanged.
+The skills target the current repository source; their tag references identify
+the last published documentation and do not imply those local behavior changes
+were published.
+
+| Skill | Package scope | Primary API anchor | Package docs |
+| --- | --- | --- | --- |
+| `rivinia-datepicker` | `@rivinia/datepicker` | `projects/datepicker/src/public-api.ts`, `projects/datepicker/ui/src/public-api.ts` | [`docs/datepicker/`](../datepicker/) |
+| `rivinia-env` | `@rivinia/env` | `projects/env/src/public-api.ts`, schematics collection | [`docs/env/`](../env/) |
+| `rivinia-http` | `@rivinia/http` | `projects/http/src/public-api.ts` | [`docs/http/`](../http/) |
+| `rivinia-i18n` | `@rivinia/i18n` | `projects/i18n/src/public-api.ts`, `/ui`, `/select` | [`docs/i18n/`](../i18n/) |
+| `rivinia-menu` | `@rivinia/menu` | `projects/menu/src/public-api.ts`, `projects/menu/ui/src/public-api.ts` | [`docs/menu/`](../menu/) |
+| `rivinia-modal` | `@rivinia/modal` | `projects/modal/src/public-api.ts`, `projects/modal/ui/src/public-api.ts` | [`docs/modal/`](../modal/) |
+| `rivinia-popup` | `@rivinia/popup` | `projects/popup/src/public-api.ts` | `projects/popup/README.md` |
+| `rivinia-select` | `@rivinia/select` | `projects/select/src/public-api.ts`, `projects/select/ui/src/public-api.ts` | [`docs/select/`](../select/) |
+| `rivinia-table` | `@rivinia/table` | `projects/table/src/public-api.ts`, `projects/table/ui/src/public-api.ts` | [`docs/table/`](../table/) |
+| `rivinia-theme` | `@rivinia/theme` | CSS exports in `projects/theme/package.json`; TypeScript entry intentionally exports nothing | [`docs/theme/`](../theme/) |
+| `rivinia-toast` | `@rivinia/toast` | `projects/toast/src/public-api.ts`, `projects/toast/ui/src/public-api.ts` | [`docs/toast/`](../toast/) |
+
+Their common workflow and boundaries come from root [`AGENTS.md`](../../AGENTS.md)
+and [`rivinia-playbook`](../../.agents/skills/rivinia-playbook/SKILL.md), rather
+than repeated copies of generic instructions. Run `pnpm check:skills` to check
+frontmatter, compatibility sidecars, package identities, version references
+and repository paths.

@@ -9,6 +9,7 @@ gates; do not install or copy them automatically.
 
 | Task | Route | Safety / fallback |
 | --- | --- | --- |
+| Package-scoped maintenance | `rivinia-playbook` → matching `rivinia-<package>` | Verify current source, public exports, tests and docs; the skill checklist is not proof that a proposed capability exists |
 | Architecture, public API, package seams | `rivinia-playbook` → `codebase-design` if available | Read package boundaries and decisions; test public imports; `domain-modeling` only when terminology or an ADR is changing |
 | Specifications and planning | `rivinia-playbook`; use `grilling` only when asked to challenge a plan | `to-spec`, `to-tickets`, and `wayfinder` can write to an issue tracker; use only when explicitly requested and the target tracker is known |
 | Angular / TypeScript implementation | `rivinia-playbook`; use `tdd` when test-first work is requested or fits the task | Check installed Angular/TypeScript versions and repository rules first. External `angular-developer` is not installed; its discovery is not approval to install |

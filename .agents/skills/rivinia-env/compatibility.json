@@ -1,0 +1,30 @@
+{
+  "role": "maintainer",
+  "packages": [
+    {
+      "name": "@rivinia/env",
+      "release_group": "rivinia-1.0",
+      "supported_ranges": [
+        ">=1.0.4 <1.0.5"
+      ],
+      "verified_versions": [
+        "1.0.4"
+      ],
+      "compatibility_boundary": {
+        "major": 1
+      },
+      "documentation": {
+        "canonical_source": "projects/env/README.md",
+        "release_references": {
+          "1.0.4": "env/v1.0.4"
+        }
+      },
+      "evidence": [
+        {
+          "version": "1.0.4",
+          "ref": "docs/engineering/CHANGELOG.md"
+        }
+      ]
+    }
+  ]
+}

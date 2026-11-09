@@ -10,6 +10,8 @@ Use the package README in `projects/<package>/` for its public setup and API. Th
 | Architecture policy and workflows | [`engineering/README.md`](engineering/README.md) | Current policy and procedures |
 | Durable architecture decisions | [Decision index](decisions/README.md); stable entry point [`DECISIONS.md`](DECISIONS.md) | Append-only records, one file per decision |
 | Feature specifications and designs | `projects/<package>/specifications/` plus the [cross-library index](specifications/README.md) | Package-owned records stay with their owners; each record states its status |
+| Consumer architecture guidance | [`guides/feature-first-consumer.md`](guides/feature-first-consumer.md) | Optional organization patterns; examples do not prescribe a required folder layout |
+| Future package/component candidates | [`specifications/future-library-roadmap.md`](specifications/future-library-roadmap.md) | Candidate backlog only; not an implementation or package-admission decision |
 | Testing and browser evidence | [`testing/README.md`](testing/README.md) | Testing procedures plus dated verification evidence |
 | Release history | [`releases/1.0/README.md`](releases/1.0/README.md) | Historical RC records and current stable release index |
 | 1.0.0 stable preparation | [`releases/1.0/STABLE-1.0.0.md`](releases/1.0/STABLE-1.0.0.md) | Eleven-package candidate; human checks, soak, main integration and owner publish remain |

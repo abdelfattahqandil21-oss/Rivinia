@@ -2,7 +2,7 @@
 
 **Owner:** Rivinia maintainers
 **Purpose:** keep consumer and maintainer instructions aligned with package APIs actually available.
-**Status:** schema and local metadata validation implemented; no consumer-facing package skill is currently shipped.
+**Status:** schema and local metadata validation implemented; repository-local maintainer skills cover all eleven current packages. No consumer-facing package skill is shipped.
 
 ## Roles
 
@@ -74,4 +74,12 @@ Before package changes, read ownership and API boundaries. For any member of the
 
 ## Runtime discovery
 
-The repository stores its two Rivinia skills under `.agents/skills/`. Codex discovers repository skills in this path; OpenCode also searches it as an agent-compatible project path. Both read `SKILL.md` metadata for discovery and load the body on demand. Explicitly invoke with `$rivinia-playbook` in Codex or the native OpenCode `skill` tool using ID `rivinia-playbook`. The release skill is explicit-only in both runtimes; invoke it by the same method with ID `rivinia-release`. Do not duplicate skill bodies under `.opencode/skills/`; see the [inventory](SKILLS-INVENTORY.md), [matrix](SKILLS-REFERENCE-MATRIX.md), and [routing guide](SKILLS-ROUTING.md).
+The repository stores its skills under `.agents/skills/`: two repository-wide skills and eleven package maintainer skills. Codex discovers repository skills in this path; OpenCode also searches it as an agent-compatible project path. Both read `SKILL.md` metadata for discovery and load the body on demand. Explicitly invoke with `$rivinia-playbook` in Codex or the native OpenCode `skill` tool using ID `rivinia-playbook`. The release skill is explicit-only in both runtimes; invoke it by the same method with ID `rivinia-release`. Do not duplicate skill bodies under `.opencode/skills/`; see the [inventory](SKILLS-INVENTORY.md), [matrix](SKILLS-REFERENCE-MATRIX.md), and [routing guide](SKILLS-ROUTING.md).
+
+## Documentation and package-content contract
+
+- Maintainer skills are tracked repository instructions. Keep their package-specific checklists concise and link to the package README, canonical topic docs, source entry points, tests and engineering policies instead of copying API reference material.
+- Treat blueprints and roadmap items as proposals until current exports, source and tests prove the capability exists. Mark unimplemented ideas clearly; never turn them into consumer API claims.
+- Update package README/API/topic docs when public consumer behavior or imports change. Record user-visible shipped behavior in the package changelog only for its actual release; use an Unreleased entry only for a reviewed candidate that has not shipped.
+- Label framework recipes as tested or proposed, cover relevant forms/accessibility/errors/edge cases, and measure whole-consumer bundles rather than calling package FESM size transfer cost.
+- Git tracking does not imply npm inclusion. Keep `.agents/skills/` outside package assets and verify dry-run tarball file lists with `pnpm check:pack`; do not add skill files to `.gitignore` or copy them into package assets.
