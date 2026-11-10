@@ -16,6 +16,16 @@ leaves the previous language in place instead of an empty page. The two
 strategies themselves are in [the configuration
 reference](api.md#the-options-that-change-behaviour).
 
+The async call resolves when its dictionary load settles. If a newer switch
+request supersedes it, the older dictionary can still enter the cache but the
+older call does not activate that language. Loader failures stay in
+`loadingState`/`loadingError` and `onLoadError`; they do not reject the promise.
+
+When language switches overlap, the latest requested language wins, even if it
+is already visible. An older preload may still finish and populate the
+dictionary cache, but it cannot activate, change document direction, or persist
+that older choice.
+
 `toggle()` flips the first two languages and logs a dev warning when more are
 configured. `next()` and `previous()` cycle through the whole list.
 

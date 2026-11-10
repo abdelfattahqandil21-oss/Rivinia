@@ -125,4 +125,25 @@ describe('view transitions and dictionary application', () => {
     await flushMicrotasks();
     expect(i18n.translate('greeting')).toBe('مرحبا');
   });
+
+  it('does not commit an older deferred transition after a newer same-language request', async () => {
+    const viewTransition = new DeferredViewTransition();
+    const i18n = setup(viewTransition);
+
+    i18n.setLanguage('en');
+    await flushMicrotasks();
+    expect(i18n.currentLanguage()).toBe('en');
+    expect(i18n.translate('greeting')).toBe('Hello');
+
+    // The older intent has a deferred visual commit. Asking for the already
+    // current language still supersedes it, without scheduling another commit.
+    i18n.setLanguage('ar');
+    expect(viewTransition.pending).toBe(1);
+    i18n.setLanguage('en');
+    viewTransition.flush();
+
+    expect(i18n.currentLanguage()).toBe('en');
+    expect(i18n.dir()).toBe('ltr');
+    expect(i18n.translate('greeting')).toBe('Hello');
+  });
 });

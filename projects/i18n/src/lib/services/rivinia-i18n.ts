@@ -145,6 +145,8 @@ export class RiviniaI18n<L extends string = string> {
 
   private _initialized = false;
   private readonly _tasks = inject(PendingTasks, { optional: true });
+  /** Latest explicit switch intent; older preload-first completions cannot win. */
+  private _languageSwitchGeneration = 0;
 
   readonly languages = this._languages.asReadonly();
   readonly currentLanguage = this._currentLanguageId.asReadonly();
@@ -389,7 +391,8 @@ export class RiviniaI18n<L extends string = string> {
     }
     const currentId = this._currentLanguageId();
     const newId = currentId === langs[0].id ? langs[1].id : langs[0].id;
-    this.applyLanguage(newId);
+    const generation = this._beginLanguageSwitch(newId);
+    if (generation !== null) this.applyLanguage(newId, generation);
   }
 
   next(): void {
@@ -397,7 +400,9 @@ export class RiviniaI18n<L extends string = string> {
     if (langs.length < 2) return;
     const currentIdx = langs.findIndex((l) => l.id === this._currentLanguageId());
     const nextIdx = (currentIdx + 1) % langs.length;
-    this.applyLanguage(langs[nextIdx].id);
+    const id = langs[nextIdx].id;
+    const generation = this._beginLanguageSwitch(id);
+    if (generation !== null) this.applyLanguage(id, generation);
   }
 
   previous(): void {
@@ -405,7 +410,9 @@ export class RiviniaI18n<L extends string = string> {
     if (langs.length < 2) return;
     const currentIdx = langs.findIndex((l) => l.id === this._currentLanguageId());
     const prevIdx = (currentIdx - 1 + langs.length) % langs.length;
-    this.applyLanguage(langs[prevIdx].id);
+    const id = langs[prevIdx].id;
+    const generation = this._beginLanguageSwitch(id);
+    if (generation !== null) this.applyLanguage(id, generation);
   }
 
   setLanguage(id: L): void {
@@ -413,17 +420,25 @@ export class RiviniaI18n<L extends string = string> {
       void this.setLanguageAsync(id);
       return;
     }
-    this.applyLanguage(id);
+    const generation = this._beginLanguageSwitch(id);
+    if (generation !== null) this.applyLanguage(id, generation);
   }
 
   /** Preload-first switch: await the dictionary, then flip — no raw-key flash.
    * A failed load aborts: language, direction and dictionary stay untouched. */
   async setLanguageAsync(id: L): Promise<void> {
-    if (id === this._currentLanguageId()) return;
-    if (!this._languages().some((l) => l.id === id)) return;
+    const generation = this._beginLanguageSwitch(id);
+    if (generation === null || id === this._currentLanguageId()) return;
     const { ok } = await this._store.load(id);
-    if (!ok) return;
-    this.applyLanguage(id);
+    if (!ok || generation !== this._languageSwitchGeneration) return;
+    this.applyLanguage(id, generation);
+  }
+
+  /** Records valid user intent, including an explicit request for current locale. */
+  private _beginLanguageSwitch(id: L): number | null {
+    if (!this._languages().some((language) => language.id === id)) return null;
+    this._languageSwitchGeneration++;
+    return this._languageSwitchGeneration;
   }
 
   /** Number formatting bound to the current language locale (cached Intl). */
@@ -446,13 +461,18 @@ export class RiviniaI18n<L extends string = string> {
     onMissingParam: (key, name) => untracked(() => this._reportMissingParam(key, name)),
   });
 
-  private applyLanguage(id: L, opts?: { skipLoad?: boolean }): void {
+  private applyLanguage(id: L, generation: number, opts?: { skipLoad?: boolean }): void {
     if (id === this._currentLanguageId()) return;
 
     const lang = this._languages().find((l) => l.id === id);
     if (!lang) return;
 
     this._direction.apply(lang, () => {
+      // A view-transition callback may run after a newer switch was requested.
+      // Guard at the commit point so stale intent cannot change any visible or
+      // persisted locale state, even when the callback itself was deferred.
+      if (generation !== this._languageSwitchGeneration) return;
+
       // The language must change BEFORE the load resolves: a cached
       // dictionary applies synchronously, and `DictionaryStore._apply()` only
       // publishes a dictionary whose language is current. With a view
@@ -465,10 +485,10 @@ export class RiviniaI18n<L extends string = string> {
         void this._store.load(id);
         this._store.ensureFallback();
       }
-    });
 
-    // Explicit switch only (RIV-17): the initial language is never written.
-    this._languageStorage.persistAfterSwitch(id);
+      // Explicit switch only (RIV-17): persist the locale that actually won.
+      this._languageStorage.persistAfterSwitch(id);
+    });
   }
 
   private render(
