@@ -300,6 +300,49 @@ describe('applySort', () => {
     ).toEqual(['item 2', 'item 9', 'item 10']);
   });
 
+  it('keeps null and undefined values after present values in source order', () => {
+    interface OptionalName {
+      readonly id: number;
+      readonly name: string | null | undefined;
+    }
+    const data: readonly OptionalName[] = [
+      { id: 1, name: undefined },
+      { id: 2, name: 'Beta' },
+      { id: 3, name: null },
+      { id: 4, name: 'Alpha' },
+    ];
+    const rows = data.map((value, index) => ({ id: value.id, data: value, index }));
+    const columns: readonly TableColumn<OptionalName>[] = [
+      { id: 'name', accessor: (row) => row.name },
+    ];
+
+    expect(
+      applySort(rows, columns, [{ column: 'name', direction: 'asc' }]).map((row) => row.id),
+    ).toEqual([4, 2, 1, 3]);
+    expect(data.map((value) => value.id)).toEqual([1, 2, 3, 4]);
+  });
+
+  it('uses the requested locale for locale-sensitive string ordering', () => {
+    const data = ['z', 'ä', 'a'].map((name, id) => ({ id, name }));
+    const rows = data.map((value, index) => ({ id: value.id, data: value, index }));
+    const columns: readonly TableColumn<{ readonly id: number; readonly name: string }>[] = [
+      { id: 'name', accessor: (row) => row.name },
+    ];
+    const sort = [{ column: 'name', direction: 'asc' as const }];
+
+    expect(applySort(rows, columns, sort, 'en').map((row) => row.data.name)).toEqual([
+      'ä',
+      'a',
+      'z',
+    ]);
+    expect(applySort(rows, columns, sort, 'sv').map((row) => row.data.name)).toEqual([
+      'a',
+      'z',
+      'ä',
+    ]);
+    expect(data.map((value) => value.name)).toEqual(['z', 'ä', 'a']);
+  });
+
   it('sorts Dates chronologically', () => {
     expect(ids(applySort(ROWS, COLUMNS, [{ column: 'joined', direction: 'asc' }]))).toEqual([
       3, 4, 1, 5, 2, 6,

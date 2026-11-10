@@ -334,7 +334,10 @@ export function applySort<T>(
       }
       const entry = plan[index];
       const result = comparePresent(left, right, entry.column.comparator, collator);
-      if (result !== 0) return entry.state.direction === 'desc' ? -result : result;
+      // Array.sort treats NaN as equality. Preserve that comparator contract
+      // while allowing the next multi-sort level to resolve the tie.
+      if (result === 0 || Number.isNaN(result)) continue;
+      return entry.state.direction === 'desc' ? -result : result;
     }
     return a.row.index - b.row.index;
   });

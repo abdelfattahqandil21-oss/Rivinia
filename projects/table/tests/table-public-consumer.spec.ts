@@ -204,6 +204,35 @@ function clickRow(root: HTMLElement, index: number): void {
 }
 
 describe('@rivinia/table built-package consumer', () => {
+  it('uses later sort levels when a custom comparator returns NaN', () => {
+    interface SortableRow {
+      readonly id: number;
+      readonly group: string;
+      readonly rank: number;
+    }
+    const rows: readonly SortableRow[] = [
+      { id: 1, group: 'same', rank: 2 },
+      { id: 2, group: 'same', rank: 1 },
+      { id: 3, group: 'same', rank: 3 },
+    ];
+    const columns: readonly TableColumn<SortableRow>[] = [
+      { id: 'group', accessor: (row) => row.group, comparator: () => Number.NaN },
+      { id: 'rank', accessor: (row) => row.rank },
+    ];
+    const table = createTable<SortableRow>(() => ({
+      columns: () => columns,
+      data: () => rows,
+    }));
+
+    table.sorting.set([
+      { column: 'group', direction: 'asc' },
+      { column: 'rank', direction: 'asc' },
+    ]);
+
+    expect(table.rows().map((row) => row.id)).toEqual([2, 1, 3]);
+    expect(rows.map((row) => row.id)).toEqual([1, 2, 3]);
+  });
+
   it('retains a selected row through externally loaded page replacement and return', () => {
     const { fixture, host, root } = mount();
     expect(dataRows(root).map((row) => row.getAttribute('aria-rowindex'))).toEqual(['2', '3']);
