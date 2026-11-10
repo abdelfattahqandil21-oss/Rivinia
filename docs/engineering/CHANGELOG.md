@@ -3,6 +3,33 @@
 **Owner:** Rivinia maintainers
 **Purpose:** dated record of repository architecture and workflow changes, separate from npm package histories.
 
+## 2026-11-10 — Phase D7 @rivinia/env correctness audit
+
+- Confirmed `@rivinia/env` exports only the `BaseEnvironment` type and an
+  `ng add` schematic; it has no runtime provider, mutable configuration
+  singleton, or per-request SSR state. Generated values are build-time imports
+  and must be treated as public browser-bundle content.
+- Existing package contract: `pnpm exec ng test env --no-watch` passed 2/2;
+  schematic suite passed 14/14; `pnpm exec ng build env` passed. An isolated
+  TypeScript compile of the protected schematic source matched the checked-in
+  `.cjs` byte-for-byte; no protected schematic file was edited.
+- Packed exact local `@rivinia/env@1.0.4` (9 files; SHA-256
+  `a685e664ae9307c5b14fc38d29b16b3d346196563fcf1312232c8883eef6de58`),
+  installed that tarball into a temporary Angular consumer, ran its packaged
+  `ng add`, and production-built `dev`, `stag`, and `prod`. Each bundle
+  contained the expected environment URL and app version `7.6.5`.
+- No Env runtime defect or public contract change was identified. Browser
+  bundles expose configured values by design; do not put secrets in them.
+  Provider isolation and concurrent SSR are inapplicable to the current
+  compile-time-only contract; actual SSR consumer proof was not run.
+- Unit/build/consumer checks passed; no code test failed. `pnpm check:docs`
+  passed with 0 failures / 40 existing prose warnings; Prettier and
+  `git diff --check` passed. No package source, public API, dependency, version, release tag,
+  registry state, protected path or remote changed. Worktree:
+  `/media/abdelfattahqandi/OWN/libs/Revinia-env-correctness`, branch
+  `pkg/@rivinia/env/correctness-audit`, based on accepted HTTP HEAD
+  `d76dc10fbdecc64aaf410d659f6e1085face6f0d`; evidence commit follows locally.
+
 ## 2026-11-10 — Phase D6 @rivinia/http correctness audit (in progress)
 
 - Source inspection confirms the package delegates transport, interceptors,
