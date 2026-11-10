@@ -36,6 +36,28 @@ describe('formatIcu plural (Arabic — six forms)', () => {
   ])('count %i → %s', (count, expected) => {
     expect(formatIcu(tpl, { count }, 'ar')).toBe(expected);
   });
+
+  it.each([
+    [0, 'zero'],
+    [1, 'one'],
+    [2, 'two'],
+    [3, 'few'],
+    [10, 'few'],
+    [11, 'many'],
+    [99, 'many'],
+    [100, 'other'],
+    [102, 'other'],
+    [103, 'few'],
+    [110, 'few'],
+    [111, 'many'],
+    [199, 'many'],
+    [200, 'other'],
+  ])('matches Intl.PluralRules Arabic boundary %i → %s', (count, expected) => {
+    const boundaryTemplate =
+      '{count, plural, zero{zero} one{one} two{two} few{few} many{many} other{other}}';
+    expect(new Intl.PluralRules('ar').select(count)).toBe(expected);
+    expect(formatIcu(boundaryTemplate, { count }, 'ar')).toBe(expected);
+  });
 });
 
 describe('formatIcu select', () => {
@@ -173,6 +195,21 @@ describe('formatIcu date', () => {
 
   it('renders an ISO-8601 date string instead of returning it raw (RIV-10)', () => {
     expect(formatIcu('{d, date}', { d: '2026-10-25' }, 'en')).toBe('10/25/2026');
+  });
+
+  it.each([
+    ['0001-01-01', 'Monday, January 1, 1'],
+    ['0004-02-29', 'Sunday, February 29, 4'],
+    ['0025-01-01', 'Wednesday, January 1, 25'],
+    ['0099-12-31', 'Thursday, December 31, 99'],
+    ['2011-12-30', 'Friday, December 30, 2011'],
+  ])('preserves ISO civil year for %s', (date, expected) => {
+    expect(formatIcu('{d, date, full}', { d: date }, 'en')).toBe(expected);
+  });
+
+  it('rejects impossible strict ISO civil dates', () => {
+    expect(formatIcu('{d, date, long}', { d: '0001-02-29' }, 'en')).toBe('{d, date, long}');
+    expect(formatIcu('{d, date, long}', { d: '2011-02-30' }, 'en')).toBe('{d, date, long}');
   });
 
   it('returns the raw segment for a non-date value or unknown style', () => {

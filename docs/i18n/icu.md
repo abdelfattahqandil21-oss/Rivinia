@@ -39,6 +39,9 @@ package's own dictionaries need. Supported: `{name}` interpolation,
   (`Don't`) is unchanged.
 - `date` accepts a `Date`, epoch milliseconds, or a strict ISO-8601 string
   (`2026-10-28`, `2026-10-28T12:00:00Z`). Invalid input keeps the raw segment.
+  Date-only strings are civil dates and keep the same day in every host
+  timezone; date-time strings, `Date` values and epoch milliseconds represent
+  instants and use the runtime's timezone.
   Plain `{d}` on a `Date` uses `String()` — use `{d, date, …}` for localized
   output.
 - Templates are compiled once into a cached AST, so a message rendered on every

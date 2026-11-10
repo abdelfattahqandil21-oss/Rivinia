@@ -586,14 +586,17 @@ function formatDateValue(
   locale: string,
   style: string | undefined,
 ): string | null {
-  const date = toDate(value);
-  if (date === null) return null;
+  const parsed = toDate(value);
+  if (parsed === null) return null;
   if (style !== undefined && !DATE_STYLES.has(style)) return null;
-  const options: Intl.DateTimeFormatOptions =
-    style === undefined ? {} : { dateStyle: style as 'short' | 'medium' | 'long' | 'full' };
+  const options: Intl.DateTimeFormatOptions = {
+    ...(style === undefined ? {} : { dateStyle: style as 'short' | 'medium' | 'long' | 'full' }),
+    // Date-only inputs are civil dates, not instants in the host timezone.
+    ...(parsed.dateOnly ? { timeZone: 'UTC' } : {}),
+  };
   try {
-    const key = `${locale}|${style ?? ''}`;
-    return memo(dateFormats, key, () => new Intl.DateTimeFormat(locale, options)).format(date);
+    const key = `${locale}|${style ?? ''}|${parsed.dateOnly ? 'civil' : 'instant'}`;
+    return memo(dateFormats, key, () => new Intl.DateTimeFormat(locale, options)).format(parsed.date);
   } catch {
     return null;
   }
@@ -601,32 +604,36 @@ function formatDateValue(
 
 /**
  * A `Date` (any realm), epoch milliseconds, or a strict ISO-8601 string.
- * Date-only strings are read as a local calendar date, so `2026-10-28` never
- * renders as the 27th in a negative UTC offset.
+ * Date-only strings are preserved as civil dates independent of host timezone.
  */
-function toDate(value: unknown): Date | null {
+function toDate(value: unknown): { date: Date; dateOnly: boolean } | null {
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) return null;
     const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
+    return Number.isNaN(date.getTime()) ? null : { date, dateOnly: false };
   }
   if (typeof value === 'string') {
     if (ISO_DATE.test(value)) {
       const [year, month, day] = value.split('-').map(Number);
-      const date = new Date(year, month - 1, day);
-      return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
-        ? date
+      // Use a UTC carrier so even dates skipped by historical timezone changes
+      // (for example Apia's 2011-12-30) remain exact civil dates. The year-safe
+      // setter also avoids Date's special constructor treatment of years 0–99.
+      const date = new Date(0);
+      date.setUTCFullYear(year, month - 1, day);
+      date.setUTCHours(0, 0, 0, 0);
+      return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+        ? { date, dateOnly: true }
         : null;
     }
     if (ISO_DATE_TIME.test(value)) {
       const date = new Date(value);
-      return Number.isNaN(date.getTime()) ? null : date;
+      return Number.isNaN(date.getTime()) ? null : { date, dateOnly: false };
     }
     return null;
   }
   if (Object.prototype.toString.call(value) === '[object Date]') {
     const date = value as Date;
-    return Number.isNaN(date.getTime()) ? null : date;
+    return Number.isNaN(date.getTime()) ? null : { date, dateOnly: false };
   }
   return null;
 }
