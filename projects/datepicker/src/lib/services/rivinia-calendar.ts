@@ -39,6 +39,9 @@ import {
 } from '../utils/date-format';
 import { datepickerLabelsFor } from '../models/date-types';
 
+const FIRST_SUPPORTED_DATE: RiviniaDate = { year: 1, month: 1, day: 1 };
+const LAST_SUPPORTED_DATE: RiviniaDate = { year: 9999, month: 12, day: 31 };
+
 /**
  * The whole behaviour of the calendar, with no DOM.
  *
@@ -149,6 +152,7 @@ export class RiviniaCalendar {
 
   /** True when the day is inside `[min, max]` (both ends inclusive). */
   readonly canSelect = (date: RiviniaDate): boolean => {
+    if (!isValidDate(date)) return false;
     const min = this._min();
     const max = this._max();
     if (min && compare(date, min) < 0) return false;
@@ -303,16 +307,22 @@ export class RiviniaCalendar {
   private move(action: RiviniaCalendarAction): void {
     const focused = this._focused();
     const view = this._view();
+    let next: RiviniaDate;
 
     if (view === 'day') {
-      this._focused.set(this.moveDay(focused, action));
-      return;
+      next = this.moveDay(focused, action);
+    } else if (view === 'month') {
+      next = this.moveMonth(focused, action);
+    } else {
+      next = this.moveYear(focused, action);
     }
-    if (view === 'month') {
-      this._focused.set(this.moveMonth(focused, action));
-      return;
-    }
-    this._focused.set(this.moveYear(focused, action));
+    this._focused.set(this.clampToSupportedDates(next));
+  }
+
+  private clampToSupportedDates(date: RiviniaDate): RiviniaDate {
+    if (date.year < FIRST_SUPPORTED_DATE.year) return FIRST_SUPPORTED_DATE;
+    if (date.year > LAST_SUPPORTED_DATE.year) return LAST_SUPPORTED_DATE;
+    return date;
   }
 
   private moveDay(focused: RiviniaDate, action: RiviniaCalendarAction): RiviniaDate {

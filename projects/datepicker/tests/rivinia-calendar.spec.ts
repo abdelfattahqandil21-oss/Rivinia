@@ -129,6 +129,16 @@ describe('RiviniaCalendar — range bounds', () => {
     expect(calendar.canSelect(d(2026, 10, 21))).toBe(false);
   });
 
+  it('rejects impossible civil dates through the public selection boundary', () => {
+    const calendar = create();
+    const impossible = d(2026, 2, 30);
+
+    expect(calendar.canSelect(impossible)).toBe(false);
+    expect(calendar.select(impossible)).toBe(false);
+    expect(calendar.selected()).toBeNull();
+    expect(calendar.focused()).toEqual(TODAY);
+  });
+
   it('refuses to select outside the range', () => {
     const calendar = create({ min: d(2026, 10, 10), max: d(2026, 10, 20) });
     expect(calendar.select(d(2026, 10, 9))).toBe(false);
@@ -284,6 +294,28 @@ describe('RiviniaCalendar — day-view actions', () => {
     calendar.goToToday();
     expect(calendar.focused()).toEqual(TODAY);
     expect(calendar.month()).toEqual(d(2026, 10, 1));
+  });
+});
+
+describe('RiviniaCalendar — supported year boundaries', () => {
+  it('does not navigate the focused date outside years 1 through 9999', () => {
+    const earliest = create({ today: d(1, 1, 1) });
+    earliest.applyAction('move-previous');
+    earliest.applyAction('page-back');
+    expect(earliest.focused()).toEqual(d(1, 1, 1));
+    expect(earliest.monthGrid().year).toBe(1);
+    earliest.setView('year');
+    expect(earliest.years().find((year) => year.year === 0)?.disabled).toBe(true);
+    expect(earliest.chooseYear(0)).toBe(false);
+
+    const latest = create({ today: d(9999, 12, 31) });
+    latest.applyAction('move-next');
+    latest.applyAction('page-forward');
+    expect(latest.focused()).toEqual(d(9999, 12, 31));
+    expect(latest.monthGrid().year).toBe(9999);
+    latest.setView('year');
+    expect(latest.years().find((year) => year.year === 10000)?.disabled).toBe(true);
+    expect(latest.chooseYear(10000)).toBe(false);
   });
 });
 
