@@ -3,6 +3,30 @@
 **Owner:** Rivinia maintainers
 **Purpose:** dated record of repository architecture and workflow changes, separate from npm package histories.
 
+## 2026-11-10 — Phase D5 i18n correctness audit (in progress)
+
+- `RiviniaI18n` now guards async and synchronous locale activation with a
+  per-instance switch-intent generation. A newer request for the visible
+  locale supersedes older pending activations; deferred view-transition
+  callbacks check at commit time, and only the winning locale is persisted.
+  `DictionaryStore` retains dictionary loading, in-flight deduplication and
+  cache ownership. A production-built consumer reproduces delayed Arabic
+  response versus a later English intent and checks visible text, direction
+  and persistence.
+- Strict ISO date-only ICU inputs now use a year-safe UTC carrier and UTC
+  formatting, preserving civil date, year and weekday across host zones,
+  including Pacific/Apia 2011-12-30. Date-time, `Date` and epoch inputs keep
+  instant/runtime-timezone semantics. Arabic plural tests compare rendered
+  branches with `Intl.PluralRules` at category boundaries.
+- Evidence: i18n unit suite 406/406; ICU 60/60 under UTC, America/Los_Angeles
+  and Pacific/Apia; production i18n and CSR consumer builds; Chromium+Firefox
+  consumer matrix 66/66; SSR/hydration/request-isolation smoke 40/40;
+  `check:docs` 0 failures / 40 prose warnings; `git diff --check` clean.
+  WebKit and physical assistive technology remain unverified.
+- No public API, package dependency, version, tag, release, or registry state
+  changed. Worktree is `/media/abdelfattahqandi/OWN/libs/Revinia-i18n-correctness`;
+  focused local commits and reviewer acceptance are pending.
+
 ## 2026-11-10 — Datepicker correctness audit (in progress)
 
 - Civil date formatting now uses a UTC carrier and UTC `Intl` formatting, so a
