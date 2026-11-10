@@ -12,7 +12,9 @@ const packageNames = group?.packages ?? [];
 const packageByName = new Map();
 
 for (const name of packageNames) {
-  const manifest = JSON.parse(readFileSync(join(ROOT, 'projects', name.split('/').at(-1), 'package.json'), 'utf8'));
+  const manifest = JSON.parse(
+    readFileSync(join(ROOT, 'projects', name.split('/').at(-1), 'package.json'), 'utf8'),
+  );
   if (manifest.name !== name) throw new Error(`${name}: package manifest name mismatch`);
   packageByName.set(name, manifest);
 }
@@ -73,7 +75,10 @@ for (const name of buildOrder()) {
   const packageName = name.split('/').at(-1);
   const script = `build:${packageName}`;
   const rootManifest = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
-  run(`${name} production build`, rootManifest.scripts[script] ? [script] : ['exec', 'ng', 'build', packageName]);
+  run(
+    `${name} production build`,
+    rootManifest.scripts[script] ? [script] : ['exec', 'ng', 'build', packageName],
+  );
 }
 
 run('Package metadata and packed files', ['check:pack']);
@@ -81,15 +86,28 @@ run('Theme package contract', ['check:theme']);
 
 for (const name of packageNames) {
   const packageName = name.split('/').at(-1);
-  run(`${name} unit tests`, packageName === 'theme'
-    ? ['test:theme']
-    : ['exec', 'ng', 'test', packageName, '--watch=false']);
+  run(
+    `${name} unit tests`,
+    packageName === 'theme' ? ['test:theme'] : ['exec', 'ng', 'test', packageName, '--watch=false'],
+  );
 }
 
 run('Schematics tests', ['test:schematics']);
 run('Menu and Select browser harness build', ['exec', 'ng', 'build', 'menu-e2e']);
-run('Chromium browser installation', process.env.CI
-  ? ['exec', 'playwright', 'install', '--with-deps', 'chromium']
-  : ['exec', 'playwright', 'install', 'chromium']);
-run('Menu, Select, and Popup browser tests', ['exec', 'playwright', 'test', '--project=chromium']);
+run(
+  'Chromium browser installation',
+  process.env.CI
+    ? ['exec', 'playwright', 'install', '--with-deps', 'chromium']
+    : ['exec', 'playwright', 'install', 'chromium'],
+);
+run('Menu, Select, and Popup browser tests', [
+  'exec',
+  'playwright',
+  'test',
+  '--project=chromium',
+  'e2e/menu',
+  'e2e/select',
+  'e2e/popup',
+  'e2e/overlay-lifecycle.spec.ts',
+]);
 console.log('\nRequired CI validation passed.');

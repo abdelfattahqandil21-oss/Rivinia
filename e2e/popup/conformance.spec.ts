@@ -494,6 +494,20 @@ for (const adapter of ADAPTERS) {
       await page.evaluate(() => window.scrollBy(0, 40));
       await expect(panel).toBeVisible();
       await settlePopupMotion(page, adapter.panel);
+      await expect
+        .poll(
+          () =>
+            page.evaluate(
+              ({ trigger, panel, beforeGap }) => {
+                const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();
+                const panelBox = document.querySelector(panel)!.getBoundingClientRect();
+                return Math.abs(panelBox.top - triggerBox.bottom - beforeGap);
+              },
+              { trigger: adapter.trigger, panel: adapter.panel, beforeGap: before.gap },
+            ),
+          { message: 'the open popup repositions after the page scroll' },
+        )
+        .toBeLessThanOrEqual(1);
       const after = await page.evaluate(
         ({ trigger, panel }) => {
           const triggerBox = document.querySelector(trigger)!.getBoundingClientRect();

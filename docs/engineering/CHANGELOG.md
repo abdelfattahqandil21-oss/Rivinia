@@ -3,6 +3,39 @@
 **Owner:** Rivinia maintainers
 **Purpose:** dated record of repository architecture and workflow changes, separate from npm package histories.
 
+## 2026-11-10 — Phase D8 ecosystem integration audit (in progress)
+
+- Built all eleven synchronized `1.0.4` packages in dependency order; all 11
+  unit suites passed (1,525 tests total), 42 schematic tests passed, all five
+  tracked schematic compiler outputs matched their TypeScript sources, and
+  `check:pack` / `check:theme` passed.
+- Packed all eleven exact local artifacts and installed them together in a
+  clean Angular consumer. Production compilation passed with 19 public
+  package/secondary-entry imports and all three Theme CSS entry points.
+- `check:docs` reported 0 failures / 40 existing prose warnings; README,
+  governance, skill, versioned-link and tooling gates passed. The historical
+  API snapshot still covers only the initial four packages; direct packed
+  consumer imports cover all published entry points instead.
+- Fixed the shared Playwright gate so Menu/Select/Popup cases run on their
+  `menu-e2e` harness rather than accidentally discovering `e2e/table` tests.
+  Added a geometry poll to the Popup scroll contract so it waits for the
+  component's scheduled animation-frame reposition while retaining the 1px
+  anchor-gap assertion. The first unscoped run exposed this harness mismatch
+  and the timing race; on correct harnesses, Table/Datepicker passed 15/15,
+  Menu/Select/Popup passed 159 Chromium and 154 Firefox checks. Engine-specific
+  skips were recorded. WebKit was unavailable in this environment.
+- Theme compatibility built seven production CSS configurations and passed
+  all applicable browser assertions; Theme dark-mode and component-theme checks
+  passed in Chromium/Firefox. Popup SSR, Theme contrast and Table production
+  identity checks passed. `check:duplication` was not run because its pinned
+  `pnpm dlx jscpd@4.0.8` fetch did not respond after two minutes.
+- Verification used Node `24.21.0`; the repository `.node-version` specifies
+  `24.22.2`. This exact patch-level CI toolchain remains unverified. No package
+  API, version, tag, release artifact or registry state changed. Worktree:
+  `/media/abdelfattahqandi/OWN/libs/Revinia-phase-d8-ecosystem`, branch
+  `pkg/repo/phase-d8-ecosystem-audit`, based on accepted D7 HEAD
+  `c1d235c22b93e12a79377de31ebaaed194ae9f43`; local review commit pending.
+
 ## 2026-11-10 — Phase D7 @rivinia/env correctness audit
 
 - Confirmed `@rivinia/env` exports only the `BaseEnvironment` type and an
@@ -28,7 +61,8 @@
   registry state, protected path or remote changed. Worktree:
   `/media/abdelfattahqandi/OWN/libs/Revinia-env-correctness`, branch
   `pkg/@rivinia/env/correctness-audit`, based on accepted HTTP HEAD
-  `d76dc10fbdecc64aaf410d659f6e1085face6f0d`; evidence commit follows locally.
+  `d76dc10fbdecc64aaf410d659f6e1085face6f0d`; evidence commit
+  `c1d235c22b93e12a79377de31ebaaed194ae9f43` is local only.
 
 ## 2026-11-10 — Phase D6 @rivinia/http correctness audit (in progress)
 
