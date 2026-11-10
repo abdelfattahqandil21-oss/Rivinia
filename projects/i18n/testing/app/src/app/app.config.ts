@@ -25,7 +25,9 @@ export const appConfig: ApplicationConfig = {
         { id: 'en', nativeName: 'English', dir: 'ltr', locale: 'en-GB' },
       ],
       fallbackLanguage: 'en',
-      storageStrategy: 'local',
+      // Cookie preference is readable from each server REQUEST, so the SSR
+      // smoke can exercise two simultaneous requests with different locales.
+      storageStrategy: 'cookie',
       // A dictionary that cannot be fetched is a console.error on purpose:
       // the e2e suite asserts zero console errors, so a broken loader cannot
       // pass silently.

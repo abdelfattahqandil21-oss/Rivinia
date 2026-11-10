@@ -61,11 +61,22 @@ export class Home {
   readonly missingParam = computed(() => this.i18n.translate('hardening.missing', {}));
 
   readonly live = signal(1);
+  readonly racePreparationComplete = signal(false);
   /** A `params` FUNCTION, so the signal it reads is tracked. */
   readonly liveText = this.i18n.t('signal.count', () => ({ count: this.live() }));
 
   use(id: 'ar' | 'en'): void {
     this.i18n.setLanguage(id);
+  }
+
+  async prepareLocaleRace(): Promise<void> {
+    this.racePreparationComplete.set(false);
+    await this.i18n.reload();
+    this.racePreparationComplete.set(true);
+  }
+
+  requestLanguageAsync(id: 'ar' | 'en'): Promise<void> {
+    return this.i18n.setLanguageAsync(id);
   }
 
   bump(): void {

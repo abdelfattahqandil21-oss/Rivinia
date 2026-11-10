@@ -71,6 +71,28 @@ describe('RiviniaI18n init and validation', () => {
   });
 });
 
+describe('RiviniaI18n injector ownership', () => {
+  it('keeps each application root service and inline dictionary independent', async () => {
+    const first = setup({
+      preload: false,
+      translations: { ar: { tenant: 'first app' } },
+    });
+    await first.initialize();
+
+    const second = setup({
+      preload: false,
+      translations: { ar: { tenant: 'second app' } },
+    });
+    await second.initialize();
+
+    expect(first).not.toBe(second);
+    expect(first.currentLanguage()).toBe('ar');
+    expect(second.currentLanguage()).toBe('ar');
+    expect(first.translate('tenant')).toBe('first app');
+    expect(second.translate('tenant')).toBe('second app');
+  });
+});
+
 describe('RiviniaI18n defaultLanguage resolution', () => {
   it('defaults to the first configured language when omitted', () => {
     const i18n = setup({

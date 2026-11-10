@@ -24,6 +24,19 @@
   <p class="state" data-testid="state">
     {{ i18n.currentLanguage() }} · {{ i18n.dir() }} · {{ i18n.loadingState() }}
   </p>
+
+  <div aria-label="Locale race test controls" data-testid="locale-race-controls">
+    <button type="button" data-testid="prepare-locale-race" (click)="prepareLocaleRace()">
+      Prepare locale race
+    </button>
+    <span data-testid="locale-race-ready">{{ racePreparationComplete() }}</span>
+    <button type="button" data-testid="request-ar-async" (click)="requestLanguageAsync('ar')">
+      Request Arabic asynchronously
+    </button>
+    <button type="button" data-testid="request-en-async" (click)="requestLanguageAsync('en')">
+      Request English asynchronously
+    </button>
+  </div>
 </header>
 
 <main>

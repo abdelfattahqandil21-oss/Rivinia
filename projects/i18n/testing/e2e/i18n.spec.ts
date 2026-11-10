@@ -71,6 +71,48 @@ test.describe('first load', () => {
   });
 });
 
+test('a stale preloaded locale response cannot overwrite the latest request in a built consumer', async ({
+  page,
+}) => {
+  let releaseArabic!: () => void;
+  let notifyArabicRequest!: () => void;
+  const arabicGate = new Promise<void>((resolve) => (releaseArabic = resolve));
+  const arabicRequested = new Promise<void>((resolve) => (notifyArabicRequest = resolve));
+
+  await page.goto('/');
+  await page.getByTestId('lang-en').click();
+  await expect(page.getByTestId('hero')).toHaveText(EN.hero);
+
+  // `reload()` drops the non-current Arabic cache so this exercises the real
+  // public JSON loader, with Playwright holding only the next Arabic response.
+  await page.getByTestId('prepare-locale-race').click();
+  await expect(page.getByTestId('locale-race-ready')).toHaveText('true');
+  await page.route('**/i18n/ar.json', async (route) => {
+    notifyArabicRequest();
+    await arabicGate;
+    await route.continue();
+  });
+
+  await page.getByTestId('request-ar-async').click();
+  await arabicRequested;
+  await page.getByTestId('request-en-async').click();
+  releaseArabic();
+
+  await expect(page.getByTestId('state')).toHaveText('en · ltr · idle');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en-GB');
+  await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
+  await expect(page.getByTestId('hero')).toHaveText(EN.hero);
+  expect(
+    await page.evaluate(
+      () =>
+        document.cookie
+          .split('; ')
+          .find((cookie) => cookie.startsWith('rivinia.i18n.language='))
+          ?.split('=')[1] ?? null,
+    ),
+  ).toBe('en');
+});
+
 test.describe('language switch', () => {
   test('switching to English changes the copy, lang, dir and persists across reloads', async ({
     page,
@@ -93,11 +135,19 @@ test.describe('language switch', () => {
   test('writes storage only after an explicit switch (RIV-17)', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByTestId('app-title')).toHaveText(AR.title);
-    expect(await page.evaluate(() => localStorage.getItem('rivinia.i18n.language'))).toBeNull();
+    const storedLanguage = () =>
+      page.evaluate(
+        () =>
+          document.cookie
+            .split('; ')
+            .find((cookie) => cookie.startsWith('rivinia.i18n.language='))
+            ?.split('=')[1] ?? null,
+      );
+    expect(await storedLanguage()).toBeNull();
 
     await page.getByTestId('lang-en').click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en-GB');
-    expect(await page.evaluate(() => localStorage.getItem('rivinia.i18n.language'))).toBe('en');
+    expect(await storedLanguage()).toBe('en');
   });
 
   test('switching back to Arabic restores RTL and the Arabic copy', async ({ page }) => {

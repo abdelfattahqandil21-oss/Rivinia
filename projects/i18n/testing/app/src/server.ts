@@ -78,7 +78,14 @@ const server = createServer(async (req, res) => {
     const html = await renderApplication(bootstrap, {
       document: await template(),
       url,
-      platformProviders: [{ provide: REQUEST, useValue: new Request(url) }],
+      platformProviders: [
+        {
+          provide: REQUEST,
+          useValue: new Request(url, {
+            headers: req.headers.cookie ? { cookie: req.headers.cookie } : undefined,
+          }),
+        },
+      ],
       // `renderApplication` validates the request host against this list
       // (NG05706); there is no implicit default, and an open list would make
       // the host a request-forgery relay. A real deployment passes its own

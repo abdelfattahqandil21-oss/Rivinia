@@ -29,6 +29,7 @@ const ORIGIN = `http://127.0.0.1:${PORT}`;
 const AR_HERO = 'مدير لغات واحد لكل اللغات';
 const AR_TITLE = 'ريفينيا للتعريب';
 const EN_HERO = 'One language manager, every locale';
+const EN_TITLE = 'Rivinia i18n';
 
 const results = [];
 function check(name, condition, detail = '') {
@@ -38,6 +39,13 @@ function check(name, condition, detail = '') {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function renderedTestIdText(html, testId) {
+  const match = html.match(
+    new RegExp(`<[^>]*data-testid="${testId}"[^>]*>([\\s\\S]*?)<\\/[^>]+>`),
+  );
+  return match?.[1]?.replace(/<[^>]*>/g, '').trim() ?? null;
 }
 
 /** Polls an async read until it matches; a single read races the CD cycle. */
@@ -92,6 +100,28 @@ try {
   check('SSR HTML has no raw key', !/\b(home\.hero|app\.title|icu\.items)\b/.test(html));
   check('SSR HTML has no [object Object]', !html.includes('[object Object]'));
   check('SSR HTML carries the TransferState payload', html.includes('ng-state'));
+
+  const [arabicResponse, englishResponse] = await Promise.all([
+    fetch(`${ORIGIN}/`, { headers: { cookie: 'rivinia.i18n.language=ar' } }),
+    fetch(`${ORIGIN}/`, { headers: { cookie: 'rivinia.i18n.language=en' } }),
+  ]);
+  const [arabicHtml, englishHtml] = await Promise.all([
+    arabicResponse.text(),
+    englishResponse.text(),
+  ]);
+  check('concurrent Arabic and English SSR requests both respond 200',
+    arabicResponse.status === 200 && englishResponse.status === 200,
+    `${arabicResponse.status}/${englishResponse.status}`);
+  check('concurrent Arabic request keeps visible title, hero and RTL locale',
+    renderedTestIdText(arabicHtml, 'app-title') === AR_TITLE &&
+      renderedTestIdText(arabicHtml, 'hero') === AR_HERO &&
+      /<html[^>]*lang="ar-EG"[^>]*dir="rtl"/.test(arabicHtml));
+  check('concurrent English request keeps visible title, hero and LTR locale',
+    renderedTestIdText(englishHtml, 'app-title') === EN_TITLE &&
+      renderedTestIdText(englishHtml, 'hero') === EN_HERO &&
+      /<html[^>]*lang="en-GB"[^>]*dir="ltr"/.test(englishHtml));
+  check('both concurrent responses carry request-local TransferState',
+    arabicHtml.includes('ng-state') && englishHtml.includes('ng-state'));
 
   const log = logs.join('');
   check('server log has no fetch failure', !/failed to load|Failed to parse URL|fetch failed/i.test(log));
