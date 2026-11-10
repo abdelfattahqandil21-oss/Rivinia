@@ -3,6 +3,40 @@
 **Owner:** Rivinia maintainers
 **Purpose:** dated record of repository architecture and workflow changes, separate from npm package histories.
 
+## 2026-11-10 — Datepicker correctness audit (in progress)
+
+- Civil date formatting now uses a UTC carrier and UTC `Intl` formatting, so a
+  timezone with a skipped local civil day cannot silently advance the displayed
+  value. The public `toLocalDate()` remains a host-local bridge and its
+  normalization behavior is documented. Pacific/Apia 2011-12-30 reproduced the
+  previous shift; style and pattern formatters now preserve the input date.
+- Calendar selection rejects invalid civil dates through the public controller
+  boundary, and day/month/year navigation stays within supported years 1–9999.
+- A production-built Angular consumer exposed a reactive tracking defect: the
+  min/max input effect tracked calendar focus through `setBounds()`, so moving
+  onto a disabled date immediately reset focus. The bounds update now runs
+  untracked; disabled dates remain keyboard-focusable while commits stay
+  blocked. Unit regression and Chromium/Firefox consumer checks pass.
+- A real Chromium keyboard run exposed a second focus defect: replacing the
+  focused day cell on PageDown produced `focusout` with no `relatedTarget`, and
+  the non-modal host closed before focus restoration. The host now defers only
+  this ambiguous null-target close until focus restoration completes. Built
+  consumer checks for PageDown, Shift+PageUp, Home/End and Escape pass in
+  Chromium and Firefox.
+- Added an opt-in Reactive Forms section to the production-built Angular
+  consumer. Programmatic writes update the trigger and open month without
+  dirtying/touching the control; selecting a day updates the FormControl and
+  marks it dirty/touched in Chromium and Firefox.
+- Year-safe formatting regressions cover 1, 4, 99, 100, 1900, 2000 and 9999
+  through both `Intl` styles and custom patterns. An actual plain-Node Angular
+  SSR render of a year-25 date passed with no browser globals; the UTC carrier
+  uses `setUTCFullYear`, avoiding the constructor's 0–99 year remapping.
+- The built consumer exposed stale range state after both dynamic min/max inputs
+  returned to `undefined`. The bounds effect now reapplies configured
+  fallbacks, or clears stale bounds when neither source supplies one. Expansion
+  and clearing both pass in Chromium and Firefox.
+- D4 remains active; lifecycle, form and remaining consumer checks are pending.
+
 ## 2026-11-10 — Phase D2 Table query/pagination composition (in progress)
 
 - Ownership map: Table builds stable row IDs, applies client filtering/search

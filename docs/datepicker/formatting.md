@@ -124,4 +124,11 @@ Angular's `DatePipe` is a poor fit for a date-only field:
 
 So the package formats with `Intl` for styles and with its own per-token
 formatter for patterns. `formatDate(locale, date, format)` exposes the same
-behaviour to your own templates.
+behaviour to your own templates. These date-only formatters carry the civil
+value through UTC and set `timeZone: 'UTC'` for `Intl`, so the host timezone
+cannot shift the displayed day. This matters for civil dates skipped entirely
+by a local timezone transition, such as 2011-12-30.
+
+`toLocalDate()` is a separate explicit bridge for APIs that need a host-local
+JavaScript `Date`; JavaScript normalizes a civil day that does not exist in
+that timezone. Do not use that bridge for stable date-only formatting.
