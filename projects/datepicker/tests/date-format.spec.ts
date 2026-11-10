@@ -8,6 +8,7 @@ import {
   formatMonthName,
   formatMonthYear,
   formatWithStyle,
+  formatWithPattern,
   formatYear,
   gregorianLocale,
   isDateStyle,
@@ -102,6 +103,68 @@ describe('formatWithStyle — Intl dateStyle', () => {
 
   it('falls back to en-US for an invalid locale tag instead of throwing', () => {
     expect(formatWithStyle('not-a-locale!!', oct25, 'medium')).toBe('Oct 25, 2026');
+  });
+});
+
+describe('civil date formatting across local timezone transitions', () => {
+  it('does not shift a civil date skipped by the host timezone', () => {
+    const env = (
+      globalThis as typeof globalThis & { process?: { env: Record<string, string | undefined> } }
+    ).process?.env;
+    if (!env) throw new Error('The Datepicker unit runner must provide a Node environment.');
+    const previousTimeZone = env['TZ'];
+    env['TZ'] = 'Pacific/Apia';
+    try {
+      const skippedDay = { year: 2011, month: 12, day: 30 };
+      expect(formatWithStyle('en-IE', skippedDay, 'full')).toBe('Friday 30 December 2011');
+      expect(formatWithPattern('en-IE', skippedDay, 'dd/MM/yyyy')).toBe('30/12/2011');
+    } finally {
+      if (previousTimeZone === undefined) delete env['TZ'];
+      else env['TZ'] = previousTimeZone;
+    }
+  });
+});
+
+describe('civil date formatting across the supported year range', () => {
+  it.each([
+    {
+      date: { year: 1, month: 1, day: 1 },
+      full: 'Monday, January 1, 1',
+      pattern: 'Monday, January 01, 1',
+    },
+    {
+      date: { year: 4, month: 2, day: 29 },
+      full: 'Sunday, February 29, 4',
+      pattern: 'Sunday, February 29, 4',
+    },
+    {
+      date: { year: 99, month: 12, day: 31 },
+      full: 'Thursday, December 31, 99',
+      pattern: 'Thursday, December 31, 99',
+    },
+    {
+      date: { year: 100, month: 1, day: 1 },
+      full: 'Friday, January 1, 100',
+      pattern: 'Friday, January 01, 100',
+    },
+    {
+      date: { year: 1900, month: 2, day: 28 },
+      full: 'Wednesday, February 28, 1900',
+      pattern: 'Wednesday, February 28, 1900',
+    },
+    {
+      date: { year: 2000, month: 2, day: 29 },
+      full: 'Tuesday, February 29, 2000',
+      pattern: 'Tuesday, February 29, 2000',
+    },
+    {
+      date: { year: 9999, month: 12, day: 31 },
+      full: 'Friday, December 31, 9999',
+      pattern: 'Friday, December 31, 9999',
+    },
+  ] as const)('formats year $date.year correctly in styles and patterns', ({ date, full, pattern }) => {
+    expect(formatWithStyle('en-US', date, 'full')).toBe(full);
+    expect(formatWithPattern('en-US', date, 'EEEE, MMMM dd, yyyy')).toBe(pattern);
   });
 });
 

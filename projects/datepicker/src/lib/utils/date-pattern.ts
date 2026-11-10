@@ -1,6 +1,6 @@
 import type { RiviniaDate } from '../models/date-types';
 import { intlFormatter } from './intl';
-import { toLocalDate } from './date-math';
+import { toUtcDate } from './date-math';
 
 /*
  * A small, date-only pattern language.
@@ -210,7 +210,7 @@ export function formatWithPattern(
   pattern: string,
 ): string {
   const parts = parseDatePattern(pattern);
-  const moment = toLocalDate(date);
+  const moment = toUtcDate(date);
   const formatters = new Map<RiviniaPatternToken, Intl.DateTimeFormat>();
 
   return parts
@@ -218,7 +218,7 @@ export function formatWithPattern(
       if (part.token === null) return part.value;
       let formatter = formatters.get(part.token);
       if (!formatter) {
-        formatter = intlFormatter(locale, TOKEN_OPTIONS[part.token]);
+        formatter = intlFormatter(locale, { ...TOKEN_OPTIONS[part.token], timeZone: 'UTC' });
         formatters.set(part.token, formatter);
       }
       return formatter.format(moment);

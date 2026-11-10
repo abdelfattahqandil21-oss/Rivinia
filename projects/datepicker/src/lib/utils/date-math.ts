@@ -122,12 +122,22 @@ export function todayDate(now: Date = new Date()): RiviniaDate {
   };
 }
 
-/** Local noon, which keeps `Intl` on the intended calendar day in every zone. */
+/** Local noon for APIs that explicitly need a host-local Date. A civil day
+ * skipped by a zone transition (for example Apia 2011-12-30) is normalized by
+ * JavaScript; date-only display formatting must use `toUtcDate` instead. */
 export function toLocalDate(date: RiviniaDate): Date {
   // `new Date(year, …)` maps years 0…99 to 1900…1999, so the year is set
   // explicitly — `formatYear(locale, 5)` must render year 5, not 1905.
   const result = new Date(2000, date.month - 1, date.day, 12, 0, 0, 0);
   result.setFullYear(date.year);
+  return result;
+}
+
+/** A stable Date carrier for Intl: UTC avoids local gaps that skip whole days. */
+export function toUtcDate(date: RiviniaDate): Date {
+  const result = new Date(0);
+  result.setUTCFullYear(date.year, date.month - 1, date.day);
+  result.setUTCHours(12, 0, 0, 0);
   return result;
 }
 

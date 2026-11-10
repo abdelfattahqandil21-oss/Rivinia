@@ -7,7 +7,7 @@ import type {
 } from '../models/date-types';
 import type { RiviniaDate } from '../models/date-types';
 import type { RiviniaWeekdayName } from '../models/calendar-types';
-import { addDays, toLocalDate } from './date-math';
+import { addDays, toUtcDate } from './date-math';
 import { formatValue, intlFormatter } from './intl';
 import { formatWithPattern } from './date-pattern';
 
@@ -68,14 +68,14 @@ export function weekdaysOf(
   locale: string,
   firstDay: RiviniaWeekday,
 ): readonly RiviniaWeekdayName[] {
-  const long = intlFormatter(locale, { weekday: 'long' });
-  const short = intlFormatter(locale, { weekday: 'short' });
-  const narrow = intlFormatter(locale, { weekday: 'narrow' });
+  const long = intlFormatter(locale, { weekday: 'long', timeZone: 'UTC' });
+  const short = intlFormatter(locale, { weekday: 'short', timeZone: 'UTC' });
+  const narrow = intlFormatter(locale, { weekday: 'narrow', timeZone: 'UTC' });
 
   const names: RiviniaWeekdayName[] = [];
   for (let index = 0; index < 7; index++) {
     const weekday = (((firstDay - 1 + index) % 7) + 1) as RiviniaWeekday;
-    const day = toLocalDate(addDays(REFERENCE_MONDAY, weekday - 1));
+    const day = toUtcDate(addDays(REFERENCE_MONDAY, weekday - 1));
     names.push({
       weekday,
       long: long.format(day),

@@ -1,5 +1,5 @@
 import type { RiviniaDate } from '../models/date-types';
-import { toLocalDate } from './date-math';
+import { toUtcDate } from './date-math';
 
 /*
  * Shared `Intl` plumbing for the formatters (both the style layer and the
@@ -110,5 +110,5 @@ export function formatValue(
   date: RiviniaDate,
   options: Intl.DateTimeFormatOptions,
 ): string {
-  return intlFormatter(locale, options).format(toLocalDate(date));
+  return intlFormatter(locale, { ...options, timeZone: 'UTC' }).format(toUtcDate(date));
 }
