@@ -71,6 +71,15 @@
   pages, a partial final page, noncontiguous rows and unknown totals. Current
   package result is 226/226 after the fix; a separate production-mode identity
   smoke verifies duplicate-ID retention and bulk-action gating.
+- Real-browser D1 follow-up: Chromium and Firefox confirmed header-inclusive
+  counts and noncontiguous absolute ordinals. Unknown positions now use explicit
+  current-page-only row counts/local indices with a screen-reader description;
+  known ordinals with unknown totals retain `aria-rowcount=-1`. A browser RED
+  showed duplicate ordinals produced duplicate `aria-rowindex` values; core now
+  rejects duplicate or out-of-order positions in development and uses
+  current-page-only row indices in production when the supplied order is invalid.
+- Browser interaction check: duplicate IDs still block selection and row
+  activation, while a projected action using row data remains available.
 
 ## 2026-11-10 — Phase C4 cross-environment and SSR confidence
 

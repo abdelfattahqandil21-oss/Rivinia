@@ -477,7 +477,7 @@ interface TableOptions<T> {
   manualSorting?: boolean;
   manualFiltering?: boolean;
   manualPagination?: boolean;
-  getRowIndex?: (row: T) => number | null;        // exact zero-based server ordinal; null if unknown
+  getRowIndex?: (row: T) => number | null;        // increasing zero-based server ordinal; null if unknown
   rowCount?: () => number;                       // when data comes from outside
   onCommit?: (change: CellChange<T>) => boolean | void | Promise<boolean>;  // 0.2.0
   labels?: Partial<TableLabels>;

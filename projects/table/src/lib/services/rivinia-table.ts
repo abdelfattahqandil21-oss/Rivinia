@@ -98,7 +98,8 @@ export interface TableOptions<T> {
   readonly manualPagination?: boolean;
   /**
    * Zero-based position in the complete result set for each externally loaded
-   * row. Return null when a cursor/noncontiguous result has no known ordinal.
+   * row. Loaded rows must have strictly increasing ordinals. Return null when a
+   * cursor/noncontiguous result has no known ordinal.
    * Used only with manualPagination; no page-index arithmetic is assumed.
    */
   readonly getRowIndex?: (row: T) => number | null;
@@ -585,7 +586,7 @@ export class RiviniaTable<T> {
       const sorted = current.manualSorting
         ? filtered
         : applySort(filtered, columns, this.sorting(), current.locale?.() ?? 'en');
-      return reindex(sorted).map((row) => {
+      const indexed = reindex(sorted).map((row) => {
         if (!current.manualPagination) return row;
         const absoluteIndex = current.getRowIndex?.(row.data) ?? null;
         if (absoluteIndex !== null && (!Number.isSafeInteger(absoluteIndex) || absoluteIndex < 0)) {
@@ -599,6 +600,44 @@ export class RiviniaTable<T> {
         }
         return { ...row, absoluteIndex };
       });
+      const ordinalPositions = new Map<number, number[]>();
+      indexed.forEach((row, position) => {
+        if (row.absoluteIndex === undefined || row.absoluteIndex === null) return;
+        const positions = ordinalPositions.get(row.absoluteIndex) ?? [];
+        positions.push(position);
+        ordinalPositions.set(row.absoluteIndex, positions);
+      });
+      for (const [ordinal, positions] of ordinalPositions) {
+        if (positions.length < 2) continue;
+        if (isDevMode()) {
+          throw new Error(
+            `[rivinia/table] Duplicate absolute row index ${ordinal} at loaded row indices ` +
+              `${positions.join(', ')}; getRowIndex must return a unique ordinal per row.`,
+          );
+        }
+        for (const position of positions) {
+          indexed[position] = { ...indexed[position], absoluteIndex: null };
+        }
+      }
+      let previousOrdinal = -1;
+      for (let position = 0; position < indexed.length; position++) {
+        const ordinal = indexed[position].absoluteIndex;
+        if (ordinal === null || ordinal === undefined) continue;
+        if (ordinal <= previousOrdinal) {
+          if (isDevMode()) {
+            throw new Error(
+              `[rivinia/table] Absolute row indices must increase with loaded row order; ` +
+                `row index ${position} has ${ordinal} after ${previousOrdinal}.`,
+            );
+          }
+          for (let pagePosition = 0; pagePosition < indexed.length; pagePosition++) {
+            indexed[pagePosition] = { ...indexed[pagePosition], absoluteIndex: null };
+          }
+          break;
+        }
+        previousOrdinal = ordinal;
+      }
+      return indexed;
     });
 
     this.total = computed(() => {

@@ -4,6 +4,9 @@
   the grid did not declare and would be announced as a row.
 -->
 <p class="rv-table-sr-only" [id]="instructionsId">{{ effectiveLabels().keyboardHelp }}</p>
+@if (currentPageOnly()) {
+  <p class="rv-table-sr-only" [id]="pageContextId">{{ pageContextDescription() }}</p>
+}
 
 <div class="rv-table-scroller" #scroll>
   <!--
@@ -15,7 +18,7 @@
     class="rv-table-grid"
     role="grid"
     [attr.aria-label]="ariaLabel() ?? hostLabel ?? effectiveLabels().grid"
-    [attr.aria-describedby]="instructionsId"
+    [attr.aria-describedby]="ariaDescribedBy()"
     [attr.aria-rowcount]="rowCount()"
     [attr.aria-colcount]="columnCount()"
     [attr.aria-multiselectable]="selectable() ? 'true' : null"

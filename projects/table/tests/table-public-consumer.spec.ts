@@ -309,8 +309,13 @@ describe('@rivinia/table built-package consumer', () => {
     host.absoluteIndexesKnown.set(false);
     host.rowCount.set(-1);
     fixture.detectChanges();
-    expect(dataRows(root).map((row) => row.hasAttribute('aria-rowindex'))).toEqual([false, false]);
-    expect(root.querySelector('[role="grid"]')?.getAttribute('aria-rowcount')).toBe('-1');
+    expect(dataRows(root).map((row) => row.getAttribute('aria-rowindex'))).toEqual(['2', '3']);
+    const grid = root.querySelector('[role="grid"]');
+    expect(grid?.getAttribute('aria-rowcount')).toBe('3');
+    const pageDescriptionId = grid?.getAttribute('aria-describedby')?.split(' ')[1];
+    expect(root.querySelector(`#${pageDescriptionId}`)?.textContent).toContain(
+      'Only the supplied page is shown',
+    );
     fixture.destroy();
   });
 

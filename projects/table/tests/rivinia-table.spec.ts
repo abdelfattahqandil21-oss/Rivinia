@@ -188,6 +188,30 @@ describe('rows and pagination', () => {
     expect(() => table.rows()).toThrow(/Invalid absolute row index -1/);
   });
 
+  it('rejects duplicate manual absolute row indices in development', () => {
+    const { table } = makeTable(
+      {
+        manualPagination: true,
+        getRowIndex: () => 42,
+      },
+      EMPLOYEES.slice(2, 4),
+    );
+
+    expect(() => table.rows()).toThrow(/Duplicate absolute row index 42.*0, 1/);
+  });
+
+  it('rejects manual absolute row indices that move backwards in loaded row order', () => {
+    const { table } = makeTable(
+      {
+        manualPagination: true,
+        getRowIndex: (row) => (row.id === 3 ? 4 : row.id === 4 ? 2 : row.id),
+      },
+      EMPLOYEES.slice(2, 4),
+    );
+
+    expect(() => table.rows()).toThrow(/Absolute row indices must increase with loaded row order/);
+  });
+
   it('treats pageSize 0 as a single page instead of crashing', () => {
     const { table } = makeTable();
     table.pageSize.set(0);

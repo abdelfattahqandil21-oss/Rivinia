@@ -17,10 +17,13 @@ A concise map of the package capabilities and their boundaries.
   a signal, so a page never recomputes more than it must.
 - **Server pages keep honest row positions.** With `manualPagination`, provide
   `getRowIndex(row)` when the server knows each row's zero-based position in the
-  complete result. Cursor or noncontiguous results can provide per-row values;
-  return `null` (or omit the callback) when a position is unknown. Rivinia then
-  omits `aria-rowindex` and reports `aria-rowcount="-1"` when the total is
-  unknown, rather than guessing from the page number.
+  complete result. Loaded rows must have strictly increasing ordinals;
+  development throws on duplicate or out-of-order positions, while production
+  falls back to current-page-only indexing when positions are ambiguous. If positions are
+  unknown, the UI exposes the supplied rows as a current-page-only grid with
+  local row indices and a description; it does not claim they are the full
+  result. When ordinals are known but the total is unknown, it reports
+  `aria-rowcount="-1"` without guessing from the page number.
 - **Selection by id, never by index.** It survives sorting, filtering and
   paging, and an action always receives the row it was rendered for.
   `selectAllOnPage()` is page-scoped on purpose.

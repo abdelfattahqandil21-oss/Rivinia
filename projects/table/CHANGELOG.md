@@ -20,6 +20,9 @@
 - Treat `NaN` from a custom sort comparator as a tie so later sort levels can
   resolve it.
 - Reconcile an invalid page when switching from manual to client pagination.
+- Use current-page-only ARIA semantics when manual row ordinals are unknown;
+  reject duplicate or out-of-order ordinals in development and fall back to
+  current-page-only positions in production.
 
 ## 1.0.4
 

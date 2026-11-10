@@ -318,6 +318,34 @@
         }
       }
     },
+    "table-e2e": {
+      "projectType": "application",
+      "root": "projects/table-e2e",
+      "sourceRoot": "projects/table-e2e/src",
+      "prefix": "table-audit",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/table-e2e/src/main.ts",
+            "index": "projects/table-e2e/src/index.html",
+            "tsConfig": "projects/table-e2e/tsconfig.app.json",
+            "assets": [],
+            "styles": [],
+            "outputPath": "dist/table-e2e"
+          },
+          "configurations": {
+            "production": { "outputHashing": "none" },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        }
+      }
+    },
     "theme-compat-e2e": {
       "projectType": "application",
       "root": "projects/theme-compat-e2e",
