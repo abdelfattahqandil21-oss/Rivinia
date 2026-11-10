@@ -99,14 +99,43 @@ test('keeps independent projected actions enabled on duplicate-ID rows', async (
   await page.keyboard.press('Space');
   await expect(page.getByTestId('selected-count')).toHaveText('0');
 
-  await rows.nth(0).getByRole('button', { name: 'Inspect First duplicate' }).click();
+  await rows.nth(0).locator('[role="gridcell"]').first().focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(rows.nth(1).locator('[role="gridcell"]').first()).toBeFocused();
+  await expect(grid.locator('[data-rv-cell][tabindex="0"]')).toHaveCount(1);
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('activated')).toBeEmpty();
+
+  const inspect = rows.nth(0).getByRole('button', { name: 'Inspect First duplicate' });
+  await inspect.focus();
+  await page.keyboard.press('Enter');
   await expect(page.getByTestId('inspected')).toHaveText('First duplicate');
+  await expect(page.getByTestId('activated')).toBeEmpty();
 
   await rows.nth(0).locator('[role="gridcell"]').first().focus();
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('activated')).toBeEmpty();
   await rows.nth(0).dblclick();
   await expect(page.getByTestId('activated')).toBeEmpty();
+});
+
+test('uses grid keyboard navigation for header and row actions', async ({ page }) => {
+  await page.goto('/');
+  const grid = page.getByRole('grid', { name: 'Audit grid' });
+  const headerCell = grid.getByRole('columnheader', { name: 'Name' });
+  const firstCell = grid.locator('[data-rv-cell="0:0"]');
+
+  await headerCell.focus();
+  await expect(grid.locator('[data-rv-cell][tabindex="0"]')).toHaveCount(1);
+  await page.keyboard.press('ArrowDown');
+  await expect(firstCell).toBeFocused();
+  await expect(grid.locator('[data-rv-cell][tabindex="0"]')).toHaveCount(1);
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('activated')).toHaveText('Third');
+  await expect(grid.locator('[data-rv-cell][tabindex="0"]')).toHaveCount(1);
+  await page.keyboard.press('Space');
+  await expect(page.getByTestId('selected-count')).toHaveText('1');
+  await expect(grid.locator('[data-rv-cell][tabindex="0"]')).toHaveCount(1);
 });
 
 test('does not invent row positions for invalid and duplicate ordinals', async ({ page }) => {

@@ -35,6 +35,27 @@
 
 ## 2026-11-10 — Phase D Table audit (in progress)
 
+- D3 real-browser focus audit reproduced a lost-focus defect when a consumer
+  sorts, pages or replaces row objects while a grid cell is focused. The UI now
+  captures cell focus before the row render changes and restores its roving
+  coordinate after render. Chromium and Firefox verify focus and exactly one
+  roving cell after each update; keyboard checks cover duplicate IDs, projected
+  native buttons, Enter/Space, and RTL horizontal movement.
+- Added a production-built consumer integration for Table with Select page size,
+  Datepicker date filtering and saved-view restore. Repeated create/destroy
+  cycles for these open controls return document/window listener counts to the
+  initial baseline. The listener audit covers those specific global events, not
+  every possible retained object or browser resource.
+- Recorded a five-sample production consumer baseline on 10,000 generated rows
+  and a 50-row page. Across Chromium 156 / Firefox 157, sort core medians were
+  3.9/7 ms, filter 12.1/12 ms, page and selection 0/0 ms; replacing objects
+  cost 3/4 ms median. Sorting and replacement read 10,000 accessor values;
+  page and selection read none. Browser interaction medians ranged 71.7–87.9 ms
+  in Chromium and 75–115 ms in Firefox. These are local medians with max-of-five
+  tails, not percentile guarantees; no compute optimization was indicated.
+- The browser harness renders 571 DOM nodes for one header plus 50 data rows.
+  WebKit and assistive-technology coverage remain unavailable in this run.
+
 - Reproduced a selection integrity defect with a manual-pagination controller:
   selecting row ID `1`, replacing the loaded page with IDs `3–4`, then returning
   to IDs `1–2` lost the selection because selection pruning treated an unloaded
