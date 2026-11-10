@@ -3,6 +3,28 @@
 **Owner:** Rivinia maintainers
 **Purpose:** dated record of repository architecture and workflow changes, separate from npm package histories.
 
+## 2026-11-10 — Phase D6 @rivinia/http correctness audit (in progress)
+
+- Source inspection confirms the package delegates transport, interceptors,
+  response event ordering, retry policy and cancellation to Angular `HttpClient`
+  / `httpResource`; it holds no mutable request cache or SSR-shared state.
+  Envelope validation and explicit one-level unwrapping run downstream of the
+  interceptor chain. Retries/timeouts remain app-owned to avoid replaying
+  non-idempotent requests.
+- Added regression evidence for Angular's outbound/inbound interceptor order
+  through `httpFeatures`, downstream response unwrapping, Observable
+  unsubscription, cancellation of an obsolete reactive-resource request, and
+  resource cancellation when its owning component is destroyed.
+- `pnpm exec ng test http --no-watch`: 44 tests passed.
+- `pnpm exec ng build http` passed; `pnpm check:docs`: 0 failures / 40 prose
+  warnings; `git diff --check` clean. No runtime contract defect reproduced
+  so far; package SSR request isolation remains delegated to Angular's
+  per-app provider lifecycle and has not been exercised in a dedicated SSR
+  consumer.
+- No public API, package dependency, version, tag, release or registry state
+  changed. Worktree: `/media/abdelfattahqandi/OWN/libs/Revinia-http-correctness`;
+  reviewer checkpoint and focused local commit pending.
+
 ## 2026-11-10 — Phase D5 i18n correctness audit (in progress)
 
 - `RiviniaI18n` now guards async and synchronous locale activation with a
