@@ -17,6 +17,9 @@
   pagination restarts at page 0 rather than assuming offset-based server pages.
 - Clamp an invalid client page to the last available page when its result set
   shrinks; manual pagination remains consumer-owned.
+- Treat `NaN` from a custom sort comparator as a tie so later sort levels can
+  resolve it.
+- Reconcile an invalid page when switching from manual to client pagination.
 
 ## 1.0.4
 

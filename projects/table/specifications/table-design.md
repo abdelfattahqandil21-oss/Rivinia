@@ -534,6 +534,8 @@ page. With `manualPagination`, page size resets to 0 because the table cannot
 assume the server's offset model. When client-side rows shrink, an invalid page
 clamps to the last available page; manual pagination leaves that decision to
 the consumer because the loaded rows do not describe the full result set.
+Switching from manual to client pagination reconciles an invalid page once the
+full client result is known.
 
 ### 4.4 Row model
 

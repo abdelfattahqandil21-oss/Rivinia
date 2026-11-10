@@ -351,6 +351,25 @@ describe('@rivinia/table built-package consumer', () => {
     fixture.destroy();
   });
 
+  it('reconciles page state when pagination switches from manual to client mode', () => {
+    const manualPagination = signal(true);
+    const table = createTable<Employee>(() => ({
+      columns: () => COLUMNS,
+      data: () => EMPLOYEES,
+      manualPagination: manualPagination(),
+      pageSize: 2,
+    }));
+
+    table.page.set(4);
+    manualPagination.set(false);
+    expect(table.page()).toBe(2);
+    expect(table.pageRows().map((row) => row.id)).toEqual([5]);
+
+    table.page.set(4);
+    manualPagination.set(true);
+    expect(table.page()).toBe(4);
+  });
+
   it('leaves manual page reconciliation to the consumer when its total shrinks', () => {
     const { fixture, host } = mount();
     host.table.page.set(2);

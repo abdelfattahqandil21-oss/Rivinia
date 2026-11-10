@@ -333,11 +333,38 @@ describe('sorting, filtering and search', () => {
     expect(table.request()).toMatchObject({ page: 0, pageSize: 50 });
   });
 
+  it('prioritizes a query reset when filter, page size and data change together', () => {
+    const { table, data } = makeTable();
+    table.pageSize.set(2);
+    table.page.set(2);
+    expect(pageIds(table)).toEqual([5, 6]);
+
+    table.filters.set([{ column: 'city', value: 'Cairo' }]);
+    table.pageSize.set(1);
+    data.set(EMPLOYEES.slice(0, 3));
+
+    expect(table.page()).toBe(0);
+    expect(pageIds(table)).toEqual([1]);
+    expect(table.request()).toMatchObject({ page: 0, pageSize: 1 });
+  });
+
   it('skips the client sort and filter stages when the caller owns them', () => {
     const { table } = makeTable({ manualFiltering: true, manualSorting: true });
     table.filters.set([{ column: 'city', value: 'Giza' }]);
     table.sorting.set([{ column: 'salary', direction: 'asc' }]);
     expect(ids(table)).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+
+  it('applies only the local stage when sorting or filtering is manual', () => {
+    const filteringClient = makeTable({ manualSorting: true });
+    filteringClient.table.filters.set([{ column: 'city', value: 'Cairo' }]);
+    filteringClient.table.sorting.set([{ column: 'salary', direction: 'desc' }]);
+    expect(ids(filteringClient.table)).toEqual([1, 3, 6]);
+
+    const sortingClient = makeTable({ manualFiltering: true });
+    sortingClient.table.filters.set([{ column: 'city', value: 'Cairo' }]);
+    sortingClient.table.sorting.set([{ column: 'salary', direction: 'desc' }]);
+    expect(ids(sortingClient.table)).toEqual([3, 6, 5, 1, 4, 2]);
   });
 
   it('keeps manual sort, filter and page data consumer-owned while exposing the request', () => {

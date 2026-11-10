@@ -20,3 +20,6 @@ restored out-of-range page remains empty until the consumer changes it or the
 client-side result shrinks and makes that page invalid; then the page clamps to
 the last available page. Manual pagination leaves page reconciliation to the
 consumer because a loaded page does not describe the full result set.
+Switching from manual to client pagination reconciles an invalid page against
+the now-known client result; switching into manual mode leaves page ownership
+with the consumer.

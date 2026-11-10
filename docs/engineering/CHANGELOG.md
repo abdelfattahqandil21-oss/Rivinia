@@ -18,12 +18,20 @@
 - Built-package consumer RED: shrinking a six-row client result to three rows
   while on page 2 left the page out of range and empty. Client pagination now
   clamps to page 1, while manual pagination remains consumer-owned.
+- Built-package consumer RED: a custom comparator returning `NaN` stopped
+  multi-sort before the next key, leaving rows in input order. Sorting now
+  treats `NaN` as a tie, matching `Array.sort`, and evaluates the next key.
+- Pagination boundary checks: switching manual pagination to client mode exposed
+  a second mismatch (`null` prior count to known client count), leaving an
+  invalid page untouched. Client mode now clamps on that transition; simultaneous
+  query, size and data changes prioritize the query reset.
 - Added built-output consumer coverage for page-size changes with selection and
   rendered ARIA positions, controlled response reordering (newer response wins
   even when the older response resolves later), and an empty server response
-  replacing prior rows. Core coverage combines sort/filter/page/selection
-  restore and verifies manual transformations leave data changes to the
-  consumer. The full Table suite is pending after the shrink reconciliation.
+  replacing prior rows, plus custom-comparator ties and pagination mode changes.
+  Core coverage combines sort/filter/page/selection restore, null/undefined and
+  locale sort behavior, query-reset precedence under simultaneous updates, and
+  manual transformation ownership. The full Table suite passes 242/242.
 
 ## 2026-11-10 — Phase D Table audit (in progress)
 

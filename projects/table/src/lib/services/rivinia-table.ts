@@ -647,8 +647,7 @@ export class RiviniaTable<T> {
         const currentTotal = current[4];
         if (
           currentTotal !== null &&
-          previousTotal !== null &&
-          currentTotal < previousTotal &&
+          (previousTotal === null || currentTotal < previousTotal) &&
           currentSize > 0
         ) {
           const lastPage = Math.max(0, Math.ceil(currentTotal / currentSize) - 1);
