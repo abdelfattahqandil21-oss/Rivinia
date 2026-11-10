@@ -1,13 +1,21 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpResponse, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { signal, computed } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { map } from 'rxjs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { RiviniaHttpConfig } from '../src/lib/models/http-config';
 import { RiviniaHttpEnvelopeError } from '../src/lib/models/http-envelope';
 import { RiviniaHttpUnwrapError } from '../src/lib/utils/http-utils';
 import { provideRiviniaHttp } from '../src/lib/providers/provide-http';
 import { RiviniaHttp } from '../src/lib/services/rivinia-http';
+
+@Component({ template: '' })
+class ResourceConsumer {
+  readonly resource = inject(RiviniaHttp).getResource('https://api.test/destroyed', {
+    unwrap: false,
+  });
+}
 
 function setup(config: RiviniaHttpConfig = {}) {
   TestBed.configureTestingModule({
@@ -30,6 +38,17 @@ describe('RiviniaHttp (plain Observables)', () => {
     ctrl.expectOne('https://api.test/users').flush(envelope);
     expect(received).toEqual(envelope);
     ctrl.verify();
+  });
+
+  it('propagates Observable unsubscription to the in-flight HttpClient request', () => {
+    const { http, ctrl } = setup();
+    const subscription = http.get<unknown>('https://api.test/slow').subscribe();
+    const request = ctrl.expectOne('https://api.test/slow');
+
+    subscription.unsubscribe();
+
+    expect(request.cancelled).toBe(true);
+    ctrl.verify({ ignoreCancelled: true });
   });
 
   it('unwraps { data } with an explicit per-call key', () => {
@@ -360,6 +379,54 @@ describe('provideRiviniaHttp httpFeatures', () => {
     req.flush({});
     ctrl.verify();
   });
+
+  it('preserves Angular interceptor request/response order before client unwrapping', () => {
+    const order: string[] = [];
+    TestBed.configureTestingModule({
+      providers: [
+        provideRiviniaHttp({
+          httpFeatures: [
+            withInterceptors([
+              (req, next) => {
+                order.push('first:request');
+                return next(req.clone({ setHeaders: { 'X-First': '1' } })).pipe(
+                  map((event) => {
+                    if (event instanceof HttpResponse) order.push('first:response');
+                    return event;
+                  }),
+                );
+              },
+              (req, next) => {
+                order.push('second:request');
+                return next(req.clone({ setHeaders: { 'X-Second': '1' } })).pipe(
+                  map((event) => {
+                    if (event instanceof HttpResponse) order.push('second:response');
+                    return event;
+                  }),
+                );
+              },
+            ]),
+          ],
+        }),
+        provideHttpClientTesting(),
+      ],
+    });
+    const http = TestBed.inject(RiviniaHttp);
+    const ctrl = TestBed.inject(HttpTestingController);
+    let received: unknown;
+    http
+      .get<unknown>('https://api.test/intercepted', { unwrap: true, unwrapKey: 'data' })
+      .subscribe((value) => (received = value));
+
+    const req = ctrl.expectOne('https://api.test/intercepted');
+    expect(req.request.headers.get('X-First')).toBe('1');
+    expect(req.request.headers.get('X-Second')).toBe('1');
+    req.flush({ data: { id: 7 } });
+
+    expect(order).toEqual(['first:request', 'second:request', 'second:response', 'first:response']);
+    expect(received).toEqual({ id: 7 });
+    ctrl.verify();
+  });
 });
 describe('RiviniaHttp envelope failures', () => {
   const failed = { data: null, isSuccess: false, error: 'CARD_DECLINED' };
@@ -493,6 +560,38 @@ describe('RiviniaHttp.getResource', () => {
     expect(second.request.params.get('page')).toBe('2');
     second.flush([]);
     ctrl.verify();
+  });
+
+  it('cancels an obsolete in-flight request when a reactive endpoint changes', async () => {
+    const { http, ctrl } = setup();
+    const endpoint = signal<string | undefined>('https://api.test/items/a');
+    const resource = TestBed.runInInjectionContext(() => http.getResource(endpoint));
+    TestBed.flushEffects();
+    const obsolete = ctrl.expectOne('https://api.test/items/a');
+
+    endpoint.set('https://api.test/items/b');
+    TestBed.flushEffects();
+
+    expect(obsolete.cancelled).toBe(true);
+    ctrl.expectOne('https://api.test/items/b').flush({ data: ['current'] });
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    TestBed.flushEffects();
+    expect(resource.value()).toEqual({ data: ['current'] });
+    ctrl.verify({ ignoreCancelled: true });
+  });
+
+  it('releases its in-flight request when the owning Angular consumer is destroyed', () => {
+    const { ctrl } = setup();
+    const fixture = TestBed.createComponent(ResourceConsumer);
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    const request = ctrl.expectOne('https://api.test/destroyed');
+
+    fixture.destroy();
+
+    expect(request.cancelled).toBe(true);
+    ctrl.verify({ ignoreCancelled: true });
   });
 
   it('disables the request while the endpoint signal is undefined', () => {
