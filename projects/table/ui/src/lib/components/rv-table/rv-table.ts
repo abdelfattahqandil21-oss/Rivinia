@@ -7,6 +7,7 @@ import {
   afterRenderEffect,
   computed,
   contentChildren,
+  effect,
   inject,
   input,
   model,
@@ -461,6 +462,16 @@ export class RiviniaTableComponent {
   });
 
   constructor() {
+    // If a consumer replaces, reorders or pages the rows while a grid cell has
+    // DOM focus, that cell may be removed before the next render. Capture the
+    // intent while the old element is still active; the render effect below
+    // moves focus to the same roving coordinate in the updated grid.
+    effect(() => {
+      this.bodyRows();
+      const activeElement = this.host.nativeElement.ownerDocument.activeElement;
+      if (activeElement?.hasAttribute('data-rv-cell')) this.pendingFocus = true;
+    });
+
     // Focus is applied AFTER the DOM has the new tabindex; focusing during the
     // keydown would land on an element that is about to be re-rendered.
     afterRenderEffect(() => {
