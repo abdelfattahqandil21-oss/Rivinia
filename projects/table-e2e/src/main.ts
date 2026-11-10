@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRiviniaDatepicker } from '@rivinia/datepicker';
 import type { RiviniaDate } from '@rivinia/datepicker';
@@ -63,9 +64,15 @@ function makePerfRows(count: number): readonly PerfRow[] {
 
 @Component({
   selector: 'table-audit-root',
-  imports: [RiviniaTableComponent, RvTableCell, RiviniaSelectComponent, RiviniaDatepickerComponent],
+  imports: [
+    ReactiveFormsModule,
+    RiviniaTableComponent,
+    RvTableCell,
+    RiviniaSelectComponent,
+    RiviniaDatepickerComponent,
+  ],
   template: `
-    <main>
+    <main [attr.dir]="dateLocale() === 'ar-EG' ? 'rtl' : 'ltr'">
       @if (performanceMode()) {
         <h1>Table performance audit</h1>
         <div class="controls">
@@ -92,6 +99,35 @@ function makePerfRows(count: number): readonly PerfRow[] {
           <button type="button" data-testid="restore-view" (click)="restoreView()">
             Restore view
           </button>
+          <button type="button" data-testid="toggle-date-locale" (click)="toggleDateLocale()">
+            Toggle date locale
+          </button>
+          <button type="button" data-testid="set-samoa-date" (click)="setSamoaDate()">
+            Set 2011-12-30
+          </button>
+          <button type="button" data-testid="restrict-date-range" (click)="restrictDateRange()">
+            Restrict dates to January 15–16
+          </button>
+          <button type="button" data-testid="expand-date-range" (click)="expandDateRange()">
+            Expand date range
+          </button>
+          <button type="button" data-testid="clear-date-range" (click)="clearDateRange()">
+            Clear date range
+          </button>
+          <button
+            type="button"
+            data-testid="prepare-date-navigation"
+            (click)="prepareDateNavigation()"
+          >
+            Prepare date navigation
+          </button>
+          <button
+            type="button"
+            data-testid="show-datepicker-form"
+            (click)="showDatepickerForm.set(true)"
+          >
+            Show Datepicker form audit
+          </button>
           <button type="button" data-testid="show-aria-audit" (click)="performanceMode.set(false)">
             Accessibility audit
           </button>
@@ -106,10 +142,22 @@ function makePerfRows(count: number): readonly PerfRow[] {
         <rv-datepicker
           label="Filter date"
           format="dd/MM/yyyy"
+          [locale]="dateLocale()"
+          [min]="dateMin()"
+          [max]="dateMax()"
           [(value)]="dateFilter"
           (valueChange)="applyDateFilter($event)"
           [clearable]="true"
         />
+        @if (showDatepickerForm()) {
+          <section data-testid="datepicker-form-audit">
+            <button type="button" data-testid="set-form-date" (click)="setFormDate()">
+              Set form date
+            </button>
+            <rv-datepicker label="Form date" [formControl]="formDate" />
+            <output data-testid="form-date-state">{{ formDateState() }}</output>
+          </section>
+        }
         <p data-testid="perf-page-size">{{ perfTable.pageSize() }}</p>
         <p data-testid="date-filter-count">{{ perfTable.rows().length }}</p>
         <p data-testid="perf-measurement">{{ perfMeasurement() }}</p>
@@ -204,6 +252,11 @@ class TableAuditApp {
   ];
   readonly pageSizeValue = signal<SelectChange>('50');
   readonly dateFilter = signal<RiviniaDate | null>({ year: 2026, month: 1, day: 15 });
+  readonly showDatepickerForm = signal(false);
+  readonly formDate = new FormControl<RiviniaDate | null>(null);
+  readonly dateLocale = signal('en-US');
+  readonly dateMin = signal<RiviniaDate | undefined>({ year: 2026, month: 1, day: 1 });
+  readonly dateMax = signal<RiviniaDate | undefined>({ year: 2026, month: 1, day: 31 });
   readonly perfMeasurement = signal('');
   readonly savedView = signal<SavedPerfView | null>(null);
   private accessorReads = 0;
@@ -385,6 +438,48 @@ class TableAuditApp {
       pageSizeValue: this.pageSizeValue(),
       dateFilter: this.dateFilter(),
     });
+  }
+
+  toggleDateLocale(): void {
+    this.dateLocale.update((locale) => (locale === 'en-US' ? 'ar-EG' : 'en-US'));
+  }
+
+  setSamoaDate(): void {
+    this.dateMin.set({ year: 2011, month: 12, day: 1 });
+    this.dateMax.set({ year: 2011, month: 12, day: 31 });
+    this.dateFilter.set({ year: 2011, month: 12, day: 30 });
+  }
+
+  restrictDateRange(): void {
+    this.dateMin.set({ year: 2026, month: 1, day: 15 });
+    this.dateMax.set({ year: 2026, month: 1, day: 16 });
+  }
+
+  expandDateRange(): void {
+    this.dateMin.set({ year: 2026, month: 1, day: 14 });
+    this.dateMax.set({ year: 2026, month: 1, day: 18 });
+  }
+
+  clearDateRange(): void {
+    this.dateMin.set(undefined);
+    this.dateMax.set(undefined);
+  }
+
+  prepareDateNavigation(): void {
+    this.dateMin.set({ year: 2024, month: 1, day: 1 });
+    this.dateMax.set({ year: 2027, month: 12, day: 31 });
+  }
+
+  setFormDate(): void {
+    this.formDate.setValue({ year: 2026, month: 2, day: 10 });
+  }
+
+  formDateState(): string {
+    const value = this.formDate.value;
+    const date = value
+      ? `${value.year}-${String(value.month).padStart(2, '0')}-${String(value.day).padStart(2, '0')}`
+      : 'empty';
+    return `${date}|dirty=${this.formDate.dirty}|touched=${this.formDate.touched}`;
   }
 
   restoreView(): void {

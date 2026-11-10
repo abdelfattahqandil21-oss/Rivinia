@@ -11,6 +11,7 @@ import {
   model,
   output,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import type { FormValueControl } from '@angular/forms/signals';
@@ -213,11 +214,11 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
     });
 
     effect(() => {
-      const min = this.min();
-      const max = this.max();
-      // Both unbound → keep whatever the configuration provided.
-      if (min === undefined && max === undefined) return;
-      this.calendar.setBounds(min ?? null, max ?? null);
+      // An undefined input restores its configured fallback; if neither source
+      // supplies a bound, setBounds(null, null) clears a previously set range.
+      const min = this.min() ?? this.config.min ?? null;
+      const max = this.max() ?? this.config.max ?? null;
+      untracked(() => this.calendar.setBounds(min, max));
     });
 
     effect(() => this.calendar.setLabels(this.labels()));
@@ -265,9 +266,7 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
         return;
       }
       const update = (): void => {
-        this.panelShift.set(
-          panelViewportShift(panel, this.triggerRef()?.nativeElement),
-        );
+        this.panelShift.set(panelViewportShift(panel, this.triggerRef()?.nativeElement));
       };
       update();
       if (typeof ResizeObserver === 'undefined') return;
@@ -360,10 +359,24 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
   /** Touch when focus leaves the whole control (trigger + panel). */
   protected onFocusOut(event: FocusEvent): void {
     const related = event.relatedTarget as Node | null;
-    if (!related || !this.hostRef.nativeElement.contains(related)) {
-      if (this.open()) this.closePanel(false);
-      else this.touch.emit();
+    if (related && this.hostRef.nativeElement.contains(related)) return;
+
+    if (!related && this.open() && typeof document !== 'undefined') {
+      // Chromium can report a null relatedTarget when rendering replaces the
+      // focused calendar cell (for example, PageDown changes the month). Let
+      // the calendar's after-render focus restoration run before deciding the
+      // user actually left the non-modal control.
+      queueMicrotask(() => {
+        const active = document.activeElement;
+        if (this.open() && (!active || !this.hostRef.nativeElement.contains(active))) {
+          this.closePanel(false);
+        }
+      });
+      return;
     }
+
+    if (this.open()) this.closePanel(false);
+    else this.touch.emit();
   }
 
   private openPanel(): void {
@@ -403,10 +416,7 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
     this.closing.set(true);
     // `animationend` normally finishes this; the timer is the safety net for
     // a consumer stylesheet that removes the animation.
-    this.closeTimer = setTimeout(
-      () => this.finishClose(),
-      PANEL_EXIT_FALLBACK_MS,
-    );
+    this.closeTimer = setTimeout(() => this.finishClose(), PANEL_EXIT_FALLBACK_MS);
   }
 
   /** The panel's exit animation ended; remove the panel now. */

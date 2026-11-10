@@ -1,8 +1,9 @@
 import { Component, signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DATE_PICKER_CONFIG } from '../src/public-api';
+import { DATE_PICKER_CONFIG, RiviniaCalendar } from '../src/public-api';
 import { RiviniaDatepickerComponent } from '../ui/src/public-api';
 import type {
   RiviniaDate,
@@ -166,14 +167,11 @@ describe('rv-datepicker — the trigger', () => {
   });
 
   it('localizes with the locale, digits included', () => {
-    const mounted = mount(
-      { locale: 'ar-EG' },
-      (host) => {
-        host.locale = 'ar-EG';
-        host.format = 'long';
-        host.value.set(d(2026, 10, 25));
-      },
-    );
+    const mounted = mount({ locale: 'ar-EG' }, (host) => {
+      host.locale = 'ar-EG';
+      host.format = 'long';
+      host.value.set(d(2026, 10, 25));
+    });
     expect(mounted.trigger().textContent).toContain('٢٥');
     expect(mounted.trigger().textContent).toContain('أكتوبر');
   });
@@ -317,6 +315,51 @@ describe('rv-datepicker — the panel', () => {
     expect(ninth?.getAttribute('aria-disabled')).toBe('true');
   });
 
+  it('keeps configured bounds when input bounds are not supplied', () => {
+    const configured = mount({ min: d(2026, 10, 10), max: d(2026, 10, 20) });
+    configured.open();
+
+    const afterMax = configured.cells().find((cell) => cell.dataset['date'] === '2026-10-21');
+    expect(afterMax?.getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('keeps disabled dates keyboard-focusable after crossing a bound', () => {
+    const bounded = mount({}, (host) => {
+      host.min = d(2026, 10, 10);
+      host.max = d(2026, 10, 20);
+      host.value.set(d(2026, 10, 20));
+    });
+    bounded.open();
+
+    bounded.press('ArrowRight');
+
+    expect(document.activeElement).toBe(
+      bounded.cells().find((cell) => cell.dataset['date'] === '2026-10-21'),
+    );
+    expect(document.activeElement?.getAttribute('aria-disabled')).toBe('true');
+    expect(bounded.host.value()).toEqual(d(2026, 10, 20));
+  });
+
+  it('syncs changed bounds without rerunning synchronization on focus movement', () => {
+    const bounded = mount({}, (host) => {
+      host.min = d(2026, 10, 10);
+      host.max = d(2026, 10, 20);
+      host.value.set(d(2026, 10, 20));
+    });
+    const calendar = bounded.fixture.debugElement
+      .query(By.directive(RiviniaDatepickerComponent))
+      .injector.get(RiviniaCalendar);
+    const setBounds = vi.spyOn(calendar, 'setBounds');
+    bounded.open();
+    const initialSyncs = setBounds.mock.calls.length;
+
+    bounded.press('ArrowRight');
+
+    expect(setBounds).toHaveBeenCalledTimes(initialSyncs);
+    expect(calendar.focused()).toEqual(d(2026, 10, 21));
+    expect(calendar.canSelect(d(2026, 10, 21))).toBe(false);
+  });
+
   it('marks today from the configured clock', () => {
     mounted.open();
     const today = mounted.cells().find((cell) => cell.dataset['date'] === '2026-10-25');
@@ -330,7 +373,6 @@ describe('rv-datepicker — the panel', () => {
     expect(active.dataset['date']).toBe('2026-03-15');
   });
 });
-
 
 describe('rv-datepicker — wrapped in a <label>', () => {
   it('closes after a pick instead of letting the label re-open it', () => {
