@@ -102,6 +102,30 @@ describe('RiviniaSelectComponent — Reactive Forms (formControlName)', () => {
     expect(fixture.componentInstance.fg.get('val')!.value).toBe('a');
   });
 
+  it('closes the open popup without changing the value when the form disables the select', async () => {
+    const fixture = TestBed.createComponent(ReactiveHost);
+    const control = fixture.componentInstance.fg.controls.val;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const trigger = q(fixture.nativeElement, '.rv-select-trigger');
+    trigger.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const option = Array.from(
+      fixture.nativeElement.querySelectorAll('[rvselectpopupitem]') as NodeListOf<HTMLElement>,
+    ).find((item) => item.textContent?.trim() === 'Beta')!;
+    expect(option).toBeDefined();
+
+    control.disable();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    option.click();
+    fixture.detectChanges();
+
+    expect(control.value).toBe('a');
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  });
+
   it('disabled state prevents interaction and is restored', async () => {
     const fixture = TestBed.createComponent(ReactiveHost);
     fixture.detectChanges();
