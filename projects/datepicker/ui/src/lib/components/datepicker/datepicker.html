@@ -54,7 +54,7 @@
     role="dialog"
     [id]="panelId"
     [attr.aria-labelledby]="headingId"
-    [attr.inert]="closing() ? '' : null"
+    [attr.inert]="closing() || isDisabled() ? '' : null"
     [attr.aria-hidden]="closing() ? 'true' : null"
     [style.--rv-datepicker-panel-shift]="panelShift() + 'px'"
     (click)="onPanelClick($event)"

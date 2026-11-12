@@ -308,6 +308,8 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
   }
 
   protected onPicked(date: RiviniaDate): void {
+    if (this.isDisabled()) return;
+
     // Setting the model is what notifies the form AND a `[(value)]` parent:
     // `valueChange` belongs to the model. It emits only when the value really
     // changes, so re-picking the same day is silent.

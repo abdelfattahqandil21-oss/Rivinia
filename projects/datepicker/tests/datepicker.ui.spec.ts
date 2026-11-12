@@ -176,6 +176,22 @@ describe('rv-datepicker — the trigger', () => {
     expect(mounted.trigger().textContent).toContain('أكتوبر');
   });
 
+  it('does not commit a date after the open picker becomes disabled', () => {
+    const mounted = mount({}, (host) => host.value.set(d(2026, 10, 25)));
+    mounted.open();
+    const nextDay = mounted.cells().find((cell) => cell.dataset['date'] === '2026-10-26')!;
+    expect(nextDay).toBeDefined();
+
+    mounted.host.disabled.set(true);
+    mounted.settle();
+    nextDay.click();
+    mounted.settle();
+
+    expect(mounted.host.value()).toEqual(d(2026, 10, 25));
+    expect(mounted.host.changes).toEqual([]);
+    expect(mounted.panel()?.hasAttribute('inert')).toBe(true);
+  });
+
   it('is disabled when asked', () => {
     const mounted = mount({}, (host) => host.disabled.set(true));
     expect(mounted.trigger().disabled).toBe(true);
