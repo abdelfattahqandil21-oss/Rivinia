@@ -388,6 +388,10 @@ export class RiviniaSelectComponent implements FormValueControl<SelectChange> {
         }
       }
     });
+    effect(() => {
+      if (this.disabled() && this.popup.open()) this.popup.closePopup();
+    });
+
     // Searchable open lands focus in the filter box. The inner menu already
     // focused the first item in its own hook, so this runs in a microtask —
     // deterministically after every render hook — and only on the opening
@@ -483,6 +487,8 @@ export class RiviniaSelectComponent implements FormValueControl<SelectChange> {
   }
 
   protected onPick(id: string): void {
+    if (this.disabled()) return;
+
     const c = this.controller();
     if (c.mode === 'single') {
       if (!c.select(id)) return;
