@@ -1,7 +1,7 @@
 import { HttpResponse, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, Injector } from '@angular/core';
 import { map } from 'rxjs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { RiviniaHttpConfig } from '../src/lib/models/http-config';
@@ -30,6 +30,41 @@ function setup(config: RiviniaHttpConfig = {}) {
 beforeEach(() => TestBed.resetTestingModule());
 
 describe('RiviniaHttp (plain Observables)', () => {
+  it('serializes array params as repeated keys and omits empty arrays and nullish values', () => {
+    const { http, ctrl } = setup();
+    http.get('/arrays', { params: { tag: ['a', 'b'], flags: [true, 2], empty: [], skip: null, unset: undefined } }).subscribe();
+    const request = ctrl.expectOne(req => req.url === '/arrays');
+    expect(request.request.params.getAll('tag')).toEqual(['a', 'b']);
+    expect(request.request.params.getAll('flags')).toEqual(['true', '2']);
+    expect(request.request.params.has('empty')).toBe(false);
+    expect(request.request.params.has('skip')).toBe(false);
+    expect(request.request.params.has('unset')).toBe(false);
+    request.flush({}); ctrl.verify();
+  });
+
+  it('forwards native transport controls on every Observable path', () => {
+    const { http, ctrl } = setup();
+    const options = { timeout: 123, transferCache: false, cache: 'no-store' as const,
+      credentials: 'include' as const, priority: 'high' as const, mode: 'cors' as const,
+      redirect: 'error' as const, referrer: 'about:client', referrerPolicy: 'no-referrer' as const,
+      integrity: 'sha256-example', keepalive: true };
+    const calls = [http.get('/get', options), http.post('/post', {}, options),
+      http.put('/put', {}, options), http.patch('/patch', {}, options), http.delete('/delete', options),
+      http.getBlob('/blob', options), http.getText('/text', options),
+      http.getResponse('/response', options), http.postResponse('/post-response', {}, options)];
+    for (const call of calls) call.subscribe();
+    const requests = ctrl.match(() => true);
+    expect(requests.length).toBe(9);
+    for (const request of requests) {
+      for (const [key, value] of Object.entries(options)) {
+        expect(Reflect.get(request.request, key), key).toEqual(value);
+      }
+      const type = request.request.responseType;
+      request.flush(type === 'blob' ? new Blob() : type === 'text' ? '' : {});
+    }
+    ctrl.verify();
+  });
+
   it('passes bodies through untouched by default (unwrapping is opt-in)', () => {
     const { http, ctrl } = setup();
     let received: unknown;
@@ -489,6 +524,50 @@ describe('RiviniaHttp envelope failures', () => {
 });
 
 describe('RiviniaHttp.getResource', () => {
+  it('passes chaining context through and replaces a dependent request when its source resolves a new value', async () => {
+    const { http, ctrl } = setup();
+    const id = signal(1);
+    const parent = TestBed.runInInjectionContext(() => http.getResource<{ id: number }>(() => `/parent/${id()}`));
+    const child = TestBed.runInInjectionContext(() => http.getResource<string>(ctx => { const value = ctx.chain(parent); return value ? `/child/${value.id}` : undefined; }));
+    TestBed.flushEffects();
+    ctrl.expectNone(req => req.url.startsWith('/child/'));
+    ctrl.expectOne('/parent/1').flush({ id: 10 });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    TestBed.flushEffects();
+    const pending = ctrl.expectOne('/child/10');
+    id.set(2); TestBed.flushEffects();
+    ctrl.expectOne('/parent/2').flush({ id: 20 });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    TestBed.flushEffects();
+    expect(pending.cancelled).toBe(true);
+    ctrl.expectOne('/child/20').flush('current');
+    await new Promise(resolve => setTimeout(resolve, 0));
+    TestBed.flushEffects();
+    expect(child.value()).toBe('current');
+    ctrl.verify({ ignoreCancelled: true });
+  });
+
+  it('accepts an explicit injector outside injection context and preserves native equality', async () => {
+    const { http, ctrl } = setup();
+    const resource = http.getResource<{ id: number }>('/resource-options', {
+      injector: TestBed.inject(Injector), defaultValue: { id: 0 }, debugName: 'resource-options',
+      equal: (a, b) => a?.id === b?.id, timeout: 456, transferCache: false,
+    });
+    expect(resource.value()).toEqual({ id: 0 });
+    TestBed.flushEffects();
+    const request = ctrl.expectOne('/resource-options');
+    expect(request.request.timeout).toBe(456);
+    expect(request.request.transferCache).toBe(false);
+    request.flush({ id: 1 });
+    await new Promise(resolve => setTimeout(resolve, 0)); TestBed.flushEffects();
+    const first = resource.value();
+    resource.reload(); TestBed.flushEffects();
+    ctrl.expectOne('/resource-options').flush({ id: 1 });
+    await new Promise(resolve => setTimeout(resolve, 0)); TestBed.flushEffects();
+    expect(resource.value()).toBe(first);
+    ctrl.verify();
+  });
+
   it('exposes unwrapped JSON as a resource value', async () => {
     const { http, ctrl } = setup();
     const res = TestBed.runInInjectionContext(() =>

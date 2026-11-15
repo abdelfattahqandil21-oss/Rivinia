@@ -52,3 +52,16 @@ ng add @rivinia/http
 | Response envelopes and errors | [Response envelopes and errors](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/http/v1.0.4/docs/http/envelopes-and-errors.md) |
 | API reference | [API reference](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/http/v1.0.4/docs/http/api.md) |
 | Testing | [Testing](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/http/v1.0.4/docs/http/testing.md) |
+
+## Native option forwarding (next release)
+
+Observable requests and `getResource` accept native transport controls, including
+backend `timeout`, SSR `transferCache`, and fetch cache/credentials/priority options.
+`getResource` also forwards `injector`, `equal`, and `debugName`. Its URL callback
+receives Angular's resource context for `ctx.chain(...)`. Supplying a `defaultValue`
+provides the corresponding defined resource type. Query params accept readonly
+primitive arrays as repeated keys, omitting empty arrays and nullish values.
+
+Envelope validation, unwrap and parse keep their existing order. These options add
+no retry policy or shared application cache. HTTP QUERY is deferred until the
+framework API is stable; this change retains the existing Angular baseline.

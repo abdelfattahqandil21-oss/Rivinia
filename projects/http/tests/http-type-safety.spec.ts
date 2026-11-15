@@ -1,5 +1,6 @@
 import { describe, expect } from 'vitest';
 import { unwrapAs } from '../src/lib/utils/http-utils';
+import type { HttpResourceRef } from '@angular/common/http';
 import type { RiviniaHttp } from '../src/lib/services/rivinia-http';
 
 /**
@@ -70,6 +71,12 @@ function assertRawMethodsRejectUnwrap(): void {
 }
 
 function assertResourceContract(): void {
+  const defined: HttpResourceRef<User[]> = http.getResource<User[]>('/users', { defaultValue: [] });
+  const nullable: HttpResourceRef<User | null> = http.getResource<User | null>('/users/1', { defaultValue: null });
+  // @ts-expect-error - no default means the native value can be undefined
+  const missing: HttpResourceRef<User[]> = http.getResource<User[]>('/users');
+  void defined; void nullable; void missing;
+
   http.getResource<User[]>('/api/users', { unwrap: true, unwrapKey: 'data' });
   // @ts-expect-error - key is required when unwrap is enabled
   http.getResource<User[]>('/api/users', { unwrap: true });
