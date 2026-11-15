@@ -11,12 +11,12 @@
     "schematics:toast": "tsc -p projects/toast/schematics/tsconfig.schematics.json && mv projects/toast/schematics/ng-add/index.js projects/toast/schematics/ng-add/index.cjs",
     "schematics:i18n": "tsc -p projects/i18n/schematics/tsconfig.schematics.json && mv projects/i18n/schematics/ng-add/index.js projects/i18n/schematics/ng-add/index.cjs",
     "schematics:modal": "tsc -p projects/modal/schematics/tsconfig.schematics.json && mv projects/modal/schematics/ng-add/index.js projects/modal/schematics/ng-add/index.cjs",
-    "schematics:env": "tsc -p projects/env/schematics/tsconfig.schematics.json && mv projects/env/schematics/ng-add/index.js projects/env/schematics/ng-add/index.cjs",
+    "schematics:env": "node projects/env/build-schematics.mjs",
     "build:http": "pnpm schematics:http && ng build http",
     "build:toast": "pnpm schematics:toast && ng build toast",
     "build:i18n": "pnpm schematics:i18n && pnpm build:select && ng build i18n",
     "build:modal": "pnpm schematics:modal && ng build modal",
-    "build:env": "pnpm schematics:env && ng build env",
+    "build:env": "pnpm schematics:env && ng build env && node projects/env/build-schematics.mjs",
     "build:menu": "ng build menu",
     "build:select": "ng build select",
     "build:theme": "ng build theme",
@@ -77,6 +77,7 @@
     "sass": "1.105.1",
     "tailwindcss": "4.3.5",
     "typescript": "~6.0.2",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "jsonc-parser": "3.3.1"
   }
 }

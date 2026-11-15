@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Apply an explicitly reviewed environment plan",
+  "type": "object",
+  "properties": {
+    "project": { "type": "string" },
+    "planFile": { "type": "string" },
+    "reviewedDigest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "acceptConfigurationMapping": { "type": "boolean", "default": false },
+    "acceptEnvironmentSemantics": { "type": "boolean", "default": false },
+    "force": { "type": "boolean", "default": false }
+  },
+  "required": ["planFile", "reviewedDigest"],
+  "additionalProperties": false
+}

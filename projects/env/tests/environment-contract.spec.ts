@@ -6,7 +6,7 @@
  * So the thing worth testing is the seam between the two: the environment
  * file the schematic scaffolds must satisfy the type the package publishes.
  *
- * The test drives the COMPILED schematic (`schematics/ng-add/index.cjs`) —
+ * The test drives the COMPILED schematic (`schematics/ng-add.cjs`) —
  * the file that actually ships — so a drift between the scaffolded output
  * and the published contract fails here, not in a consumer's app.
  */

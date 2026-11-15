@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5
+
+- Add explicit-first environment inspection, proposal, validation, apply, and model-generation schematics.
+- Combine scaffold and review-first setup options behind the single `ng add @rivinia/env` schematic.
+- Permit read-only analysis through workspace-internal symlinks, including pnpm-managed TypeScript declarations, while keeping generated and updated paths symlink-safe.
+
 ## 1.0.4
 
 - Update published internal dependency metadata and version-pinned documentation links for the synchronized Rivinia 1.0 patch. No public API changes.
