@@ -18,6 +18,7 @@ export const routes: Routes = [
   { path: 'two', component: TwoPage },
   { path: 'rtl', component: RtlPage },
   { path: 'edge', component: EdgePage },
+  { path: 'combobox', loadComponent: () => import('./pages/combobox').then(module => module.ComboboxPage) },
   { path: 'select', component: SelectPage },
   { path: 'styled', component: StyledPage },
   { path: 'content', component: ContentPage },

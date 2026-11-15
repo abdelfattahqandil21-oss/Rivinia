@@ -15,7 +15,7 @@ import {
 } from '@angular/core';
 import type { RiviniaMenuController, RiviniaMenuItemData } from '@rivinia/menu';
 import { RiviniaMenu } from '@rivinia/menu';
-import { bindPopupDismissal, computePopupPosition } from '@rivinia/popup';
+import { bindPopupDismissal, connectPopup, type PopupConnection, computePopupPosition } from '@rivinia/popup';
 import type { RiviniaMenuUiPlacement } from '../../models/menu.ui-types';
 
 /** Payload of {@link RiviniaMenuComponent.picked}. */
@@ -217,8 +217,9 @@ export class RiviniaMenuComponent {
   readonly closed = output<void>();
 
   private readonly owned = new RiviniaMenu();
-  private readonly self = inject(ElementRef<HTMLElement>);
+  private readonly self = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
+  private connection?: PopupConnection;
   /** Item directives the consumer projected (not the ones we render). */
   private readonly projectedItems = contentChildren(RiviniaMenuItem, { descendants: true });
   /**
@@ -304,8 +305,9 @@ export class RiviniaMenuComponent {
           'children — pick one way to populate the panel.',
       );
     });
+    this.destroyRef.onDestroy(() => this.disconnectPopup());
     effect((onCleanup) => {
-      if (!this.controller().open()) return;
+      if (!this.controller().open() || this.topLayerSupported) return;
       const win = typeof window === 'undefined' ? null : window;
       const doc = typeof document === 'undefined' ? null : document;
       bindPopupDismissal({
@@ -334,6 +336,7 @@ export class RiviniaMenuComponent {
     afterRenderEffect(() => {
       if (this.controller().open() && !this.positioned()) this.showAndPosition();
       this.consumePendingFocus();
+      this.syncPopupConnection();
     });
   }
 
@@ -692,7 +695,34 @@ export class RiviniaMenuComponent {
     this.controller().activate(id);
   }
 
+  private disconnectPopup(): void {
+    this.connection?.destroy();
+    this.connection = undefined;
+  }
+
+  private syncPopupConnection(): void {
+    if (!this.controller().open()) {
+      this.disconnectPopup();
+      return;
+    }
+    if (!this.topLayerSupported || this.connection) return;
+    const origin = this.triggerEl();
+    const panel = this.self.nativeElement.querySelector<HTMLElement>('.rv-menu-panel');
+    if (!origin?.isConnected || !panel?.isConnected) return;
+    const connection = connectPopup({
+      origin, panel, parent: 'auto', closeOnWidthChange: true,
+      position: () => this.reposition(),
+      onDismiss: reason => {
+        this.connection = undefined;
+        this.doClose(reason === 'escape');
+      },
+    });
+    if (this.controller().open()) this.connection = connection;
+    else connection.destroy();
+  }
+
   private doClose(restoreFocus: boolean): void {
+    this.disconnectPopup();
     const was = this.controller().open();
     // APG: the typeahead buffer is per-open. Keeping it across a close made
     // the next open start mid-word (measured: `due` + `d` matched nothing).

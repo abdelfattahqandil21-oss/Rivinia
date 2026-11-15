@@ -1,0 +1,34 @@
+@if (visible() && (definition().href() !== undefined || definition().navigation)) {
+  <a
+    rvMenuItem
+    [rvMenuItemId]="definition().rvMenuItem()"
+    [rvMenuItemText]="definition().label!.rvMenuLabel()"
+    [rvMenuItemLabel]="definition().label!.rvMenuLabel()"
+    [rvMenuItemDisabled]="definition().disabled()"
+    [rvMenuItemKind]="definition().kind()"
+    [rvMenuItemChecked]="definition().checked()"
+    [rvMenuItemGroup]="definition().effectiveRadioGroup()"
+    [rvMenuItemNavigation]="definition().navigation"
+    [href]="definition().navigation?.href() ?? definition().href() ?? null"
+    [attr.target]="definition().target() ?? null"
+    [attr.rel]="linkRel()"
+    (rvMenuItemActivated)="onActivated($event)"
+  >
+    <ng-container #contentOutlet />
+  </a>
+} @else if (visible()) {
+  <button
+    rvMenuItem
+    type="button"
+    [rvMenuItemId]="definition().rvMenuItem()"
+    [rvMenuItemText]="definition().label!.rvMenuLabel()"
+    [rvMenuItemLabel]="definition().label!.rvMenuLabel()"
+    [rvMenuItemDisabled]="definition().disabled()"
+    [rvMenuItemKind]="definition().kind()"
+    [rvMenuItemChecked]="definition().checked()"
+    [rvMenuItemGroup]="definition().effectiveRadioGroup()"
+    (rvMenuItemActivated)="onActivated($event)"
+  >
+    <ng-container #contentOutlet />
+  </button>
+}

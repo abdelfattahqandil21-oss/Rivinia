@@ -106,3 +106,5 @@ Status labels summarize explicit status wording in the record at its recorded da
 | [D99](D099-popup-dismissal-and-multiselect-state.md) | popup dismissal follows visible triggers and multi picks preserve query and focus | Recorded | 2026-11-09 | Popup / Select |
 | [D100](D100-env-isolated-patch-for-npm-consumer-trial.md) | isolated env patch for an npm consumer trial | Owner-approved one-release exception; publication awaits exact artifact confirmation | 2026-11-14 | Release / Env |
 | [D101](D101-theme-adopts-one-v2-named-token-contract.md) | Theme adopts one V2-named token contract | Owner-approved; implementation complete locally, release verification pending | 2026-11-14 | Theme / Packages |
+
+| [D102](D102-popup-connected-panels-and-staged-v2-integration.md) | connected popup panels and staged V2 integration | Local implementation verified; release pending | 2026-11-15 | Popup / Menu / Select |

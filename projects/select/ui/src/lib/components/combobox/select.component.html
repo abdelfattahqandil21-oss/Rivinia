@@ -1,0 +1,79 @@
+<label class="rv-select-label">
+  <span>
+    {{ labelText() }}
+    @if (required()) {
+      <span aria-hidden="true">*</span>
+    }
+  </span>
+  <span class="rv-select-field">
+    <input
+      rvSelectInput
+      [attr.aria-label]="labelText()"
+      [placeholder]="placeholder()"
+      autocomplete="off"
+    />
+    <span
+      class="rv-select-chevron"
+      [class.rv-select-chevron-open]="root.isOpen()"
+      aria-hidden="true"
+    ></span>
+  </span>
+</label>
+@if (root.isOpen()) {
+  <div
+    #panel
+    rvSelectPanel
+    animate.enter="rv-select-panel-enter"
+    animate.leave="rv-select-panel-leave"
+    (scroll)="onPanelScroll($event)"
+    [rvSelectReachEndThreshold]="32"
+  >
+    @if (empty()) {
+      <div rvSelectStatus>
+        {{ visibleOptions().length === 0 && !root.query() ? noOptionsLabel() : noResultsLabel() }}
+      </div>
+    } @else {
+      @if (visibleOptions().length > 0) {
+        <div
+          rvSelectList
+          [attr.aria-label]="labelText()"
+          [style.--rv-select-option-height.px]="rvSelectVirtualItemSize()"
+        >
+          <div
+            class="rv-select-virtual-spacer"
+            aria-hidden="true"
+            [style.block-size.px]="topSpacer()"
+          ></div>
+          @for (option of renderedOptions(); track option.key; let i = $index) {
+            <div
+              rvSelectOption
+              [rvSelectOptionKey]="option.key"
+              [rvSelectOptionValue]="option.value"
+              [rvSelectOptionLabel]="option.label"
+              [rvSelectOptionDisabled]="option.disabled"
+              [rvSelectOptionGroup]="option.group ?? ''"
+              [rvSelectOptionPosition]="optionPosition(i)"
+              [rvSelectOptionSetSize]="visibleOptions().length"
+            >
+              <span class="rv-select-option-label">{{ option.label }}</span>
+              <span class="rv-select-option-check" aria-hidden="true"></span>
+            </div>
+          }
+          <div
+            class="rv-select-virtual-spacer"
+            aria-hidden="true"
+            [style.block-size.px]="bottomSpacer()"
+          ></div>
+        </div>
+      }
+      @if (loading()) {
+        <div rvSelectStatus class="rv-select-loading">
+          <span>{{ loadingLabel() }}</span>
+          <span class="rv-select-skeleton" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+        </div>
+      }
+    }
+  </div>
+}

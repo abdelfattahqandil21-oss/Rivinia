@@ -296,6 +296,17 @@ describe('Multi-select keyboard navigation reset (regression)', () => {
 });
 
 describe('FormValueControl backward compatibility', () => {
+  it('restores a disabled option from the form without emitting a user selection', async () => {
+    const fixture = TestBed.createComponent(ReactiveHost);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.fg.controls.val.setValue('c');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(q(fixture.nativeElement, '.rv-select-trigger').textContent).toContain('Gamma');
+    expect(fixture.componentInstance.fg.controls.val.value).toBe('c');
+  });
+
   it('external write does not emit selectionChange', async () => {
     const fixture = TestBed.createComponent(ReactiveHost);
     fixture.detectChanges();

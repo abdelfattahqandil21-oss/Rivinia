@@ -30,7 +30,9 @@
       "@rivinia/table/ui": ["./dist/table/ui"],
       "@rivinia/datepicker": ["./dist/datepicker"],
       "@rivinia/datepicker/ui": ["./dist/datepicker/ui"],
-      "@rivinia/select/ui": ["./dist/select/ui"]
+      "@rivinia/select/ui": ["./dist/select/ui"],
+      "@rivinia/select/headless": ["./dist/select/headless"],
+      "@rivinia/menu/router": ["./dist/menu/router"]
     },
     "target": "ES2022",
     "module": "preserve"

@@ -87,7 +87,8 @@ id="…">` rows inside a `<div rvMenuPanel>`. Give the panel an accessible
 3. **Handle `(picked)` and look at it.** The output fires after an enabled row
    is chosen and the panel has closed; `$event.id` is the row's id. Open the
    page and try the arrows, a printable key, Escape and Tab — and then resize
-   the window, which closes the panel rather than letting it drift.
+   the page: the panel follows its visible trigger. It closes when the trigger is
+   fully clipped or the viewport width changes.
 
 ## Two ways to use it
 
@@ -133,3 +134,36 @@ real Safari) are in
 
 Release history: [CHANGELOG.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/menu/v1.0.4/projects/menu/CHANGELOG.md).
 MIT licensed.
+
+## Template definitions and optional Router adapter (unreleased major integration)
+
+The package also exports the V2 `MenuController` and composed directives from
+`@rivinia/menu/ui`. Existing `RiviniaMenuComponent` / `[items]` consumers remain
+supported during integration. Import only the directives for the composition
+being rendered; do not apply the old `RiviniaMenuItem` to template definitions.
+
+```html
+<div rvMenuRoot rvMenuRootId="account">
+  <button rvMenuTrigger type="button">Account</button>
+  <div rvMenuPanel rvMenuLabel="Account actions">
+    <ng-template rvMenuItem="usage" rvMenuLabel="Usage" [rvMenuAction]="openUsage">
+      Usage
+    </ng-template>
+  </div>
+</div>
+```
+
+Import `MenuRootDirective`, `MenuTriggerDirective`, `MenuPanelDirective`,
+`MenuItemDefDirective`, `MenuActionDirective`, and `MenuLabelDirective` from
+`@rivinia/menu/ui`. Import `@rivinia/menu/ui/menu.css` for the optional styles.
+`MenuRouterLinkDirective` from `@rivinia/menu/router` supplies `[rvMenuLink]`
+on a template definition and keeps Angular Router outside the other entries.
+Template items need unique IDs and explicit labels. Select one action mode:
+callback, `href`, or Router link. Checkbox/radio checked state remains consumer-owned.
+
+The composed implementation and the existing ready-made component share
+`MenuController`. `RiviniaMenu` is an ID-based compatibility facade. Its original
+navigation policy skips disabled rows; composed menus keep disabled rows focusable.
+The facade exposes readonly open/active signals; consumers should use its existing
+write methods instead of direct signal mutation. This type-level change must ship
+in the planned major release. Browser parity remains required before release.
