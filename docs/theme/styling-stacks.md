@@ -1,19 +1,18 @@
-# @rivinia/theme — which styling stack?
+# @rivinia/theme — styling stacks
 
 Back to [the README](../../projects/theme/README.md) ·
-[where an override has to live](README.md)
+[where overrides have to live](README.md)
 
-| Stack           | How you wire it                                                                      |
-| --------------- | ------------------------------------------------------------------------------------ |
-| **Plain CSS**   | `@import '@rivinia/theme';` then set `--rv-*` on `:root`.                            |
-| **Tailwind v4** | `@import '@rivinia/theme/tailwind.css';` — utilities `bg-rv-*`; colour via `--rv-*`. |
-| **Bootstrap**   | `@import '@rivinia/theme/bootstrap.css';` — your `--bs-*` become `--rv-*`.           |
-| **Sass / SCSS** | `@use '@rivinia/theme/scss';` — bundlers only; the `sass` CLI needs `pkg:`.          |
-| **Less**        | `@import (less) '@rivinia/theme/theme.css';` — the explicit file, nothing else.      |
+| Stack | Integration |
+| --- | --- |
+| Plain CSS | Import `@rivinia/theme`; override semantic `--rv-*` tokens. |
+| Tailwind v4 | Import `@rivinia/theme/tailwind.css`; utilities use `rv-*` names. |
+| Bootstrap 5.3 | Import `@rivinia/theme/bootstrap.css`; its `--bs-*` palette maps into Rivinia tokens. |
+| Sass / SCSS | `@use '@rivinia/theme/scss';`; the Sass CLI needs `pkg:`. |
+| Less | Import the explicit `@rivinia/theme/theme.css` file. |
 
-Import the Tailwind or Bootstrap adapter **instead of** the base entry, never in
-addition: the adapter already imports the base, and both together emit
-`styles/theme.css` twice — 3,997 B duplicated at this version.
+Import one base or adapter entry. Tailwind and Bootstrap adapters already
+include the base theme stylesheet.
 
 ## Tailwind v4
 
@@ -21,32 +20,18 @@ addition: the adapter already imports the base, and both together emit
 @import 'tailwindcss';
 @import '@rivinia/theme/tailwind.css';
 
-:root {
-  --rv-bg: #ffffff;
-  --rv-fg: #111111;
-}
-```
-
-The adapter registers `--color-rv-bg`, `--color-rv-fg`, `--color-rv-accent`, …
-with `@theme inline`, so `bg-rv-bg`, `text-rv-accent`, `border-rv-border` and
-the rest are generated, and each utility reads the semantic token on the
-element. A subtree override therefore paints that subtree:
-
-```css
-/* bg-rv-bg inside .promo paints #101828 */
 .promo {
-  --rv-bg: #101828;
+  --rv-color-surface: #f4f7fc;
 }
 ```
 
-Both adapter blocks are `inline` because they reference other variables, and
-`inline` is what makes the reference resolve at use-site.
+The adapter maps the semantic contract with `@theme inline`, so utilities read
+tokens at the point of use. Examples include `bg-rv-surface`, `text-rv-text`,
+`border-rv-border`, `rounded-rv-md`, `p-rv-4`, and `shadow-rv-md`. A nested
+`data-rv-theme` scope or token override therefore applies to descendants.
 
-**Set colours with `--rv-*`, not `--color-rv-*`.** `--color-rv-*` is the name
-Tailwind generates a utility from. Overriding it on an element no longer reaches
-the utility — before 0.2.0, with a plain `@theme` block, it did. A later
-`@theme { --color-rv-bg: … }` still wins, but it replaces the alias, so that
-token stops following `--rv-bg` in the same stylesheet.
+Set the Rivinia semantic token itself when changing the palette. Tailwind's
+`--color-rv-*` values define utility names and are not a second Theme token API.
 
 ## Bootstrap 5.3
 
@@ -55,16 +40,11 @@ token stops following `--rv-bg` in the same stylesheet.
 @import '@rivinia/theme/bootstrap.css';
 ```
 
-The adapter maps the semantic layer onto `--bs-body-bg`, `--bs-body-color`,
-`--bs-secondary-color`, `--bs-border-color`, `--bs-primary`, `--bs-danger`,
-`--bs-success`, `--bs-info` and `--bs-warning`, under both
-`[data-bs-theme='light']` and `[data-bs-theme='dark']`. `--rv-shadow` has no
-Bootstrap equivalent, so it keeps the theme's values. A Bootstrap theme switch
-re-themes the Rivinia components with no extra wiring.
-
-Import order does not matter — the adapter and Bootstrap read each other through
-`var()`, which resolves at computed-value time (measured: swapping the two lines
-gives identical colours). The order above is the readable one.
+The adapter maps Bootstrap's body, secondary, border, primary, danger, success,
+info, and warning variables into the same Rivinia color tokens under
+`[data-bs-theme='light']` and `[data-bs-theme='dark']`. It also maps Bootstrap
+radius and font variables where available. The adapter rules stay unlayered so
+the selected Bootstrap palette takes precedence over Theme defaults.
 
 ## Sass
 
@@ -72,13 +52,8 @@ gives identical colours). The order above is the readable one.
 @use '@rivinia/theme/scss';
 ```
 
-`@rivinia/theme/scss` is a one-line SCSS file that forwards the stylesheet, so
-`@use` has a stable module specifier. The extension is optional in both
-spellings — `@use '@rivinia/theme/theme.css'` compiles to the same CSS.
-
-Bundlers that compile your stylesheet (measured with Angular CLI; Vite not
-measured) resolve that specifier through the package's `exports`. The **`sass`
-CLI** does not read `exports`, so give it the `pkg:` scheme:
+Bundlers resolve the package export. The Sass CLI does not read package
+`exports`, so use the Node package importer:
 
 ```bash
 sass --pkg-importer=node styles.scss
@@ -96,19 +71,5 @@ sass --pkg-importer=node styles.scss
 @import (less) '@rivinia/theme/theme.css';
 ```
 
-The explicit file is the only spelling that works in Less 4. Less resolves bare
-specifiers from `node_modules` but ignores `exports`, so:
-
-- `@import (less) '@rivinia/theme';` compiles to **nothing** — Less inlines the
-  package root, which is the empty ESM entry, and the theme silently disappears;
-- `@import (less) '@rivinia/theme/scss';` is invalid in Less (that file is Sass).
-
-Less passes CSS custom properties through untouched. Less **variables**
-(`@color: …`) are a different mechanism and do not interoperate with them — use
-`var(--rv-*)` inside Less files.
-
-## Conditionals
-
-The stylesheet uses `@supports` and `@media` only — no Sass or Less syntax —
-so it compiles as plain CSS anywhere. Your own `@if` / `@media` rules live in
-your files and can override anything the tokens expose.
+Less ignores `exports`, so the explicit CSS file is required. CSS custom
+properties pass through normally; Less variables are a separate mechanism.

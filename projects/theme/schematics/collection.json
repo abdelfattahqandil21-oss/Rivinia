@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../../node_modules/@angular-devkit/schematics/collection-schema.json",
+  "schematics": {
+    "ng-add": {
+      "description": "Set up the CSS-first Rivinia Theme in one Angular application.",
+      "factory": "./ng-add/index.cjs#ngAdd",
+      "schema": "./ng-add/schema.json"
+    }
+  }
+}

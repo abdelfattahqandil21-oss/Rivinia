@@ -152,8 +152,8 @@ Visual rules for the pill (no new token):
   border-radius: 999px;
   font-size: 0.75em;
   font-variant-numeric: tabular-nums;
-  color: var(--rv-select-muted, var(--rv-muted, #555555));
-  background: color-mix(in srgb, var(--rv-select-muted, var(--rv-muted, #555555)) 12%, transparent);
+  color: var(--rv-select-muted, var(--rv-color-text-muted, #555555));
+  background: color-mix(in srgb, var(--rv-select-muted, var(--rv-color-text-muted, #555555)) 12%, transparent);
 }
 ```
 

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Rivinia Theme setup options",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "Angular application project to configure. Required when the workspace has multiple applications."
+    },
+    "tokensPath": {
+      "type": "string",
+      "default": "theme.tokens.css",
+      "description": "Create-only CSS token override file, relative to the selected application's sourceRoot."
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["root", "light", "dark", "system"],
+      "default": "root",
+      "description": "Theme scope for the token override block generated in the consumer-owned file."
+    },
+    "integration": {
+      "type": "string",
+      "enum": ["auto", "css", "scss", "less", "tailwind-v3", "tailwind-v4", "bootstrap-5.3"],
+      "default": "auto",
+      "description": "Framework recipe to show in the setup summary. Framework dependencies and configuration are never changed."
+    },
+    "primaryColor": {
+      "type": "string",
+      "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Optional hexadecimal value for --rv-color-primary."
+    },
+    "surfaceColor": {
+      "type": "string",
+      "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Optional hexadecimal value for --rv-color-surface."
+    },
+    "textColor": {
+      "type": "string",
+      "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Optional hexadecimal value for --rv-color-text."
+    },
+    "borderColor": {
+      "type": "string",
+      "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Optional hexadecimal value for --rv-color-border."
+    }
+  },
+  "additionalProperties": false
+}

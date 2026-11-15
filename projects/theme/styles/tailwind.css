@@ -1,62 +1,25 @@
-/*
- * Tailwind v4 adapter.
- *
- *   @import 'tailwindcss';
- *   @import '@rivinia/theme/tailwind.css';
- *
- * Tailwind v4 is CSS-first: `@theme` turns a design token into a real CSS
- * variable, and `@theme inline` makes the generated utility resolve the
- * variable AT THE POINT OF USE instead of referencing the global one.
- *
- * Two rules of thumb, straight from the Tailwind docs:
- *
- *   - `@theme`        for a token with a LITERAL value — it also creates the
- *                     utility.
- *   - `@theme inline` for a token that REFERENCES another variable — the
- *                     utility then resolves at use-site, so a scoped override
- *                     still works. (With plain `@theme` the utility would
- *                     point at the global variable and a container-scoped
- *                     override would be ignored.)
- *
- * Both blocks below are `inline`, because every token in them references
- * another variable. That is what connects the two directions: your Tailwind
- * utilities can read Rivinia's tokens, and a subtree override of `--rv-*`
- * reaches `bg-rv-bg` on that subtree.
- *
- * To change a colour, set `--rv-*` — globally on `:root` or on a subtree.
- * `--color-rv-*` is only the name Tailwind generates a utility from: with
- * `inline` the utility reads `var(--rv-bg)` itself, so re-declaring
- * `--color-rv-bg` on an element, or in an ordinary rule, repaints nothing.
- *
- * One measured exception: a LATER `@theme { --color-rv-bg: … }` still wins,
- * because `@theme` emits at `:root`. It replaces the alias, so from then on
- * the utility follows `--color-rv-bg` and a subtree `--rv-bg` stops reaching
- * it. That is why the migration note says to set `--rv-*`.
- */
-
+/* Tailwind CSS v4 adapter for Rivinia's semantic token contract. */
 @import './theme.css';
 
 @theme inline {
-  --color-rv-bg: var(--rv-bg);
-  --color-rv-fg: var(--rv-fg);
-  --color-rv-muted: var(--rv-muted);
-  --color-rv-border: var(--rv-border);
-  --color-rv-accent: var(--rv-accent);
-  --color-rv-danger: var(--rv-danger);
-  --color-rv-ok: var(--rv-ok);
-  --color-rv-info: var(--rv-info);
-  --color-rv-warning: var(--rv-warning);
-}
-
-/*
- * The reverse direction: map YOUR palette onto the semantic layer, so the
- * components follow the same tokens your utilities use.
- *
- * `@theme inline` — these reference other variables, so the utility has to
- * resolve at use-site.
- */
-@theme inline {
-  --color-surface: var(--rv-bg);
-  --color-foreground: var(--rv-fg);
-  --color-line: var(--rv-border);
+  --color-rv-primary: var(--rv-color-primary);
+  --color-rv-surface: var(--rv-color-surface);
+  --color-rv-surface-raised: var(--rv-color-surface-raised);
+  --color-rv-text: var(--rv-color-text);
+  --color-rv-text-muted: var(--rv-color-text-muted);
+  --color-rv-border: var(--rv-color-border);
+  --color-rv-focus: var(--rv-color-focus);
+  --color-rv-danger: var(--rv-color-danger);
+  --color-rv-success: var(--rv-color-success);
+  --color-rv-info: var(--rv-color-info);
+  --color-rv-warning: var(--rv-color-warning);
+  --radius-rv-sm: var(--rv-radius-sm);
+  --radius-rv-md: var(--rv-radius-md);
+  --radius-rv-lg: var(--rv-radius-lg);
+  --spacing-rv-1: var(--rv-space-1);
+  --spacing-rv-2: var(--rv-space-2);
+  --spacing-rv-3: var(--rv-space-3);
+  --spacing-rv-4: var(--rv-space-4);
+  --shadow-rv-md: var(--rv-shadow-md);
+  --font-rv: var(--rv-font-family);
 }

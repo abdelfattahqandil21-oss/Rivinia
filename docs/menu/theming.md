@@ -14,22 +14,22 @@ Every colour reads its own token, then the shared semantic layer, then a
 built-in default:
 
 ```css
---rv-menu-bg  →  --rv-bg  →  #ffffff
+--rv-menu-bg  →  --rv-color-surface  →  #ffffff
 ```
 
 | Level          | Token          | Scope                               |
 | -------------- | -------------- | ----------------------------------- |
 | 1. per package | `--rv-menu-bg` | that menu only                      |
-| 2. global      | `--rv-bg`      | every Rivinia component, everywhere |
+| 2. global      | `--rv-color-surface`      | every Rivinia component, everywhere |
 | 3. default     | —              | what you get if you set nothing     |
 
 ```css
 @import '@rivinia/theme';
 
 :root {
-  --rv-bg: #ffffff;
-  --rv-fg: #111111;
-  --rv-border: #e0e0e0;
+  --rv-color-surface: #ffffff;
+  --rv-color-text: #111111;
+  --rv-color-border: #e0e0e0;
 }
 ```
 
@@ -43,14 +43,14 @@ the override silently stops working. A per-menu token (`--rv-menu-*`) set on the
 
 | Token                      | Falls back to | Built-in default                                                      | Applies to            |
 | -------------------------- | ------------- | --------------------------------------------------------------------- | --------------------- |
-| `--rv-menu-bg`             | `--rv-bg`     | `#ffffff`                                                             | panel                 |
-| `--rv-menu-fg`             | `--rv-fg`     | `#111111`                                                             | panel                 |
-| `--rv-menu-border`         | `--rv-border` | `#e0e0e0`                                                             | panel + divider       |
-| `--rv-menu-muted`          | `--rv-muted`  | `#555555`                                                             | icon tone             |
-| `--rv-menu-item-active-bg` | `--rv-accent` | `color-mix(in srgb, var(--rv-accent, currentColor) 10%, transparent)` | the active row's wash |
-| `--rv-menu-radius`         | `--rv-radius` | `0.75rem` (12px)                                                      | panel                 |
-| `--rv-menu-item-radius`    | `--rv-radius` | `0.5rem`                                                              | a row                 |
-| `--rv-menu-shadow`         | `--rv-shadow` | `0 16px 48px rgba(0, 0, 0, .22)`                                      | panel                 |
+| `--rv-menu-bg`             | `--rv-color-surface`     | `#ffffff`                                                             | panel                 |
+| `--rv-menu-fg`             | `--rv-color-text`     | `#111111`                                                             | panel                 |
+| `--rv-menu-border`         | `--rv-color-border` | `#e0e0e0`                                                             | panel + divider       |
+| `--rv-menu-muted`          | `--rv-color-text-muted`  | `#555555`                                                             | icon tone             |
+| `--rv-menu-item-active-bg` | `--rv-color-primary` | `color-mix(in srgb, var(--rv-color-primary, currentColor) 10%, transparent)` | the active row's wash |
+| `--rv-menu-radius`         | `--rv-radius-md` | `0.75rem` (12px)                                                      | panel                 |
+| `--rv-menu-item-radius`    | `--rv-radius-md` | `0.5rem`                                                              | a row                 |
+| `--rv-menu-shadow`         | `--rv-shadow-md` | `0 16px 48px rgba(0, 0, 0, .22)`                                      | panel                 |
 | `--rv-menu-width`          | —             | `10rem`                                                               | panel min-width       |
 | `--rv-menu-max-width`      | —             | `22rem`                                                               | panel max-width       |
 | `--rv-menu-z`              | —             | `500`                                                                 | panel stacking        |
@@ -67,7 +67,7 @@ rv-menu {
   --rv-menu-item-padding: 0.75rem 0.875rem;
   --rv-menu-item-radius: 0.25rem;
   --rv-menu-item-min-height: 2.75rem;
-  --rv-menu-focus-ring: 2px solid var(--rv-accent);
+  --rv-menu-focus-ring: 2px solid var(--rv-color-primary);
 }
 ```
 
@@ -79,7 +79,7 @@ rv-menu {
 | `--rv-menu-item-gap`              | `0.625rem`                                 | icon-to-label gap in a row   |
 | `--rv-menu-item-align`            | `start`                                    | a row's cross-axis alignment |
 | `--rv-menu-item-disabled-opacity` | `0.45`                                     | a disabled row               |
-| `--rv-menu-focus-ring`            | `2px solid var(--rv-accent, currentColor)` | a focused row                |
+| `--rv-menu-focus-ring`            | `2px solid var(--rv-color-primary, currentColor)` | a focused row                |
 | `--rv-menu-focus-offset`          | `-2px`                                     | that ring                    |
 | `--rv-menu-panel-max-height`      | `min(20rem, calc(100dvh - 2rem))`          | the panel's scroll box       |
 | `--rv-menu-duration`              | `160ms`                                    | the open animation           |
@@ -98,8 +98,8 @@ would have moved.
 
 ## Accent and forced colors
 
-`--rv-accent` paints the row focus ring and the active row's tint. Both read
-`var(--rv-accent, <their previous value>)`, so a page that never imports the
+`--rv-color-primary` paints the row focus ring and the active row's tint. Both read
+`var(--rv-color-primary, <their previous value>)`, so a page that never imports the
 theme looks exactly as it did before — unless you set `--rv-menu-focus-ring` or
 `--rv-menu-item-active-bg`, which still win over all of it.
 
@@ -118,7 +118,7 @@ stylesheet, so pick one.
 
 **No forced dark mode** — there is no `prefers-color-scheme` block in this
 package. A menu gets dark colours only from the theme layer it reads through
-`--rv-bg` and friends; a page that never imports `@rivinia/theme` keeps the
+`--rv-color-surface` and friends; a page that never imports `@rivinia/theme` keeps the
 light defaults whatever the OS says.
 
 ## Classes for anything the tokens do not cover

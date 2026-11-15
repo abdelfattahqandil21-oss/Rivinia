@@ -1,5 +1,6 @@
 /**
- * `@rivinia/theme` ships no TypeScript.
+ * `@rivinia/theme` root remains CSS-only. Optional Angular APIs live at
+ * `@rivinia/theme/headless`, `/toggle`, and `/motion`.
  *
  * It is a token layer: a stylesheet you import once, so the whole Rivinia
  * component ecosystem reads one palette. The CSS is published as package

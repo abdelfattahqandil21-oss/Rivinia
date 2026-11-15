@@ -24,10 +24,10 @@ the list, so a Theme value or a scoped `--rv-*` override can reach each toast:
 
 | Token                | No-Theme fallback | Semantic token |
 | -------------------- | ----------------- | -------------- |
-| `--rv-toast-success` | `#16a34a`         | `--rv-ok`      |
-| `--rv-toast-error`   | `#dc2626`         | `--rv-danger`  |
-| `--rv-toast-info`    | `#2563eb`         | `--rv-info`    |
-| `--rv-toast-warning` | `#d97706`         | `--rv-warning` |
+| `--rv-toast-success` | `#16a34a`         | `--rv-color-success`      |
+| `--rv-toast-error`   | `#dc2626`         | `--rv-color-danger`  |
+| `--rv-toast-info`    | `#2563eb`         | `--rv-color-info`    |
+| `--rv-toast-warning` | `#d97706`         | `--rv-color-warning` |
 
 With `richColors=true`, each status token is mixed with 45% black for the card
 background and the card uses white foreground text. This keeps the Theme's

@@ -36,7 +36,7 @@
 .rv-select-popup-panel hr {
   border: 0;
   border-top: 1px solid
-    var(--rv-select-popup-border, var(--rv-select-border, var(--rv-border, #e0e0e0)));
+    var(--rv-select-popup-border, var(--rv-select-border, var(--rv-color-border, #e0e0e0)));
   margin: 0.375rem 0.25rem;
 }
 /* NOTE: the :host pseudo-class does not exist without encapsulation,
@@ -97,15 +97,15 @@ rv-select-popup {
   overflow-y: auto;
   /* Rows are `width: 100%`; the padding has to live inside that 100%. */
   box-sizing: border-box;
-  background: var(--rv-select-popup-bg, var(--rv-select-bg, var(--rv-bg, #ffffff)));
-  color: var(--rv-select-popup-fg, var(--rv-select-fg, var(--rv-fg, #111111)));
+  background: var(--rv-select-popup-bg, var(--rv-select-bg, var(--rv-color-surface, #ffffff)));
+  color: var(--rv-select-popup-fg, var(--rv-select-fg, var(--rv-color-text, #111111)));
   font-family: var(--rv-select-popup-font, system-ui, -apple-system, 'Segoe UI', sans-serif);
   border: 1px solid
-    var(--rv-select-popup-border, var(--rv-select-border, var(--rv-border, #e0e0e0)));
-  border-radius: var(--rv-select-popup-radius, var(--rv-select-radius, var(--rv-radius, 0.75rem)));
+    var(--rv-select-popup-border, var(--rv-select-border, var(--rv-color-border, #e0e0e0)));
+  border-radius: var(--rv-select-popup-radius, var(--rv-select-radius, var(--rv-radius-md, 0.75rem)));
   box-shadow: var(
     --rv-select-popup-shadow,
-    var(--rv-select-shadow, var(--rv-shadow, 0 16px 48px rgba(0, 0, 0, 0.22)))
+    var(--rv-select-shadow, var(--rv-shadow-md, 0 16px 48px rgba(0, 0, 0, 0.22)))
   );
   padding: var(--rv-select-popup-pad, 0.375rem);
 }
@@ -306,7 +306,7 @@ rv-select-popup {
   overflow-wrap: anywhere;
   min-height: var(--rv-select-item-min-height, 2.5rem);
   border: 0;
-  border-radius: var(--rv-select-item-radius, var(--rv-radius, 0.5rem));
+  border-radius: var(--rv-select-item-radius, var(--rv-radius-md, 0.5rem));
   background: transparent;
   color: inherit;
   font: inherit;
@@ -319,7 +319,7 @@ rv-select-popup {
 .rv-select-popup-panel [rvselectpopupitem][data-active='true'] {
   background: var(
     --rv-select-item-active-bg,
-    color-mix(in srgb, var(--rv-accent, currentColor) 10%, transparent)
+    color-mix(in srgb, var(--rv-color-primary, currentColor) 10%, transparent)
   );
 }
 .rv-select-popup-panel [rvselectpopupitem]:hover {
@@ -339,11 +339,11 @@ rv-select-popup {
 .rv-select-popup-panel [rvselectpopupitem][data-active='true']:hover {
   background: var(
     --rv-select-item-active-hover-bg,
-    color-mix(in srgb, var(--rv-accent, currentColor) 8%, transparent)
+    color-mix(in srgb, var(--rv-color-primary, currentColor) 8%, transparent)
   );
 }
 .rv-select-popup-panel [rvselectpopupitem]:focus-visible {
-  outline: var(--rv-select-focus-ring, 2px solid var(--rv-accent, currentColor));
+  outline: var(--rv-select-focus-ring, 2px solid var(--rv-color-focus, currentColor));
   outline-offset: var(--rv-select-focus-offset, -2px);
 }
 .rv-select-popup-panel [rvselectpopupitem][aria-disabled='true'] {
@@ -375,10 +375,10 @@ rv-select-popup {
  * resolves to that inherited value).
  */
 .rv-select-popup-panel [rvselectpopupitem] svg.rv-select-check {
-  color: var(--rv-accent, var(--rv-select-popup-muted));
+  color: var(--rv-color-primary, var(--rv-select-popup-muted));
 }
 .rv-select-popup-panel [rvselectpopupitem][data-active='true'] svg.rv-select-check {
-  color: var(--rv-accent, currentColor);
+  color: var(--rv-color-primary, currentColor);
 }
 /* Opening motion (researched: Radix/shadcn/HeadlessUI pattern):
    fade + scale from the trigger edge + a small slide toward rest.
@@ -427,7 +427,7 @@ rv-select-popup {
  * PREMIUM — all of it behind the flag; `simple` matches none of these.
  *
  * Every value is a var() fallback, so a consumer's --rv-select-popup-* /
- * --rv-border and a select's own --rv-select-* mapping (declared on this panel
+ * --rv-color-border and a select's own --rv-select-* mapping (declared on this panel
  * in select-panel.css) still win, and the two skins can never fight: exactly
  * one selector matches.
  *
@@ -442,10 +442,10 @@ rv-select-popup[data-variant='premium'] .rv-select-popup-panel {
   --rv-select-popup-easing: cubic-bezier(0.22, 1, 0.36, 1);
   --rv-select-popup-from-scale: 0.97;
   --rv-select-popup-from-y: -0.25rem;
-  border-radius: var(--rv-select-popup-radius, var(--rv-select-radius, var(--rv-radius, 0.875rem)));
+  border-radius: var(--rv-select-popup-radius, var(--rv-select-radius, var(--rv-radius-md, 0.875rem)));
   border-color: var(
     --rv-select-popup-border,
-    var(--rv-select-border, var(--rv-border, color-mix(in srgb, currentColor 10%, transparent)))
+    var(--rv-select-border, var(--rv-color-border, color-mix(in srgb, currentColor 10%, transparent)))
   );
   /* Ambient + contact layer, both offset: depth without the simple skin's
      single heavy drop. */
@@ -454,7 +454,7 @@ rv-select-popup[data-variant='premium'] .rv-select-popup-panel {
     var(
       --rv-select-shadow,
       var(
-        --rv-shadow,
+        --rv-shadow-md,
         0 12px 32px -8px rgba(16, 24, 40, 0.18),
         0 4px 8px -4px rgba(16, 24, 40, 0.1)
       )
@@ -485,13 +485,13 @@ rv-select-popup[data-variant='premium']
   [rvselectpopupitem][data-active='true'] {
   background: var(
     --rv-select-item-active-bg,
-    color-mix(in srgb, var(--rv-accent, currentColor) 7%, transparent)
+    color-mix(in srgb, var(--rv-color-primary, currentColor) 7%, transparent)
   );
 }
 rv-select-popup[data-variant='premium'] .rv-select-popup-panel [rvselectpopupitem]:focus-visible {
   outline: var(
     --rv-select-focus-ring,
-    2px solid var(--rv-accent, color-mix(in srgb, currentColor 55%, transparent))
+    2px solid var(--rv-color-focus, color-mix(in srgb, currentColor 55%, transparent))
   );
   outline-offset: -2px;
 }

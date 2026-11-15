@@ -26,7 +26,7 @@
   gap: var(--rv-datetimepicker-zone-gap, 0.375rem);
   min-inline-size: 0;
   padding-block-start: var(--rv-datetimepicker-zone-padding, 0.375rem);
-  color: var(--rv-datetimepicker-zone-fg, var(--rv-muted, light-dark(#52525b, #a1a1aa)));
+  color: var(--rv-datetimepicker-zone-fg, var(--rv-color-text-muted, light-dark(#52525b, #a1a1aa)));
   font-size: var(--rv-datetimepicker-zone-font-size, 0.75rem);
   line-height: 1.4;
 }
@@ -45,18 +45,18 @@
   padding: var(--rv-datetimepicker-warning-padding, 0.5rem);
   color: var(
     --rv-datetimepicker-warning-fg,
-    var(--rv-fg, light-dark(#111111, #f4f4f5))
+    var(--rv-color-text, light-dark(#111111, #f4f4f5))
   );
   background: var(
     --rv-datetimepicker-warning-bg,
-    color-mix(in srgb, var(--rv-warning, #b45309) 14%, transparent)
+    color-mix(in srgb, var(--rv-color-warning, #b45309) 14%, transparent)
   );
   border: 1px solid
     var(
       --rv-datetimepicker-warning-border,
-      color-mix(in srgb, var(--rv-warning, #b45309) 40%, transparent)
+      color-mix(in srgb, var(--rv-color-warning, #b45309) 40%, transparent)
     );
-  border-radius: var(--rv-datetimepicker-warning-radius, var(--rv-radius, 0.5rem));
+  border-radius: var(--rv-datetimepicker-warning-radius, var(--rv-radius-md, 0.5rem));
   font-size: var(--rv-datetimepicker-warning-font-size, 0.75rem);
   line-height: 1.45;
 }
@@ -73,21 +73,21 @@
 
 .rv-datetimepicker-action {
   padding: var(--rv-datetimepicker-action-padding, 0.25rem 0.5rem);
-  color: var(--rv-datetimepicker-action-fg, var(--rv-accent, light-dark(#4f46e5, #a5b4fc)));
+  color: var(--rv-datetimepicker-action-fg, var(--rv-color-primary, light-dark(#4f46e5, #a5b4fc)));
   background: transparent;
-  border: 1px solid var(--rv-datetimepicker-action-border, var(--rv-accent, light-dark(#4f46e5, #a5b4fc)));
-  border-radius: var(--rv-datetimepicker-action-radius, var(--rv-radius, 0.5rem));
+  border: 1px solid var(--rv-datetimepicker-action-border, var(--rv-color-primary, light-dark(#4f46e5, #a5b4fc)));
+  border-radius: var(--rv-datetimepicker-action-radius, var(--rv-radius-md, 0.5rem));
   font: inherit;
   cursor: pointer;
 }
 
 .rv-datetimepicker-action:hover {
-  background: color-mix(in srgb, var(--rv-accent, #4f46e5) 14%, transparent);
+  background: color-mix(in srgb, var(--rv-color-primary, #4f46e5) 14%, transparent);
 }
 
 .rv-datetimepicker-action:focus-visible,
 .rv-datetimepicker-offset:focus-visible {
-  outline: 2px solid var(--rv-accent, light-dark(#4f46e5, #a5b4fc));
+  outline: 2px solid var(--rv-color-focus, light-dark(#005fcc, #8ab4ff));
   outline-offset: 1px;
 }
 
@@ -106,18 +106,18 @@
 
 .rv-datetimepicker-offset {
   padding: var(--rv-datetimepicker-offset-padding, 0.25rem 0.5rem);
-  color: var(--rv-datetimepicker-offset-fg, var(--rv-fg, light-dark(#111111, #f4f4f5)));
+  color: var(--rv-datetimepicker-offset-fg, var(--rv-color-text, light-dark(#111111, #f4f4f5)));
   background: transparent;
-  border: 1px solid var(--rv-datetimepicker-offset-border, var(--rv-border, light-dark(#d4d4d8, #3f3f46)));
-  border-radius: var(--rv-datetimepicker-offset-radius, var(--rv-radius, 0.5rem));
+  border: 1px solid var(--rv-datetimepicker-offset-border, var(--rv-color-border, light-dark(#d4d4d8, #3f3f46)));
+  border-radius: var(--rv-datetimepicker-offset-radius, var(--rv-radius-md, 0.5rem));
   font: inherit;
   cursor: pointer;
 }
 
 .rv-datetimepicker-offset[aria-pressed='true'] {
-  color: var(--rv-datetimepicker-offset-active-fg, var(--rv-accent, light-dark(#4f46e5, #a5b4fc)));
-  border-color: var(--rv-accent, light-dark(#4f46e5, #a5b4fc));
-  background: color-mix(in srgb, var(--rv-accent, #4f46e5) 14%, transparent);
+  color: var(--rv-datetimepicker-offset-active-fg, var(--rv-color-primary, light-dark(#4f46e5, #a5b4fc)));
+  border-color: var(--rv-color-primary, light-dark(#4f46e5, #a5b4fc));
+  background: color-mix(in srgb, var(--rv-color-primary, #4f46e5) 14%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {

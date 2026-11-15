@@ -131,7 +131,7 @@ interface TableUiState {
  * ## Theming
  * Every colour and shape is read AT THE USE SITE as
  * `var(--rv-table-<part>, var(--rv-<semantic>, <default>))`, so one
- * `:root { --rv-bg: … }` reaches the grid. Nothing is declared on the host, so
+ * `:root { --rv-color-surface: … }` reaches the grid. Nothing is declared on the host, so
  * a token set anywhere on an ancestor wins (the D42/D46 rule).
  * `[density]` only changes the FALLBACK of the size tokens, so an explicit
  * token still wins over the preset.

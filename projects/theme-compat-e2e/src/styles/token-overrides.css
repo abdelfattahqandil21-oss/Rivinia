@@ -1,6 +1,6 @@
 .booking-scope[data-bs-theme='light'] {
-  --rv-bg: rgb(218 235 255);
-  --rv-fg: rgb(14 34 58);
+  --rv-color-surface: rgb(218 235 255);
+  --rv-color-text: rgb(14 34 58);
   color-scheme: light;
 }
 
@@ -13,7 +13,7 @@
 }
 
 .rtl-scope {
-  --rv-bg: rgb(240 232 255);
-  --rv-fg: rgb(35 24 58);
+  --rv-color-surface: rgb(240 232 255);
+  --rv-color-text: rgb(35 24 58);
   color-scheme: light;
 }

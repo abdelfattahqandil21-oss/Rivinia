@@ -4,7 +4,7 @@
  * Theming rules (the ecosystem contract, D42/D46):
  *   - every colour/shape is read AT THE USE SITE as
  *       var(--rv-table-<part>, var(--rv-<semantic>, <built-in default>))
- *     so a single `:root { --rv-bg: … }` reaches the whole grid;
+ *     so a single `:root { --rv-color-surface: … }` reaches the whole grid;
  *   - no token is DECLARED on the host: an ancestor's value must always win;
  *   - the density presets only change the `var()` FALLBACK (see the last
  *     section), so an explicit `--rv-table-row-height` beats the preset;
@@ -30,7 +30,7 @@
 :host {
   display: block;
   font-size: var(--rv-table-font-size, 0.875rem);
-  color: var(--rv-table-fg, var(--rv-fg, light-dark(#111827, #f4f4f5)));
+  color: var(--rv-table-fg, var(--rv-color-text, light-dark(#111827, #f4f4f5)));
   -webkit-text-size-adjust: 100%;
 }
 
@@ -53,9 +53,9 @@
   max-block-size: var(--rv-table-max-height, none);
   overscroll-behavior: contain;
   border: 1px solid
-    var(--rv-table-border, var(--rv-border, light-dark(#e5e7eb, #2f2f36)));
-  border-radius: var(--rv-table-radius, var(--rv-radius, 0.5rem));
-  background: var(--rv-table-bg, var(--rv-bg, light-dark(#ffffff, #17171b)));
+    var(--rv-table-border, var(--rv-color-border, light-dark(#e5e7eb, #2f2f36)));
+  border-radius: var(--rv-table-radius, var(--rv-radius-md, 0.5rem));
+  background: var(--rv-table-bg, var(--rv-color-surface, light-dark(#ffffff, #17171b)));
   scrollbar-width: thin;
   scrollbar-color: var(--rv-table-scrollbar, light-dark(#cbd5e1, #3f3f46))
     transparent;
@@ -75,12 +75,12 @@
     --rv-table-header-bg,
     color-mix(
       in oklab,
-      var(--rv-table-bg, var(--rv-bg, light-dark(#ffffff, #17171b))) 92%,
-      var(--rv-table-fg, var(--rv-fg, light-dark(#111827, #f4f4f5)))
+      var(--rv-table-bg, var(--rv-color-surface, light-dark(#ffffff, #17171b))) 92%,
+      var(--rv-table-fg, var(--rv-color-text, light-dark(#111827, #f4f4f5)))
     )
   );
   border-block-end: 1px solid
-    var(--rv-table-header-border, var(--rv-border, light-dark(#d1d5db, #3f3f46)));
+    var(--rv-table-header-border, var(--rv-color-border, light-dark(#d1d5db, #3f3f46)));
 }
 
 :host([data-sticky='true']) .rv-table-head {
@@ -98,7 +98,7 @@
   /* The rowgroup owns the rule under the header; a cell rule here would draw
      a second, half-pixel-offset line. */
   border-block-end: 0;
-  color: var(--rv-table-header-fg, var(--rv-muted, light-dark(#52525b, #a1a1aa)));
+  color: var(--rv-table-header-fg, var(--rv-color-text-muted, light-dark(#52525b, #a1a1aa)));
   font-size: var(--rv-table-header-font-size, 0.75rem);
   font-weight: var(--rv-table-header-font-weight, 700);
   letter-spacing: 0.02em;
@@ -114,15 +114,15 @@
     --rv-table-header-hover,
     color-mix(
       in oklab,
-      var(--rv-table-bg, var(--rv-bg, light-dark(#ffffff, #17171b))) 86%,
-      var(--rv-table-fg, var(--rv-fg, light-dark(#111827, #f4f4f5)))
+      var(--rv-table-bg, var(--rv-color-surface, light-dark(#ffffff, #17171b))) 86%,
+      var(--rv-table-fg, var(--rv-color-text, light-dark(#111827, #f4f4f5)))
     )
   );
-  color: var(--rv-table-header-fg-active, var(--rv-fg, light-dark(#111827, #f4f4f5)));
+  color: var(--rv-table-header-fg-active, var(--rv-color-text, light-dark(#111827, #f4f4f5)));
 }
 
 .rv-table-head-cell[data-sorted='true'] {
-  color: var(--rv-table-header-fg-active, var(--rv-fg, light-dark(#111827, #f4f4f5)));
+  color: var(--rv-table-header-fg-active, var(--rv-color-text, light-dark(#111827, #f4f4f5)));
 }
 
 /* A real button for pointer and AT "click", but never a tab stop: the CELL is
@@ -162,7 +162,7 @@
   justify-content: center;
   inline-size: 1rem;
   block-size: 1rem;
-  color: var(--rv-table-sort-fg, var(--rv-accent, light-dark(#5b5bd6, #8b8bf0)));
+  color: var(--rv-table-sort-fg, var(--rv-color-primary, light-dark(#5b5bd6, #8b8bf0)));
   opacity: 0;
   transition:
     opacity 0.12s ease,
@@ -191,10 +191,10 @@
   border-radius: 999px;
   background: color-mix(
     in oklab,
-    var(--rv-table-sort-fg, var(--rv-accent, light-dark(#5b5bd6, #8b8bf0))) 16%,
+    var(--rv-table-sort-fg, var(--rv-color-primary, light-dark(#5b5bd6, #8b8bf0))) 16%,
     transparent
   );
-  color: var(--rv-table-sort-fg, var(--rv-accent, light-dark(#5b5bd6, #8b8bf0)));
+  color: var(--rv-table-sort-fg, var(--rv-color-primary, light-dark(#5b5bd6, #8b8bf0)));
   font-size: 0.6875rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -225,7 +225,7 @@
   min-inline-size: 0;
   padding: var(--rv-table-cell-padding, 0.5rem 0.75rem);
   border-block-end: 1px solid
-    var(--rv-table-border, var(--rv-border, light-dark(#e5e7eb, #2f2f36)));
+    var(--rv-table-border, var(--rv-color-border, light-dark(#e5e7eb, #2f2f36)));
   background: transparent;
   transition: background-color 0.12s ease;
 }
@@ -235,8 +235,8 @@
     --rv-table-row-hover,
     color-mix(
       in oklab,
-      var(--rv-table-bg, var(--rv-bg, light-dark(#ffffff, #17171b))) 94%,
-      var(--rv-table-fg, var(--rv-fg, light-dark(#111827, #f4f4f5)))
+      var(--rv-table-bg, var(--rv-color-surface, light-dark(#ffffff, #17171b))) 94%,
+      var(--rv-table-fg, var(--rv-color-text, light-dark(#111827, #f4f4f5)))
     )
   );
 }
@@ -252,9 +252,9 @@
   inline-size: 1rem;
   block-size: 1rem;
   border: 1px solid
-    var(--rv-table-select-border, var(--rv-border, light-dark(#9ca3af, #52525b)));
+    var(--rv-table-select-border, var(--rv-color-border, light-dark(#9ca3af, #52525b)));
   border-radius: var(--rv-table-select-radius, 0.25rem);
-  background: var(--rv-table-select-bg, var(--rv-bg, light-dark(#ffffff, #17171b)));
+  background: var(--rv-table-select-bg, var(--rv-color-surface, light-dark(#ffffff, #17171b)));
   transition:
     background-color 0.12s ease,
     border-color 0.12s ease;
@@ -265,16 +265,16 @@
   inline-size: 0.5rem;
   block-size: 0.3rem;
   border-inline-start: 2px solid
-    var(--rv-table-select-mark, var(--rv-bg, light-dark(#ffffff, #17171b)));
+    var(--rv-table-select-mark, var(--rv-color-surface, light-dark(#ffffff, #17171b)));
   border-block-end: 2px solid
-    var(--rv-table-select-mark, var(--rv-bg, light-dark(#ffffff, #17171b)));
+    var(--rv-table-select-mark, var(--rv-color-surface, light-dark(#ffffff, #17171b)));
   transform: translateY(-0.06rem) rotate(-45deg) scale(0);
   transition: transform 0.12s ease;
 }
 
 .rv-table-select[data-checked='true'] {
-  border-color: var(--rv-table-accent, var(--rv-accent, light-dark(#5b5bd6, #8b8bf0)));
-  background: var(--rv-table-accent, var(--rv-accent, light-dark(#5b5bd6, #8b8bf0)));
+  border-color: var(--rv-table-accent, var(--rv-color-primary, light-dark(#5b5bd6, #8b8bf0)));
+  background: var(--rv-table-accent, var(--rv-color-primary, light-dark(#5b5bd6, #8b8bf0)));
 }
 
 .rv-table-select[data-checked='true']::after {
@@ -294,8 +294,8 @@
     --rv-table-row-selected,
     color-mix(
       in oklab,
-      var(--rv-table-accent, var(--rv-accent, light-dark(#5b5bd6, #8b8bf0))) 12%,
-      var(--rv-table-bg, var(--rv-bg, light-dark(#ffffff, #17171b)))
+      var(--rv-table-accent, var(--rv-color-primary, light-dark(#5b5bd6, #8b8bf0))) 12%,
+      var(--rv-table-bg, var(--rv-color-surface, light-dark(#ffffff, #17171b)))
     )
   );
 }
@@ -309,7 +309,7 @@
   inset-block: 0;
   inset-inline-start: 0;
   inline-size: var(--rv-table-selected-rail, 3px);
-  background: var(--rv-table-accent, var(--rv-accent, light-dark(#5b5bd6, #8b8bf0)));
+  background: var(--rv-table-accent, var(--rv-color-primary, light-dark(#5b5bd6, #8b8bf0)));
 }
 
 .rv-table-cell[data-align='center'] {
@@ -335,7 +335,7 @@
 
 .rv-table-cell:focus-visible {
   outline: 2px solid
-    var(--rv-table-focus, var(--rv-accent, light-dark(#5b5bd6, #8b8bf0)));
+    var(--rv-table-focus, var(--rv-color-focus, light-dark(#005fcc, #8ab4ff)));
   outline-offset: -2px;
   /* Painted above the neighbouring cells' borders while focused; still below
      the sticky header, which must cover a cell scrolled underneath it. */
@@ -417,8 +417,8 @@
   inline-size: 100%;
   padding: var(--rv-table-state-padding, 3rem 1.25rem);
   text-align: center;
-  background: var(--rv-table-bg, var(--rv-bg, light-dark(#ffffff, #17171b)));
-  color: var(--rv-table-state-fg, var(--rv-muted, light-dark(#52525b, #a1a1aa)));
+  background: var(--rv-table-bg, var(--rv-color-surface, light-dark(#ffffff, #17171b)));
+  color: var(--rv-table-state-fg, var(--rv-color-text-muted, light-dark(#52525b, #a1a1aa)));
 }
 
 .rv-table-state-art {
@@ -429,7 +429,7 @@
   border-radius: 1rem;
   background: color-mix(
     in oklab,
-    var(--rv-table-state-fg, var(--rv-muted, light-dark(#52525b, #a1a1aa))) 10%,
+    var(--rv-table-state-fg, var(--rv-color-text-muted, light-dark(#52525b, #a1a1aa))) 10%,
     transparent
   );
 }
@@ -437,16 +437,16 @@
 .rv-table-state[data-state='error'] .rv-table-state-art {
   background: color-mix(
     in oklab,
-    var(--rv-table-state-error, var(--rv-danger, light-dark(#dc2626, #f87171))) 14%,
+    var(--rv-table-state-error, var(--rv-color-danger, light-dark(#dc2626, #f87171))) 14%,
     transparent
   );
-  color: var(--rv-table-state-error, var(--rv-danger, light-dark(#dc2626, #f87171)));
+  color: var(--rv-table-state-error, var(--rv-color-danger, light-dark(#dc2626, #f87171)));
 }
 
 .rv-table-state-text {
   margin: 0;
   max-inline-size: 34rem;
-  color: var(--rv-table-state-text, var(--rv-fg, light-dark(#111827, #f4f4f5)));
+  color: var(--rv-table-state-text, var(--rv-color-text, light-dark(#111827, #f4f4f5)));
   font-size: 0.9375rem;
   line-height: 1.5;
 }

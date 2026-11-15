@@ -5,7 +5,7 @@
  * Three levels, as everywhere in Rivinia (D42/D46/D52):
  *   --rv-datepicker-<part>  →  --rv-<semantic>  →  light-dark(light, dark)
  * Every value is read AT THE READ SITE, never declared on the host, so a
- * `:root { --rv-bg: … }` really does reach this component. The built-in
+ * `:root { --rv-color-surface: … }` really does reach this component. The built-in
  * palette responds to `color-scheme`, which `theme` pins per picker.
  */
 
@@ -32,20 +32,20 @@
   /* The host carries the width (one definite number); the field fills it. */
   inline-size: 100%;
   box-sizing: border-box;
-  color: var(--rv-datepicker-fg, var(--rv-fg, light-dark(#111111, #f4f4f5)));
-  font-family: var(--rv-datepicker-font, var(--rv-font, system-ui, sans-serif));
+  color: var(--rv-datepicker-fg, var(--rv-color-text, light-dark(#111111, #f4f4f5)));
+  font-family: var(--rv-datepicker-font, var(--rv-font-family, system-ui, sans-serif));
   font-size: var(--rv-datepicker-font-size, 0.875rem);
   line-height: 1.4;
-  background: var(--rv-datepicker-bg, var(--rv-bg, light-dark(#ffffff, #18181b)));
-  border: 1px solid var(--rv-datepicker-border, var(--rv-border, light-dark(#e0e0e0, #3f3f46)));
-  border-radius: var(--rv-datepicker-radius, var(--rv-radius, 0.625rem));
+  background: var(--rv-datepicker-bg, var(--rv-color-surface, light-dark(#ffffff, #18181b)));
+  border: 1px solid var(--rv-datepicker-border, var(--rv-color-border, light-dark(#e0e0e0, #3f3f46)));
+  border-radius: var(--rv-datepicker-radius, var(--rv-radius-md, 0.625rem));
   box-shadow: var(--rv-datepicker-shadow, none);
 }
 
 .rv-datepicker-field:hover {
   background: var(
     --rv-datepicker-hover-bg,
-    var(--rv-datepicker-bg, var(--rv-bg, light-dark(#ffffff, #18181b)))
+    var(--rv-datepicker-bg, var(--rv-color-surface, light-dark(#ffffff, #18181b)))
   );
 }
 
@@ -55,14 +55,14 @@
    field. */
 .rv-datepicker-field:focus-within {
   outline: 2px solid
-    var(--rv-datepicker-focus-ring, var(--rv-accent, light-dark(#5b5bd6, #8b8bf0)));
+    var(--rv-datepicker-focus-ring, var(--rv-color-focus, light-dark(#005fcc, #8ab4ff)));
   outline-offset: 2px;
 }
 
 :host([data-open='true']) .rv-datepicker-field {
   border-color: var(
     --rv-datepicker-active-border,
-    var(--rv-datepicker-border, var(--rv-border, light-dark(#e0e0e0, #3f3f46)))
+    var(--rv-datepicker-border, var(--rv-color-border, light-dark(#e0e0e0, #3f3f46)))
   );
 }
 
@@ -102,7 +102,7 @@
   flex: 0 0 auto;
   inline-size: 16px;
   block-size: 16px;
-  color: var(--rv-datepicker-icon-fg, var(--rv-muted, light-dark(#555555, #a1a1aa)));
+  color: var(--rv-datepicker-icon-fg, var(--rv-color-text-muted, light-dark(#555555, #a1a1aa)));
 }
 
 /* ── The clear button ───────────────────────────────────────────────────── */
@@ -117,15 +117,15 @@
   block-size: 1.75rem;
   margin-inline-end: 0.25rem;
   padding: 0;
-  color: var(--rv-datepicker-icon-fg, var(--rv-muted, light-dark(#555555, #a1a1aa)));
+  color: var(--rv-datepicker-icon-fg, var(--rv-color-text-muted, light-dark(#555555, #a1a1aa)));
   background: transparent;
   border: 0;
-  border-radius: var(--rv-datepicker-radius, var(--rv-radius, 0.625rem));
+  border-radius: var(--rv-datepicker-radius, var(--rv-radius-md, 0.625rem));
   cursor: pointer;
 }
 
 .rv-datepicker-clear:hover {
-  color: var(--rv-datepicker-fg, var(--rv-fg, light-dark(#111111, #f4f4f5)));
+  color: var(--rv-datepicker-fg, var(--rv-color-text, light-dark(#111111, #f4f4f5)));
   background: var(--rv-datepicker-clear-hover-bg, color-mix(in srgb, currentColor 12%, transparent));
 }
 
@@ -159,14 +159,14 @@
   max-inline-size: var(--rv-datepicker-panel-max-width, calc(100vw - 1rem));
   margin: 0;
   padding: var(--rv-datepicker-panel-padding, 0.5rem);
-  color: var(--rv-datepicker-panel-fg, var(--rv-fg, light-dark(#111111, #f4f4f5)));
-  background: var(--rv-datepicker-panel-bg, var(--rv-bg, light-dark(#ffffff, #18181b)));
+  color: var(--rv-datepicker-panel-fg, var(--rv-color-text, light-dark(#111111, #f4f4f5)));
+  background: var(--rv-datepicker-panel-bg, var(--rv-color-surface, light-dark(#ffffff, #18181b)));
   border: 1px solid
-    var(--rv-datepicker-panel-border, var(--rv-border, light-dark(#e0e0e0, #3f3f46)));
-  border-radius: var(--rv-datepicker-panel-radius, var(--rv-radius, 0.625rem));
+    var(--rv-datepicker-panel-border, var(--rv-color-border, light-dark(#e0e0e0, #3f3f46)));
+  border-radius: var(--rv-datepicker-panel-radius, var(--rv-radius-md, 0.625rem));
   box-shadow: var(
     --rv-datepicker-panel-shadow,
-    var(--rv-shadow, 0 16px 48px light-dark(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.7)))
+    var(--rv-shadow-md, 0 16px 48px light-dark(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.7)))
   );
 }
 
@@ -184,7 +184,7 @@
 .rv-datepicker-panel[popover] {
   margin: 0;
   border: 1px solid
-    var(--rv-datepicker-panel-border, var(--rv-border, light-dark(#e0e0e0, #3f3f46)));
+    var(--rv-datepicker-panel-border, var(--rv-color-border, light-dark(#e0e0e0, #3f3f46)));
   padding: var(--rv-datepicker-panel-padding, 0.5rem);
   overflow: visible;
 }

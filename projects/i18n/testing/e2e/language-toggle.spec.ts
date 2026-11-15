@@ -160,12 +160,12 @@ test.describe('theme tokens', () => {
   test('the semantic border colour and font family flow through the toggle', async ({ page }) => {
     await page.goto('/toggle');
 
-    // `--rv-border` is a colour (D42): the declaration supplies `1px solid`.
+    // `--rv-color-border` is a colour (D42): the declaration supplies `1px solid`.
     // Passing it straight to `border` would reset the style to `none`, and
-    // `--rv-font` passed to the `font` shorthand would drop the declaration.
+    // `--rv-font-family` passed to the `font` shorthand would drop the declaration.
     await page.evaluate(() => {
-      document.documentElement.style.setProperty('--rv-border', 'rgb(1, 2, 3)');
-      document.documentElement.style.setProperty('--rv-font', 'monospace');
+      document.documentElement.style.setProperty('--rv-color-border', 'rgb(1, 2, 3)');
+      document.documentElement.style.setProperty('--rv-font-family', 'monospace');
     });
 
     await expect
@@ -432,7 +432,7 @@ test.describe('feedback', () => {
   }) => {
     await page.goto('/toggle');
     await page.evaluate(() =>
-      document.documentElement.style.setProperty('--rv-bg', 'rgb(20, 20, 24)'),
+      document.documentElement.style.setProperty('--rv-color-surface', 'rgb(20, 20, 24)'),
     );
 
     const button = toggle(page, 'presentational-toggle');

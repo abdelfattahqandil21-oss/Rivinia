@@ -1,6 +1,6 @@
 :host {
   display: inline-block;
-  font-family: var(--rv-i18n-toggle-font, var(--rv-font, inherit));
+  font-family: var(--rv-i18n-toggle-font, var(--rv-font-family, inherit));
 }
 
 .rv-language-toggle__button {
@@ -11,13 +11,13 @@
   font: inherit;
   font-size: var(--rv-i18n-toggle-size, 0.875rem);
   line-height: 1.2;
-  color: var(--rv-i18n-toggle-fg, var(--rv-fg, currentColor));
+  color: var(--rv-i18n-toggle-fg, var(--rv-color-text, currentColor));
   /* `background-color`, not the `background` shorthand: the hover and active
      rules change the colour alone and must not reset anything else. */
-  background-color: var(--rv-i18n-toggle-bg, var(--rv-bg, transparent));
-  border: 1px solid var(--rv-i18n-toggle-border, var(--rv-border, currentColor));
-  border-radius: var(--rv-i18n-toggle-radius, var(--rv-radius, 0.5rem));
-  box-shadow: var(--rv-i18n-toggle-shadow, var(--rv-shadow, none));
+  background-color: var(--rv-i18n-toggle-bg, var(--rv-color-surface, transparent));
+  border: 1px solid var(--rv-i18n-toggle-border, var(--rv-color-border, currentColor));
+  border-radius: var(--rv-i18n-toggle-radius, var(--rv-radius-md, 0.5rem));
+  box-shadow: var(--rv-i18n-toggle-shadow, var(--rv-shadow-md, none));
   cursor: pointer;
 }
 
@@ -31,7 +31,7 @@
 .rv-language-toggle__button:hover {
   background-color: var(
     --rv-i18n-toggle-hover-bg,
-    color-mix(in srgb, currentColor 8%, var(--rv-i18n-toggle-bg, var(--rv-bg, transparent)))
+    color-mix(in srgb, currentColor 8%, var(--rv-i18n-toggle-bg, var(--rv-color-surface, transparent)))
   );
 }
 
@@ -40,14 +40,14 @@
     --rv-i18n-toggle-active-bg,
     color-mix(
       in srgb,
-      var(--rv-accent, currentColor) 16%,
-      var(--rv-i18n-toggle-bg, var(--rv-bg, transparent))
+      var(--rv-color-primary, currentColor) 16%,
+      var(--rv-i18n-toggle-bg, var(--rv-color-surface, transparent))
     )
   );
 }
 
 .rv-language-toggle__button:focus-visible {
-  outline: var(--rv-i18n-toggle-focus-ring, 2px solid var(--rv-accent, currentColor));
+  outline: var(--rv-i18n-toggle-focus-ring, 2px solid var(--rv-color-focus, currentColor));
   outline-offset: var(--rv-i18n-toggle-focus-offset, 0.125rem);
 }
 

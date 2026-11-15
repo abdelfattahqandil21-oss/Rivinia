@@ -104,9 +104,9 @@ for (const configuration of configurations) {
   const preflight = allText.includes(
     '*,:after,:before,::backdrop,::file-selector-button{box-sizing:border-box;margin:0;padding:0;border:0 solid}',
   );
-  const tailwindUtility = /\.bg-rv-bg\s*\{/.test(allText);
+  const tailwindUtility = /\.bg-rv-surface\s*\{/.test(allText);
   const prefixedUtility =
-    /\.tw\\:bg-rv-bg\s*\{/.test(allText) || /\.tw\\\\:bg-rv-bg\s*\{/.test(allText);
+    /\.tw\\:bg-rv-surface\s*\{/.test(allText) || /\.tw\\\\:bg-rv-surface\s*\{/.test(allText);
   const themeLayerCount = allText.split('@layer rivinia-theme').length - 1;
   const cssAssets = assets.filter((asset) => asset.extension === 'css');
   const duplicateCss = cssAssets

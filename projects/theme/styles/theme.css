@@ -1,129 +1,74 @@
 /*
- * The Rivinia semantic layer.
+ * Rivinia's single semantic token contract.
  *
- * ONE import, ONE place to set the whole component ecosystem's colours:
- *
- *   @import '@rivinia/theme';
- *
- * Every Rivinia component reads its OWN token first, then this semantic layer,
- * then its built-in default:
- *
- *   --rv-select-bg  →  --rv-bg  →  #ffffff
- *   --rv-menu-bg    →  --rv-bg  →  #ffffff
- *   --rv-modal-bg   →  --rv-bg  →  #ffffff
- *   --rv-toast-bg   →  --rv-bg  →  #ffffff
- *
- * So there are three levels of control, and each beats the next:
- *
- *   1. `--rv-select-bg`  — this component only.
- *   2. `--rv-bg`         — every Rivinia component, everywhere.
- *   3. the default       — what you get if you set nothing.
- *
- * Set the semantic layer once and the whole ecosystem follows:
- *
- *   :root { --rv-bg: #fff; --rv-fg: #111; }
- *   :root[data-rv-theme='dark'] { --rv-bg: #161616; --rv-fg: #f2f2f2; }
- *
- * The defaults live in a @layer on purpose: unlayered declarations always beat
- * layered ones, so your own `:root { --rv-bg: … }` wins wherever it appears in
- * your stylesheet, with no import-ordering to get wrong.
- *
- * One thing to avoid: do not map the semantic layer ON a Rivinia component's
- * element. That declaration shadows the root value inside that one component,
- * so a later change to the page palette silently stops reaching it. Map it on
- * `:root` for the page, or on a section when scoping a region is the intent.
- *
- * A component token set on the root (`--rv-select-bg`) still shadows a
- * section's `--rv-bg` inside that section: the component reads its own token
- * first, wherever it is.
- *
- * DARK MODE
- *
- * The dark values apply from two places, and they are kept identical:
- *
- *   - `@media (prefers-color-scheme: dark)` — the OS setting, unless the page
- *     opts out with `:root[data-rv-theme='light']`;
- *   - `:root[data-rv-theme='dark']` — an explicit switch that wins over a light
- *     OS setting.
- *
- * Both blocks also set `color-scheme`, so form controls, scrollbars and the
- * canvas follow the palette instead of staying light under a dark surface.
- *
- * The switch is read on `:root` only. A subtree goes dark by setting these
- * properties on itself (plus `color-scheme`), not by a `data-rv-theme`
- * attribute — the tokens live on the root, so an attribute lower down the tree
- * would change nothing.
- *
- * `scripts/check-contrast.mjs` fails when the two dark blocks disagree or when
- * a measured pair drops below its WCAG AA threshold. `--rv-border` is measured
- * and printed but never failed: it is a hairline, not a control's only edge.
- * See the README.
+ * The CSS remains usable without Angular. Runtime state is optional and writes
+ * data-rv-theme="light|dark|system"; the same attributes also scope nested
+ * theme regions. Unlayered consumer declarations continue to override defaults.
  */
-
 @layer rivinia-theme {
-  :root {
+  :root,
+  [data-rv-theme='light'],
+  [data-rv-theme='system'] {
     color-scheme: light;
 
-    /* Surfaces */
-    --rv-bg: #ffffff;
-    --rv-fg: #111111;
-    --rv-muted: #555555;
-    --rv-border: #e0e0e0;
+    --rv-color-primary: #005fcc;
+    --rv-color-surface: #ffffff;
+    --rv-color-surface-raised: #f5f7fa;
+    --rv-color-text: #101820;
+    --rv-color-text-muted: #454f58;
+    --rv-color-border: #767676;
+    --rv-color-focus: #005fcc;
+    --rv-color-danger: #dc2626;
+    --rv-color-success: #16a34a;
+    --rv-color-info: #2563eb;
+    --rv-color-warning: #d97706;
 
-    /* Shape and elevation */
-    --rv-radius: 0.625rem;
-    --rv-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+    --rv-radius-sm: 0.25rem;
+    --rv-radius-md: 0.5rem;
+    --rv-radius-lg: 0.75rem;
+    --rv-space-1: 0.25rem;
+    --rv-space-2: 0.5rem;
+    --rv-space-3: 0.75rem;
+    --rv-space-4: 1rem;
+    --rv-shadow-md: 0 16px 48px rgba(0, 0, 0, 0.22);
+    --rv-font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
 
-    /* Type */
-    --rv-font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  [data-rv-theme='dark'] {
+    color-scheme: dark;
 
-    /* Status */
-    --rv-accent: #5b5bd6;
-    --rv-danger: #dc2626;
-    --rv-ok: #16a34a;
-    --rv-info: #2563eb;
-    --rv-warning: #d97706;
+    --rv-color-primary: #8ab4ff;
+    --rv-color-surface: #182028;
+    --rv-color-surface-raised: #202d38;
+    --rv-color-text: #f5f7fa;
+    --rv-color-text-muted: #c4ced8;
+    --rv-color-border: #8292a1;
+    --rv-color-focus: #8ab4ff;
+    --rv-color-danger: #f87171;
+    --rv-color-success: #4ade80;
+    --rv-color-info: #60a5fa;
+    --rv-color-warning: #fbbf24;
+
+    --rv-shadow-md: 0 16px 48px rgba(0, 0, 0, 0.6);
   }
 
   @media (prefers-color-scheme: dark) {
-    :root:not([data-rv-theme='light']) {
+    [data-rv-theme='system'] {
       color-scheme: dark;
 
-      /* Surfaces */
-      --rv-bg: #161616;
-      --rv-fg: #f2f2f2;
-      --rv-muted: #a1a1aa;
-      --rv-border: #3f3f46;
+      --rv-color-primary: #8ab4ff;
+      --rv-color-surface: #182028;
+      --rv-color-surface-raised: #202d38;
+      --rv-color-text: #f5f7fa;
+      --rv-color-text-muted: #c4ced8;
+      --rv-color-border: #8292a1;
+      --rv-color-focus: #8ab4ff;
+      --rv-color-danger: #f87171;
+      --rv-color-success: #4ade80;
+      --rv-color-info: #60a5fa;
+      --rv-color-warning: #fbbf24;
 
-      /* Elevation: black at the light alpha vanishes on a dark surface. */
-      --rv-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
-
-      /* Status */
-      --rv-accent: #8b8bf0;
-      --rv-danger: #f87171;
-      --rv-ok: #4ade80;
-      --rv-info: #60a5fa;
-      --rv-warning: #fbbf24;
+      --rv-shadow-md: 0 16px 48px rgba(0, 0, 0, 0.6);
     }
-  }
-
-  :root[data-rv-theme='dark'] {
-    color-scheme: dark;
-
-    /* Surfaces */
-    --rv-bg: #161616;
-    --rv-fg: #f2f2f2;
-    --rv-muted: #a1a1aa;
-    --rv-border: #3f3f46;
-
-    /* Elevation: black at the light alpha vanishes on a dark surface. */
-    --rv-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
-
-    /* Status */
-    --rv-accent: #8b8bf0;
-    --rv-danger: #f87171;
-    --rv-ok: #4ade80;
-    --rv-info: #60a5fa;
-    --rv-warning: #fbbf24;
   }
 }

@@ -3,12 +3,12 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
- * D87, the select's share: `--rv-accent` paints the focus ring, the active row
- * and the selected check mark, and forced colors gets system-colour defaults.
+ * D101, the select reads `--rv-color-focus` for focus and `--rv-color-primary` for
+ * active/selected states; forced colors gets system-colour defaults.
  *
- * The accent is always read as `var(--rv-accent, <today's value>)`, never as a
- * plain `var(--rv-accent)`. A page without the theme imported has no
- * `--rv-accent` at all, and D87 requires that page to render exactly as 0.7.x
+ * The accent is always read as `var(--rv-color-primary, <today's value>)`, never as a
+ * plain `var(--rv-color-primary)`. A page without the theme imported has no
+ * `--rv-color-primary` at all, and D87 requires that page to render exactly as 0.7.x
  * did; the fallback is what makes that true. `check-component-theme` proves it
  * in a browser (the `light` case), this file proves the declarations cannot
  * silently stop carrying it.
@@ -51,31 +51,29 @@ function block(css: string, opener: string): string {
   throw new Error(`unbalanced rule: ${opener}`);
 }
 
-const accentReads = (css: string) => (css.match(/var\(--rv-accent,/g) ?? []).length;
+const accentReads = (css: string) => (css.match(/var\(--rv-color-primary,/g) ?? []).length;
 
 describe('select theme wiring', () => {
-  it('paints every focus ring with the accent and keeps today’s ring as the fallback', () => {
+  it('paints focus rings with the dedicated focus token', () => {
     expect(flat(panel)).toContain(
-      'outline: var(--rv-select-focus-ring, 2px solid var(--rv-accent, currentColor));',
+      'outline: var(--rv-select-focus-ring, 2px solid var(--rv-color-focus, currentColor));',
     );
     expect(flat(panel)).toContain(
-      'outline: var(--rv-select-focus-ring, 2px solid var(--rv-accent, color-mix(in srgb, currentColor 55%, transparent)));',
+      'outline: var(--rv-select-focus-ring, 2px solid var(--rv-color-focus, color-mix(in srgb, currentColor 55%, transparent)));',
     );
     expect(flat(popup)).toContain(
-      'outline: var(--rv-select-focus-ring, 2px solid var(--rv-accent, currentColor));',
+      'outline: var(--rv-select-focus-ring, 2px solid var(--rv-color-focus, currentColor));',
     );
     expect(flat(popup)).toContain(
-      'outline: var(--rv-select-focus-ring, 2px solid var(--rv-accent, color-mix(in srgb, currentColor 55%, transparent)));',
+      'outline: var(--rv-select-focus-ring, 2px solid var(--rv-color-focus, color-mix(in srgb, currentColor 55%, transparent)));',
     );
   });
 
-  it('reads the accent only through a fallback, never bare', () => {
-    expect(panel + popup).not.toMatch(/var\(--rv-accent\)/);
-    // Ten reads, one per place D87 names: three panel rings (premium trigger,
-    // simple search, premium search), two row rings, three active-row tints
-    // (simple, simple under the pointer, premium), and the tick on and off the
-    // active row.
-    expect(accentReads(panel) + accentReads(popup)).toBe(10);
+  it('reads primary only through a fallback and keeps focus separate', () => {
+    expect(panel + popup).not.toMatch(/var\(--rv-color-primary\)/);
+    expect(panel + popup).toContain('var(--rv-color-focus,');
+    // Five primary reads remain for selected/active states; focus reads its own token.
+    expect(accentReads(panel) + accentReads(popup)).toBe(5);
   });
 
   it('paints the selected check mark with the accent', () => {
@@ -85,7 +83,7 @@ describe('select theme wiring', () => {
     // had before as its fallback: muted off the active row, the row's ink on it.
     expect(
       flat(block(popup, '.rv-select-popup-panel [rvselectpopupitem] svg.rv-select-check {')),
-    ).toContain('color: var(--rv-accent, var(--rv-select-popup-muted));');
+    ).toContain('color: var(--rv-color-primary, var(--rv-select-popup-muted));');
     expect(
       flat(
         block(
@@ -93,14 +91,14 @@ describe('select theme wiring', () => {
           ".rv-select-popup-panel [rvselectpopupitem][data-active='true'] svg.rv-select-check {",
         ),
       ),
-    ).toContain('color: var(--rv-accent, currentColor);');
+    ).toContain('color: var(--rv-color-primary, currentColor);');
   });
 
   it('tints the active row with the accent, keeping the 10% and 7% mixes', () => {
     expect(
       flat(block(popup, ".rv-select-popup-panel [rvselectpopupitem][data-active='true'] {")),
     ).toContain(
-      'background: var(--rv-select-item-active-bg, color-mix(in srgb, var(--rv-accent, currentColor) 10%, transparent));',
+      'background: var(--rv-select-item-active-bg, color-mix(in srgb, var(--rv-color-primary, currentColor) 10%, transparent));',
     );
     expect(
       flat(
@@ -110,7 +108,7 @@ describe('select theme wiring', () => {
         ),
       ),
     ).toContain(
-      'background: var(--rv-select-item-active-bg, color-mix(in srgb, var(--rv-accent, currentColor) 7%, transparent));',
+      'background: var(--rv-select-item-active-bg, color-mix(in srgb, var(--rv-color-primary, currentColor) 7%, transparent));',
     );
   });
 
@@ -125,7 +123,7 @@ describe('select theme wiring', () => {
     expect(
       flat(block(popup, ".rv-select-popup-panel [rvselectpopupitem][data-active='true']:hover {")),
     ).toContain(
-      'background: var(--rv-select-item-active-hover-bg, color-mix(in srgb, var(--rv-accent, currentColor) 8%, transparent));',
+      'background: var(--rv-select-item-active-hover-bg, color-mix(in srgb, var(--rv-color-primary, currentColor) 8%, transparent));',
     );
   });
 

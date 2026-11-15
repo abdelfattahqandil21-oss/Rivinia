@@ -55,7 +55,7 @@ test('keeps the status region accessible and uses built-in colors without Theme'
   page,
 }) => {
   const hasTheme = await page.evaluate(
-    () => getComputedStyle(document.documentElement).getPropertyValue('--rv-ok').trim() !== '',
+    () => getComputedStyle(document.documentElement).getPropertyValue('--rv-color-success').trim() !== '',
   );
 
   test.skip(hasTheme, 'Standalone fallback is exercised by the no-Theme build.');
@@ -86,10 +86,10 @@ test('resolves global, scoped, instance, and rich-color overrides independently'
   page,
 }) => {
   await page.evaluate(() => {
-    document.documentElement.style.setProperty('--rv-ok', 'rgb(1, 2, 3)');
-    document.documentElement.style.setProperty('--rv-danger', 'rgb(4, 5, 6)');
-    document.documentElement.style.setProperty('--rv-info', 'rgb(7, 8, 9)');
-    document.documentElement.style.setProperty('--rv-warning', 'rgb(10, 11, 12)');
+    document.documentElement.style.setProperty('--rv-color-success', 'rgb(1, 2, 3)');
+    document.documentElement.style.setProperty('--rv-color-danger', 'rgb(4, 5, 6)');
+    document.documentElement.style.setProperty('--rv-color-info', 'rgb(7, 8, 9)');
+    document.documentElement.style.setProperty('--rv-color-warning', 'rgb(10, 11, 12)');
   });
 
   const global = await statusColors(page, '#default-list');
@@ -123,7 +123,7 @@ test('resolves global, scoped, instance, and rich-color overrides independently'
 
 test('follows the Theme light and dark semantic status tokens', async ({ page }) => {
   const hasTheme = await page.evaluate(
-    () => getComputedStyle(document.documentElement).getPropertyValue('--rv-ok').trim() !== '',
+    () => getComputedStyle(document.documentElement).getPropertyValue('--rv-color-success').trim() !== '',
   );
 
   test.skip(!hasTheme, 'Theme inheritance is exercised by the Theme-enabled build.');
@@ -136,7 +136,7 @@ test('follows the Theme light and dark semantic status tokens', async ({ page })
       const style = getComputedStyle(document.documentElement);
       const probe = document.createElement('span');
       document.body.append(probe);
-      const colors = ['--rv-ok', '--rv-danger', '--rv-info', '--rv-warning'].map((name) => {
+      const colors = ['--rv-color-success', '--rv-color-danger', '--rv-color-info', '--rv-color-warning'].map((name) => {
         probe.style.color = style.getPropertyValue(name).trim();
         return getComputedStyle(probe).color;
       });
@@ -155,7 +155,7 @@ test('rich status text, controls, icons, and focus indicators meet contrast thre
   page,
 }) => {
   const hasTheme = await page.evaluate(
-    () => getComputedStyle(document.documentElement).getPropertyValue('--rv-ok').trim() !== '',
+    () => getComputedStyle(document.documentElement).getPropertyValue('--rv-color-success').trim() !== '',
   );
   const modes = hasTheme ? ['light', 'dark'] : ['standalone'];
 

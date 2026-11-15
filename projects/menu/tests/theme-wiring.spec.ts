@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
- * D87, the menu's share: `--rv-accent` paints the focus ring and the active
- * row, and forced colors gets system-colour defaults.
+ * D101, the menu reads `--rv-color-focus` for its focus ring and
+ * `--rv-color-primary` for the active row; forced colors gets system-colour defaults.
  *
- * The accent is always read as `var(--rv-accent, <today's value>)`: without the
- * theme imported there is no `--rv-accent`, and D87 requires that page to look
+ * The accent is always read as `var(--rv-color-primary, <today's value>)`: without the
+ * theme imported there is no `--rv-color-primary`, and D87 requires that page to look
  * exactly as it does today. The `light` case of `check:component-theme` is the
  * browser proof; this file keeps the declarations from drifting away from it.
  *
@@ -40,16 +40,16 @@ function block(css: string, opener: string): string {
 }
 
 describe('menu theme wiring', () => {
-  it('paints the row focus ring with the accent and keeps today’s ring as the fallback', () => {
+  it('paints the row focus ring with the dedicated focus token', () => {
     expect(flat(source)).toContain(
-      'outline: var(--rv-menu-focus-ring, 2px solid var(--rv-accent, currentColor));',
+      'outline: var(--rv-menu-focus-ring, 2px solid var(--rv-color-focus, currentColor));',
     );
-    expect(source).not.toMatch(/var\(--rv-accent\)/);
+    expect(source).toContain('var(--rv-color-primary, currentColor) 10%');
   });
 
   it('tints the active row with the accent, keeping the 10% mix', () => {
     expect(flat(block(source, ".rv-menu-panel [rvmenuitem][data-active='true'] {"))).toContain(
-      'background: var(--rv-menu-item-active-bg, color-mix(in srgb, var(--rv-accent, currentColor) 10%, transparent));',
+      'background: var(--rv-menu-item-active-bg, color-mix(in srgb, var(--rv-color-primary, currentColor) 10%, transparent));',
     );
   });
 

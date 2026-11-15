@@ -8,8 +8,8 @@
  * colour and `color-scheme` are compared.
  *
  * Cases:
- *  1. OS dark, no attribute            → the dark values.
- *  2. OS light, no attribute           → the light values.
+ *  1. OS dark + `data-rv-theme="system"` → the dark values.
+ *  2. OS light + `data-rv-theme="system"` → the light values.
  *  3. OS dark + data-rv-theme="light"  → the light values (opt-out).
  *  4. OS light + data-rv-theme="dark"  → the dark values (explicit wins).
  *  5. OS dark + data-rv-theme="dark"   → the dark values.
@@ -18,9 +18,7 @@
  *  8. Consumer `:root` override, OS dark → the consumer's value wins.
  *  9. Bootstrap light variables, OS dark → `--rv-*` follows `--bs-*`, not the fallbacks.
  * 10. Bootstrap dark variables, OS light → same, in the dark block.
- * 11. A dark section inside a light page → `--rv-*` and `color-scheme` on the
- *     section reach it and nothing outside it. This is the README's workaround
- *     for the fact that `data-rv-theme` is read on `<html>` only.
+ * 11. A nested dark scope inside a light page reaches that section alone.
  *
  * Cases 6 and 7 are the reason the adapter's rules stay unlayered: unlayered
  * declarations beat every layered one, so Bootstrap stays authoritative over
@@ -43,35 +41,35 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const STYLES = join(ROOT, 'projects', 'theme', 'styles');
 
-const BODY = '<style>body,#section-probe{background:var(--rv-bg);color:var(--rv-fg)}</style>';
+const BODY = '<style>body,#section-probe{background:var(--rv-color-surface);color:var(--rv-color-text)}</style>';
 
 export const CASES = Object.freeze([
   {
     id: 'os-dark',
-    htmlAttrs: '',
+    htmlAttrs: ' data-rv-theme="system"',
     stylesheet: 'theme.css',
-    label: 'OS dark, no attribute',
+    label: 'OS dark, system mode',
     scheme: 'dark',
     expect: {
-      bg: '#161616',
-      fg: '#f2f2f2',
+      bg: '#182028',
+      fg: '#f5f7fa',
       colorScheme: 'dark',
       shadowAlpha: 0.6,
-      accent: '#8b8bf0',
+      accent: '#8ab4ff',
     },
   },
   {
     id: 'os-light',
-    htmlAttrs: '',
+    htmlAttrs: ' data-rv-theme="system"',
     stylesheet: 'theme.css',
-    label: 'OS light, no attribute',
+    label: 'OS light, system mode',
     scheme: 'light',
     expect: {
       bg: '#ffffff',
-      fg: '#111111',
+      fg: '#101820',
       colorScheme: 'light',
       shadowAlpha: 0.22,
-      accent: '#5b5bd6',
+      accent: '#005fcc',
     },
   },
   {
@@ -82,10 +80,10 @@ export const CASES = Object.freeze([
     scheme: 'dark',
     expect: {
       bg: '#ffffff',
-      fg: '#111111',
+      fg: '#101820',
       colorScheme: 'light',
       shadowAlpha: 0.22,
-      accent: '#5b5bd6',
+      accent: '#005fcc',
     },
   },
   {
@@ -95,11 +93,11 @@ export const CASES = Object.freeze([
     label: 'OS light + data-rv-theme="dark"',
     scheme: 'light',
     expect: {
-      bg: '#161616',
-      fg: '#f2f2f2',
+      bg: '#182028',
+      fg: '#f5f7fa',
       colorScheme: 'dark',
       shadowAlpha: 0.6,
-      accent: '#8b8bf0',
+      accent: '#8ab4ff',
     },
   },
   {
@@ -109,11 +107,11 @@ export const CASES = Object.freeze([
     label: 'OS dark + data-rv-theme="dark"',
     scheme: 'dark',
     expect: {
-      bg: '#161616',
-      fg: '#f2f2f2',
+      bg: '#182028',
+      fg: '#f5f7fa',
       colorScheme: 'dark',
       shadowAlpha: 0.6,
-      accent: '#8b8bf0',
+      accent: '#8ab4ff',
     },
   },
   {
@@ -124,10 +122,10 @@ export const CASES = Object.freeze([
     scheme: 'dark',
     expect: {
       bg: '#ffffff',
-      fg: '#111111',
+      fg: '#101820',
       colorScheme: 'light',
       shadowAlpha: 0.22,
-      accent: '#5b5bd6',
+      accent: '#005fcc',
     },
   },
   {
@@ -137,11 +135,11 @@ export const CASES = Object.freeze([
     label: 'Bootstrap dark, OS light',
     scheme: 'light',
     expect: {
-      bg: '#161616',
-      fg: '#f2f2f2',
+      bg: '#182028',
+      fg: '#f5f7fa',
       colorScheme: 'dark',
       shadowAlpha: 0.6,
-      accent: '#8b8bf0',
+      accent: '#8ab4ff',
     },
   },
   {
@@ -150,13 +148,13 @@ export const CASES = Object.freeze([
     stylesheet: 'theme.css',
     label: 'consumer :root override, OS dark',
     scheme: 'dark',
-    extra: ':root{--rv-bg:#ff0000;--rv-fg:#00ff00}',
+    extra: ':root{--rv-color-surface:#ff0000;--rv-color-text:#00ff00}',
     expect: {
       bg: '#ff0000',
       fg: '#00ff00',
-      colorScheme: 'dark',
-      shadowAlpha: 0.6,
-      accent: '#8b8bf0',
+      colorScheme: 'light',
+      shadowAlpha: 0.22,
+      accent: '#005fcc',
     },
   },
   {
@@ -196,31 +194,30 @@ export const CASES = Object.freeze([
     stylesheet: 'theme.css',
     label: 'dark section in a light page',
     scheme: 'light',
-    // The README's section recipe, declarations and all.
-    extra:
-      '#section-probe{color-scheme:dark;--rv-bg:#161616;--rv-fg:#f2f2f2;--rv-muted:#a1a1aa;--rv-border:#3f3f46;--rv-accent:#8b8bf0;--rv-shadow:0 16px 48px rgba(0,0,0,.6)}',
+    // A nested explicit dark scope changes only its descendants.
+    sectionAttrs: ' data-rv-theme="dark"',
     expect: {
       bg: '#ffffff',
-      fg: '#111111',
+      fg: '#101820',
       colorScheme: 'light',
       shadowAlpha: 0.22,
-      accent: '#5b5bd6',
+      accent: '#005fcc',
     },
     expectSection: {
-      bg: '#161616',
-      fg: '#f2f2f2',
+      bg: '#182028',
+      fg: '#f5f7fa',
       colorScheme: 'dark',
       shadowAlpha: 0.6,
-      accent: '#8b8bf0',
+      accent: '#8ab4ff',
     },
   },
 ]);
 
-function document(htmlAttrs, stylesheet, extra = '') {
+function document(htmlAttrs, stylesheet, extra = '', sectionAttrs = '') {
   // The consumer sheet goes BEFORE the theme link on purpose: the layer is
   // what makes it win, not source order.
   const override = extra ? `<style>${extra}</style>` : '';
-  return `<!doctype html><html${htmlAttrs}><head>${override}<link rel="stylesheet" href="${stylesheet}">${BODY}</head><body><p>probe</p><section id="section-probe">section</section></body></html>`;
+  return `<!doctype html><html${htmlAttrs}><head>${override}<link rel="stylesheet" href="${stylesheet}">${BODY}</head><body><p>probe</p><section id="section-probe"${sectionAttrs}>section</section></body></html>`;
 }
 
 function writeFixtures() {
@@ -230,7 +227,7 @@ function writeFixtures() {
   for (const testCase of CASES) {
     writeFileSync(
       join(dir, `${testCase.id}.html`),
-      document(testCase.htmlAttrs, testCase.stylesheet, testCase.extra),
+      document(testCase.htmlAttrs, testCase.stylesheet, testCase.extra, testCase.sectionAttrs),
     );
   }
   return dir;
@@ -264,12 +261,12 @@ export async function run({ engines = ['chromium', 'firefox'], log = console.log
               const match = /rgba\([^)]*,\s*([\d.]+)\s*\)/.exec(value.trim());
               return match ? Number(match[1]) : null;
             };
-            const shadowAlpha = alphaOf(root.getPropertyValue('--rv-shadow'));
-            const accent = root.getPropertyValue('--rv-accent').trim();
-            const sectionAccent = section.getPropertyValue('--rv-accent').trim();
+            const shadowAlpha = alphaOf(root.getPropertyValue('--rv-shadow-md'));
+            const accent = root.getPropertyValue('--rv-color-primary').trim();
+            const sectionAccent = section.getPropertyValue('--rv-color-primary').trim();
             const sectionShadowAlpha = alphaOf(
               getComputedStyle(document.querySelector('#section-probe')).getPropertyValue(
-                '--rv-shadow',
+                '--rv-shadow-md',
               ),
             );
             return {
