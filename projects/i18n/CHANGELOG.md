@@ -1,5 +1,9 @@
 # @rivinia/i18n
 
+## Unreleased — local integration (not published)
+
+- Share one lazy loader descriptor resolution across simultaneous language loads; retry descriptor failures without caching the rejection.
+
 ## 1.0.4
 
 - Update published internal dependency metadata and version-pinned documentation links for the synchronized Rivinia 1.0 patch. No public API changes.

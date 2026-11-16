@@ -165,3 +165,7 @@ surface ordered by API.
 
 Release history: [CHANGELOG.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v1.0.4/projects/i18n/CHANGELOG.md).
 MIT licensed.
+
+## Local integration
+
+Concurrent first dictionary loads now share descriptor initialization. Failed initialization can retry. The core API is unchanged.

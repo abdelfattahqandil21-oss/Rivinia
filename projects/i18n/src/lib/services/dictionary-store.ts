@@ -57,6 +57,7 @@ export class DictionaryStore<L extends string> {
   /** Non-background loads in flight; `loadingState` follows this count. */
   private _loadingCount = 0;
   private _resolvedLoader: TranslationLoader<L> | null = null;
+  private _loaderTask: Promise<TranslationLoader<L>> | null = null;
 
   readonly visible: Signal<Record<string, unknown>> = this._visible.asReadonly();
   readonly fallback: Signal<Record<string, unknown> | null> = this._fallbackDict.asReadonly();
@@ -235,10 +236,8 @@ export class DictionaryStore<L extends string> {
     task = (async () => {
       const stale = (): boolean => this._generationOf(languageId) !== generation;
       try {
-        if (!this._resolvedLoader) {
-          this._resolvedLoader = await this._deps.loader(this._deps.loaderContext);
-        }
-        const translations = await this._resolvedLoader.load(languageId, this._deps.loaderContext);
+        const loader = this._resolvedLoader ?? await this._getLoader();
+        const translations = await loader.load(languageId, this._deps.loaderContext);
 
         // A superseded response touches nothing: no cache, no transfer state,
         // no signals, no error reporting.
@@ -261,6 +260,18 @@ export class DictionaryStore<L extends string> {
       }
     })();
     return task;
+  }
+
+  /** Share descriptor initialization across languages, but allow a failed chunk to retry. */
+  private _getLoader(): Promise<TranslationLoader<L>> {
+    if (!this._loaderTask) {
+      const task = this._deps.loader(this._deps.loaderContext);
+      this._loaderTask = task;
+      void task.then(loader => { this._resolvedLoader = loader; }, () => {
+        if (this._loaderTask === task) this._loaderTask = null;
+      });
+    }
+    return this._loaderTask;
   }
 
   private _generationOf(languageId: L): number {
