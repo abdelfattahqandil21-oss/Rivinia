@@ -70,6 +70,7 @@
     "@types/node": "^24.19.2",
     "bootstrap": "5.3.8",
     "jsdom": "^30.0.0",
+    "jsonc-parser": "3.3.1",
     "less": "4.9.1",
     "ng-packagr": "22.2.5",
     "postcss": "8.5.29",
@@ -77,7 +78,23 @@
     "sass": "1.105.1",
     "tailwindcss": "4.3.5",
     "typescript": "~6.0.2",
-    "vitest": "^5.0.0",
-    "jsonc-parser": "3.3.1"
-  }
+    "vitest": "^5.0.0"
+  },
+  "description": "<p align=\"center\">   <picture>     <source media=\"(prefers-color-scheme: dark)\" srcset=\"./assets/rivinia-abstract-mark.svg\" />     <source media=\"(prefers-color-scheme: light)\" srcset=\"./assets/rivinia-abstract-mark-light.svg\" />     <img src=\"./assets/rivinia-abstract-mark-light.svg\" alt=\"Rivinia\" width=\"390\" />   </picture> </p>",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abdelfattahqandil21-oss/Rivinia.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/abdelfattahqandil21-oss/Rivinia/issues"
+  },
+  "homepage": "https://github.com/abdelfattahqandil21-oss/Rivinia#readme"
 }
