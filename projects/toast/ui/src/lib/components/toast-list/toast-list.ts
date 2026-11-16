@@ -144,6 +144,9 @@ export class RiviniaToastList implements AfterViewInit {
   /** Kind-tinted rail (default) vs full-bleed kind colors. @default false */
   readonly richColors = input<boolean>(false);
   /** Render the X button. @default true */
+  readonly regionLabel = input('Notifications');
+  readonly dismissLabel = input('Dismiss notification');
+
   readonly showCloseButton = input<boolean>(true);
 
   /** Presentational-mode dismiss (id). Managed mode settles via the manager. */

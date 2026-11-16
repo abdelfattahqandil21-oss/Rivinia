@@ -61,3 +61,7 @@ The UI and controller are independent; use either or combine them.
 | Top layer and managed list | [Top layer and managed list](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/toast/v1.0.4/docs/toast/top-layer-and-managed-list.md) |
 | API reference | [API reference](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/toast/v1.0.4/docs/toast/api.md) |
 | Testing | [Testing](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/toast/v1.0.4/docs/toast/testing.md) |
+
+## Local integration
+
+Unreleased UI: pass `[regionLabel]` and `[dismissLabel]` to `rv-toast-list` to localize accessible notification names.

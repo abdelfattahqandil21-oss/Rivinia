@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — local integration (not published)
+
+- Add regionLabel and dismissLabel inputs so notification accessibility names can follow the application language.
+
 ## Unreleased — proposed synchronized 1.1.0 (not published)
 
 - Rich-color Toasts now derive a dark status-tinted background with a white foreground, preserving the existing status token precedence while meeting the built-in palette contrast thresholds. The enhancement is guarded by `@supports`; accessible Toast-owned background pairs remain active when `color-mix()` is unsupported. Consumer-supplied status colors remain the consumer's contrast responsibility.
