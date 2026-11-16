@@ -21,8 +21,6 @@ Not included (each is additive):
 - a typed date input with segments (`dd/MM/yyyy` typed by hand) — the time row
   is typed, the date grid is not;
 - range selection, presets, a time-only picker, and a separate timezone picker;
-- time bounds in `min`/`max` (the grid uses the date half; a time outside a
-  bound is not rejected);
 - a Hijri (Umm al-Qura) grid — the formatting seam is documented in
   `DECISIONS.md`, the grid is not implemented;
 - date/time pattern **parsing** (patterns format; they do not parse);

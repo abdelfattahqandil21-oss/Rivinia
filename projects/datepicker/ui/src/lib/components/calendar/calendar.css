@@ -63,7 +63,8 @@
 .rv-calendar-heading:focus-visible,
 .rv-calendar-day:focus-visible,
 .rv-calendar-option:focus-visible {
-  outline: 2px solid var(--rv-calendar-focus-ring, var(--rv-color-focus, light-dark(#005fcc, #8ab4ff)));
+  outline: 2px solid
+    var(--rv-calendar-focus-ring, var(--rv-color-focus, light-dark(#005fcc, #8ab4ff)));
   outline-offset: 2px;
 }
 
@@ -90,7 +91,10 @@
 }
 
 .rv-calendar-heading:hover {
-  background: var(--rv-calendar-heading-hover-bg, color-mix(in srgb, currentColor 10%, transparent));
+  background: var(
+    --rv-calendar-heading-hover-bg,
+    color-mix(in srgb, currentColor 10%, transparent)
+  );
 }
 
 .rv-calendar-heading-static {
@@ -144,6 +148,11 @@
 .rv-calendar-day--today {
   box-shadow: inset 0 0 0 1px
     var(--rv-calendar-today-ring, var(--rv-color-focus, light-dark(#005fcc, #8ab4ff)));
+}
+
+/* Adjacent dates remain real, accessible days; only their text is quieter. */
+.rv-calendar-day--outside:not(.rv-calendar-day--selected) {
+  color: var(--rv-calendar-outside-fg, var(--rv-color-text-muted, light-dark(#6b7280, #9298a3)));
 }
 
 .rv-calendar-day--selected {

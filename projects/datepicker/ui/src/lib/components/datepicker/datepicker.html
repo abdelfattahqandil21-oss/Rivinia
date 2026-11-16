@@ -1,4 +1,31 @@
-<span class="rv-datepicker-field">
+<span #field class="rv-datepicker-field">
+  <svg class="rv-datepicker-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+    <rect
+      x="2.5"
+      y="3.5"
+      width="11"
+      height="10"
+      rx="1.5"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.25"
+    />
+    <path
+      d="M2.5 6.5h11M5.5 2v3M10.5 2v3"
+      stroke="currentColor"
+      stroke-width="1.25"
+      stroke-linecap="round"
+    />
+  </svg>
+  <rv-date-segments
+    [value]="normalized()"
+    [locale]="effectiveLocale()"
+    [format]="effectiveFormat()"
+    [labels]="calendar.labels()"
+    [label]="label() ?? calendar.labels().chooseDate"
+    [disabled]="isDisabled()"
+    (valueChange)="onTypedDate($event)"
+  />
   <button
     #trigger
     type="button"
@@ -11,39 +38,17 @@
     (click)="toggle()"
   >
     <span class="rv-datepicker-value">{{ triggerText() }}</span>
-    <svg class="rv-datepicker-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <rect
-        x="2.5"
-        y="3.5"
-        width="11"
-        height="10"
-        rx="1.5"
+    <svg class="rv-datepicker-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="m3.5 6 4.5 4.5L12.5 6"
         fill="none"
         stroke="currentColor"
-        stroke-width="1.25"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
       />
-      <path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" />
     </svg>
   </button>
-
-  @if (canClear()) {
-    <button
-      type="button"
-      class="rv-datepicker-clear"
-      [attr.aria-label]="clearLabel()"
-      (click)="clearDate()"
-    >
-      <svg class="rv-datepicker-clear-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-        <path
-          d="m4.5 4.5 7 7m0-7-7 7"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-        />
-      </svg>
-    </button>
-  }
 </span>
 
 @if (open() || closing()) {
@@ -58,6 +63,7 @@
     [attr.aria-hidden]="closing() ? 'true' : null"
     [style.--rv-datepicker-panel-shift]="panelShift() + 'px'"
     (click)="onPanelClick($event)"
+    (keydown)="onPanelKeydown($event)"
     (animationend)="onPanelAnimationEnd($event)"
   >
     <rv-calendar
@@ -67,5 +73,37 @@
       (picked)="onPicked($event)"
       (dismissed)="dismiss()"
     />
+    <div class="rv-datepicker-actions">
+      <div class="rv-datepicker-actions-start">
+        <button
+          type="button"
+          class="rv-datepicker-action rv-datepicker-now"
+          [disabled]="isDisabled() || !calendar.canSelect(calendar.today())"
+          (click)="onNow()"
+        >
+          {{ calendar.labels().today ?? calendar.labels().now }}
+        </button>
+        @if (canClear()) {
+          <button
+            type="button"
+            class="rv-datepicker-action rv-datepicker-clear-action"
+            [attr.aria-label]="clearLabel()"
+            (click)="clearValue()"
+          >
+            {{ calendar.labels().clear ?? calendar.labels().clearDate }}
+          </button>
+        }
+      </div>
+      @if (commitMode() === 'explicit') {
+        <button
+          type="button"
+          class="rv-datepicker-action rv-datepicker-ok"
+          [disabled]="!canCommit()"
+          (click)="commit()"
+        >
+          {{ calendar.labels().apply ?? calendar.labels().ok }}
+        </button>
+      }
+    </div>
   </div>
 }

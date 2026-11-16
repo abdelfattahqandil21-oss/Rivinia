@@ -1,0 +1,56 @@
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  align-items: center;
+}
+
+.rv-date-segments {
+  display: inline-flex;
+  align-items: center;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rv-date-segment {
+  box-sizing: content-box;
+  inline-size: auto;
+  min-inline-size: 1ch;
+  max-inline-size: 5.5ch;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.rv-date-segment::placeholder {
+  color: var(--rv-datepicker-placeholder-fg, var(--rv-color-text-muted, currentColor));
+  opacity: 0.64;
+}
+
+.rv-date-segment:focus-visible {
+  border-radius: 0.2rem;
+  box-shadow: 0 2px 0 var(--rv-color-focus, currentColor);
+}
+
+.rv-date-segment[aria-invalid='true'] {
+  color: var(--rv-color-danger, #b42318);
+  box-shadow: 0 2px 0 currentColor;
+}
+
+.rv-date-segment:disabled {
+  cursor: not-allowed;
+}
+
+.rv-date-literal {
+  white-space: pre;
+}

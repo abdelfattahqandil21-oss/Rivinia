@@ -20,6 +20,7 @@ const TODAY = d(2026, 10, 25);
   imports: [RiviniaDatepickerComponent],
   template: `
     <rv-datepicker
+      [commitMode]="commitMode"
       [value]="value()"
       [locale]="locale"
       [format]="format"
@@ -43,6 +44,7 @@ class TestHost {
     this.changes.push(value);
     this.value.set(value);
   }
+  commitMode: 'immediate' | 'explicit' = 'immediate';
   locale = 'en-US';
   format: RiviniaDateFormat | undefined = undefined;
   min: RiviniaDate | undefined = undefined;
@@ -55,7 +57,7 @@ class TestHost {
 @Component({
   selector: 'rv-label-host',
   imports: [RiviniaDatepickerComponent],
-  template: `<label>Departure <rv-datepicker [(value)]="value" /></label>`,
+  template: `<label>Departure <rv-datepicker [(value)]="value" commitMode="immediate" /></label>`,
 })
 class LabelHost {
   readonly value = signal<RiviniaDate | null>(null);
@@ -181,6 +183,48 @@ describe('rv-datepicker — the trigger', () => {
     expect(mounted.trigger().disabled).toBe(true);
     mounted.open();
     expect(mounted.panel()).toBeNull();
+  });
+});
+
+describe('rv-datepicker — editable format segments', () => {
+  it.each([
+    { format: 'dd:mm:yyyy', order: ['day', 'month', 'year'], values: ['25', '10', '2026'] },
+    { format: 'yy:dd:mm', order: ['year', 'day', 'month'], values: ['26', '25', '10'] },
+    { format: 'YY:MM:DD', order: ['year', 'month', 'day'], values: ['26', '10', '25'] },
+  ])('renders and edits $format in token order', ({ format, order, values }) => {
+    const mounted = mount({}, (host) => {
+      host.format = format;
+      host.value.set(d(2026, 10, 25));
+    });
+    const segments = [...mounted.el.querySelectorAll<HTMLInputElement>('.rv-date-segment')];
+    expect(segments.map((input) => input.dataset['dateSegment'])).toEqual(order);
+    expect(segments.map((input) => input.value)).toEqual(values);
+
+    const day = mounted.el.querySelector<HTMLInputElement>(
+      '.rv-date-segment[data-date-segment="day"]',
+    )!;
+    day.value = '14';
+    day.dispatchEvent(new Event('input', { bubbles: true }));
+    mounted.settle();
+
+    expect(mounted.host.value()).toEqual(d(2026, 10, 14));
+    expect(day.value).toBe('14');
+  });
+
+  it('accepts localized numerals in the date segments', () => {
+    const mounted = mount({}, (host) => {
+      host.locale = 'ar-EG';
+      host.format = 'dd/MM/yyyy';
+    });
+    const segments = [...mounted.el.querySelectorAll<HTMLInputElement>('.rv-date-segment')];
+    for (const [input, value] of segments.map(
+      (input, index) => [input, ['٢٥', '١٠', '٢٠٢٦'][index]] as const,
+    )) {
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      mounted.settle();
+    }
+    expect(mounted.host.value()).toEqual(d(2026, 10, 25));
   });
 });
 
@@ -426,43 +470,55 @@ describe('rv-datepicker — theme', () => {
 });
 
 describe('rv-datepicker — clearing', () => {
-  it('renders no clear button unless the field opts in', () => {
+  it('shows no clear action unless the field opts in', () => {
     const mounted = mount({}, (host) => host.value.set(d(2026, 10, 25)));
-    expect(mounted.el.querySelector('.rv-datepicker-clear')).toBeNull();
+    mounted.open();
+    expect(mounted.panel()?.querySelector('.rv-datepicker-clear-action')).toBeNull();
   });
 
-  it('clears the value, publishes null, closes the panel and returns focus', () => {
+  it('clears the committed value immediately from the panel', () => {
     const mounted = mount({}, (host) => {
+      host.commitMode = 'explicit';
       host.clearable.set(true);
       host.value.set(d(2026, 10, 25));
     });
     mounted.open();
 
-    const clear = mounted.el.querySelector('.rv-datepicker-clear') as HTMLButtonElement;
+    const clear = mounted
+      .panel()
+      ?.querySelector('.rv-datepicker-clear-action') as HTMLButtonElement;
     expect(clear).not.toBeNull();
+    expect(mounted.el.querySelector('.rv-datepicker-clear')).toBeNull();
     clear.click();
     mounted.settle();
-
     expect(mounted.host.value()).toBeNull();
     expect(mounted.host.changes.at(-1)).toBeNull();
     expect(mounted.host.touches).toBe(1);
     expect(mounted.panel()).toBeNull();
     expect(document.activeElement).toBe(mounted.trigger());
-    expect(mounted.el.querySelector('.rv-datepicker-clear')).toBeNull();
+    expect(mounted.el.querySelector('.rv-datepicker-clear-action')).toBeNull();
   });
 
-  it('works from the closed state too', () => {
-    const mounted = mount({ clearable: true }, (host) => host.value.set(d(2026, 10, 25)));
-    (mounted.el.querySelector('.rv-datepicker-clear') as HTMLButtonElement).click();
+  it('makes Clear available after choosing a draft on an initially empty field', () => {
+    const mounted = mount({ clearable: true }, (host) => {
+      host.commitMode = 'explicit';
+    });
+    mounted.open();
+    mounted.el.querySelector<HTMLElement>('[data-date="2026-10-25"]')?.click();
+    mounted.settle();
+    (mounted.panel()?.querySelector('.rv-datepicker-clear-action') as HTMLButtonElement).click();
     mounted.settle();
     expect(mounted.host.value()).toBeNull();
-    expect(mounted.host.touches).toBe(1);
+    mounted.panel()?.querySelector<HTMLButtonElement>('.rv-datepicker-ok')?.click();
+    mounted.settle();
+    expect(mounted.host.value()).toBeNull();
     expect(mounted.trigger().textContent?.trim()).toBe('Choose date');
   });
 
   it('takes clearable from the configuration', () => {
     const mounted = mount({ clearable: true }, (host) => host.value.set(d(2026, 10, 25)));
-    expect(mounted.el.querySelector('.rv-datepicker-clear')).not.toBeNull();
+    mounted.open();
+    expect(mounted.panel()?.querySelector('.rv-datepicker-clear-action')).not.toBeNull();
   });
 
   it('hides the button when the field is disabled', () => {
@@ -471,7 +527,7 @@ describe('rv-datepicker — clearing', () => {
       host.value.set(d(2026, 10, 25));
       host.disabled.set(true);
     });
-    expect(mounted.el.querySelector('.rv-datepicker-clear')).toBeNull();
+    expect(mounted.el.querySelector('.rv-datepicker-clear-action')).toBeNull();
   });
 
   it('names the action after the field, in the field language', () => {
@@ -481,7 +537,10 @@ describe('rv-datepicker — clearing', () => {
       host.value.set(d(2026, 10, 25));
       host.label = 'Departure';
     });
-    const clear = mounted.el.querySelector('.rv-datepicker-clear') as HTMLButtonElement;
+    mounted.open();
+    const clear = mounted
+      .panel()
+      ?.querySelector('.rv-datepicker-clear-action') as HTMLButtonElement;
     expect(clear.getAttribute('aria-label')).toBe('Departure: مسح التاريخ');
   });
 });
@@ -571,6 +630,8 @@ describe('rv-datepicker — several pickers on one page', () => {
 
     (el.querySelector('td[data-date="2026-11-10"]') as HTMLElement).click();
     fixture.detectChanges();
+    (el.querySelector('.rv-datepicker-ok') as HTMLButtonElement).click();
+    fixture.detectChanges();
 
     triggers[1].click();
     fixture.detectChanges();
@@ -581,5 +642,55 @@ describe('rv-datepicker — several pickers on one page', () => {
     );
     expect(triggers[0].textContent?.trim()).toBe('Nov 10, 2026');
     expect(triggers[1].textContent?.trim()).toBe('Choose date');
+  });
+});
+
+describe('rv-datepicker — panel confirmation', () => {
+  it('keeps actions inside the panel and commits only on OK', () => {
+    const view = mount({}, (host) => {
+      host.commitMode = 'explicit';
+      host.value.set(d(2026, 10, 10));
+    });
+    expect(view.el.querySelector('.rv-datepicker-now')).toBeNull();
+    view.trigger().click();
+    view.fixture.detectChanges();
+    view.el.querySelector<HTMLElement>('[data-date="2026-10-15"]')!.click();
+    view.fixture.detectChanges();
+    expect(view.host.value()).toEqual(d(2026, 10, 10));
+    expect(view.trigger().getAttribute('aria-expanded')).toBe('true');
+    const panel = view.el.querySelector('.rv-datepicker-panel')!;
+    expect(panel.querySelector('.rv-datepicker-now')?.textContent?.trim()).toBe('Today');
+    expect(panel.querySelector('.rv-datepicker-ok')?.textContent?.trim()).toBe('Apply');
+    panel.querySelector<HTMLButtonElement>('.rv-datepicker-ok')!.click();
+    view.fixture.detectChanges();
+    expect(view.host.value()).toEqual(d(2026, 10, 15));
+    expect(view.host.changes).toHaveLength(1);
+    expect(view.trigger().getAttribute('aria-expanded')).toBe('false');
+  });
+  it('Now edits the draft, Escape discards it, and reopening restores the committed day', () => {
+    const view = mount({}, (host) => {
+      host.commitMode = 'explicit';
+      host.value.set(d(2026, 10, 10));
+    });
+    view.trigger().click();
+    view.fixture.detectChanges();
+    view.el.querySelector<HTMLButtonElement>('.rv-datepicker-now')!.click();
+    view.fixture.detectChanges();
+    expect(view.host.value()).toEqual(d(2026, 10, 10));
+    expect(view.el.querySelector('[aria-selected="true"]')?.getAttribute('data-date')).toBe(
+      '2026-10-25',
+    );
+    view.el
+      .querySelector<HTMLButtonElement>('.rv-datepicker-ok')!
+      .dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
+    view.fixture.detectChanges();
+    view.trigger().click();
+    view.fixture.detectChanges();
+    expect(view.el.querySelector('[aria-selected="true"]')?.getAttribute('data-date')).toBe(
+      '2026-10-10',
+    );
+    expect(view.host.changes).toHaveLength(0);
   });
 });

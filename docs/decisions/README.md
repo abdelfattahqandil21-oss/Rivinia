@@ -108,3 +108,5 @@ Status labels summarize explicit status wording in the record at its recorded da
 | [D101](D101-theme-adopts-one-v2-named-token-contract.md) | Theme adopts one V2-named token contract | Owner-approved; implementation complete locally, release verification pending | 2026-11-14 | Theme / Packages |
 
 | [D102](D102-popup-connected-panels-and-staged-v2-integration.md) | connected popup panels and staged V2 integration | Local implementation verified; release pending | 2026-11-15 | Popup / Menu / Select |
+| [D103](D103-datepicker-draft-zone-and-popup-integration.md) | Datepicker draft, zone and Popup integration | Local implementation; release pending | 2026-11-15 | Datepicker / Popup |
+| [D104](D104-datepicker-clear-segments-and-time-tray.md) | Datepicker clear, editable segments and nested time tray | Local implementation; release pending | 2026-11-16 | Datepicker / Popup |

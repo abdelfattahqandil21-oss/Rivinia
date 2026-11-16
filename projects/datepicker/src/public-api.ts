@@ -28,11 +28,7 @@ export type {
   RiviniaWeekday,
 } from './lib/models/date-types';
 
-export {
-  DEFAULT_TIME_FORMAT,
-  TIME_STYLES,
-  isTimeStyle,
-} from './lib/models/time-types';
+export { DEFAULT_TIME_FORMAT, TIME_STYLES, isTimeStyle } from './lib/models/time-types';
 export type {
   RiviniaDateTime,
   RiviniaDateTimeResolution,
@@ -98,10 +94,7 @@ export {
   weekdaysOf,
 } from './lib/utils/date-format';
 export { formatWithPattern, parseDatePattern } from './lib/utils/date-pattern';
-export type {
-  RiviniaDatePatternPart,
-  RiviniaPatternToken,
-} from './lib/utils/date-pattern';
+export type { RiviniaDatePatternPart, RiviniaPatternToken } from './lib/utils/date-pattern';
 
 // ── Time ──────────────────────────────────────────────────────────────────────
 export {
@@ -134,19 +127,9 @@ export {
   formatUnitValue,
   parseTimePattern,
 } from './lib/utils/time-pattern';
-export type {
-  RiviniaTimePatternPart,
-  RiviniaTimePatternToken,
-} from './lib/utils/time-pattern';
-export {
-  formatDateTime,
-  formatTime,
-  formatTimeZoneName,
-} from './lib/utils/time-format';
-export type {
-  RiviniaTimeFormatOptions,
-  RiviniaTimeZoneNameStyle,
-} from './lib/utils/time-format';
+export type { RiviniaTimePatternPart, RiviniaTimePatternToken } from './lib/utils/time-pattern';
+export { formatDateTime, formatTime, formatTimeZoneName } from './lib/utils/time-format';
+export type { RiviniaTimeFormatOptions, RiviniaTimeZoneNameStyle } from './lib/utils/time-format';
 export {
   getTimeZoneOffsetMinutes,
   isValidTimeZone,
@@ -163,6 +146,21 @@ export { resolveCalendarKey } from './lib/utils/calendar-key';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 export { RiviniaCalendar } from './lib/services/rivinia-calendar';
+export { RiviniaDateTimeDraft, validateDateTime } from './lib/services/datetime-draft';
+export type {
+  RiviniaDateTimeConstraints,
+  RiviniaDateTimeValidationError,
+} from './lib/services/datetime-draft';
+export {
+  DEFAULT_TIME_ZONE_RESOLVER,
+  RIVINIA_TIME_ZONE_RESOLVER,
+  resolveDateTimeZone,
+} from './lib/services/time-zone-resolver';
+export type {
+  RiviniaTimeZoneResolver,
+  RiviniaZoneResult,
+  RiviniaZoneCommitPolicy,
+} from './lib/services/time-zone-resolver';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
 export { DATE_PICKER_CONFIG } from './lib/providers/datepicker-config';

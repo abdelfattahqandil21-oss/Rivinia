@@ -13,7 +13,8 @@
      */
     "paths": {
       "@rivinia/datepicker": ["./src/public-api.ts"],
-      "@rivinia/datepicker/ui": ["./ui/src/public-api.ts"]
+      "@rivinia/datepicker/ui": ["./ui/src/public-api.ts"],
+      "@rivinia/popup": ["../popup/src/public-api.ts"]
     }
   },
   /*

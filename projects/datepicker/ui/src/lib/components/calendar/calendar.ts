@@ -4,16 +4,12 @@ import {
   ElementRef,
   afterRenderEffect,
   computed,
+  effect,
   inject,
   input,
   output,
 } from '@angular/core';
-import {
-  formatDayNumber,
-  formatFullDate,
-  resolveCalendarKey,
-  toIso,
-} from '@rivinia/datepicker';
+import { formatDayNumber, formatFullDate, resolveCalendarKey, toIso } from '@rivinia/datepicker';
 import type {
   RiviniaCalendar,
   RiviniaCalendarCell,
@@ -54,6 +50,7 @@ export class RiviniaCalendarComponent {
   readonly headingId = input<string | undefined>(undefined);
   /** Focus the active cell on first render (the datepicker opens this way). */
   readonly autofocus = input(false);
+  readonly showOutsideDays = input(true);
 
   readonly picked = output<RiviniaDate>();
   readonly dismissed = output<void>();
@@ -80,6 +77,7 @@ export class RiviniaCalendarComponent {
   protected readonly focusedYear = computed(() => this.calendar().focused().year);
 
   constructor() {
+    effect(() => this.calendar().setShowOutsideDays(this.showOutsideDays()));
     afterRenderEffect(() => {
       const view = this.calendar().view();
       // Touch the focus signal so a move re-runs this effect.
@@ -171,6 +169,7 @@ export class RiviniaCalendarComponent {
       return;
     }
     this.calendar().focus(cell.date);
+    this.pendingFocus = true;
     const result = this.calendar().applyAction('select');
     if (result === 'commit') {
       this.picked.emit(cell.date);

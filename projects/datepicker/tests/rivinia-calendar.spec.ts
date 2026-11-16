@@ -150,8 +150,7 @@ describe('RiviniaCalendar — range bounds', () => {
   it('marks out-of-range days as disabled in the grid', () => {
     const calendar = create({ min: d(2026, 10, 10), max: d(2026, 10, 20) });
     const cells = calendar.monthGrid().weeks.flatMap((week) => week.cells);
-    const byDay = (day: number) =>
-      cells.find((cell) => cell !== null && cell.date.day === day);
+    const byDay = (day: number) => cells.find((cell) => cell !== null && cell.date.day === day);
     expect(byDay(9)?.disabled).toBe(true);
     expect(byDay(10)?.disabled).toBe(false);
     expect(byDay(20)?.disabled).toBe(false);
@@ -255,7 +254,12 @@ describe('RiviniaCalendar — day-view actions', () => {
   });
 
   it('keeps the focused day visible in the grid after every move', () => {
-    for (const action of ['page-forward', 'move-next', 'move-row-down', 'page-back-year'] as const) {
+    for (const action of [
+      'page-forward',
+      'move-next',
+      'move-row-down',
+      'page-back-year',
+    ] as const) {
       calendar.applyAction(action);
       const focused = calendar.focused();
       expect(calendar.month().year).toBe(focused.year);
@@ -362,9 +366,7 @@ describe('RiviniaCalendar — month view', () => {
   it('shows the 12 months of the focused year, localized, with the current one marked', () => {
     const months = calendar.months();
     expect(months).toHaveLength(12);
-    expect(months.map((month) => month.month)).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-    ]);
+    expect(months.map((month) => month.month)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
     expect(months[9].label).toBe('October');
     expect(months[9].current).toBe(true);
     expect(months[0].current).toBe(false);
@@ -554,10 +556,7 @@ describe('RiviniaCalendar — configuration is live', () => {
 describe('provideRiviniaDatepicker', () => {
   it('wires the config through DI for injectRiviniaDatepicker consumers', () => {
     TestBed.configureTestingModule({
-      providers: [
-        provideRiviniaDatepicker({ locale: 'ar-EG', today: TODAY }),
-        RiviniaCalendar,
-      ],
+      providers: [provideRiviniaDatepicker({ locale: 'ar-EG', today: TODAY }), RiviniaCalendar],
     });
     const calendar = TestBed.inject(RiviniaCalendar);
     expect(calendar.locale()).toBe('ar-EG');
@@ -577,5 +576,23 @@ describe('RiviniaCalendar — firstDay typing', () => {
   it('a Sunday-start grid puts Sunday in the first column', () => {
     const calendar = create({ locale: 'en-US', firstDay: 7 as RiviniaWeekday });
     expect(calendar.weekdays()[0].weekday).toBe(7);
+  });
+});
+
+describe('calendar availability and navigation ranges', () => {
+  it('keeps a month and year navigable when bounds intersect their interior', () => {
+    const calendar = create({ min: d(2026, 11, 10), max: d(2026, 11, 20) });
+    expect(calendar.isMonthDisabled(2026, 11)).toBe(false);
+    expect(calendar.isYearDisabled(2026)).toBe(false);
+    expect(calendar.isMonthDisabled(2026, 10)).toBe(true);
+    expect(calendar.isYearDisabled(2025)).toBe(true);
+  });
+  it('disables specific dates without using endpoint availability to hide a month', () => {
+    const calendar = create();
+    calendar.setDisabledDate((date) => date.day === 1 || date.day === 30 || date.day === 31);
+    expect(calendar.canSelect(d(2026, 11, 1))).toBe(false);
+    expect(calendar.canSelect(d(2026, 11, 15))).toBe(true);
+    expect(calendar.isMonthDisabled(2026, 11)).toBe(false);
+    expect(calendar.isYearDisabled(2026)).toBe(false);
   });
 });

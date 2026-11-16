@@ -19,7 +19,13 @@ const TODAY = d(2026, 10, 25);
 @Component({
   selector: 'rv-test-host',
   imports: [RiviniaCalendarComponent],
-  template: `<div [attr.dir]="direction()"><rv-calendar [calendar]="calendar" (picked)="picked = $event" (dismissed)="dismissed = dismissed + 1" /></div>`,
+  template: `<div [attr.dir]="direction()">
+    <rv-calendar
+      [calendar]="calendar"
+      (picked)="picked = $event"
+      (dismissed)="dismissed = dismissed + 1"
+    />
+  </div>`,
 })
 class TestHost {
   calendar!: RiviniaCalendar;
@@ -118,11 +124,13 @@ describe('rv-calendar — the grid', () => {
     expect(headers[0].textContent?.trim()).toBe('S');
   });
 
-  it('renders 42 table cells, 31 of them days of October', () => {
+  it('renders 42 dates with muted, selectable neighbouring days', () => {
     expect(mounted.el.querySelectorAll('tbody td')).toHaveLength(42);
-    expect(mounted.cells()).toHaveLength(31);
-    expect(mounted.cells()[0].getAttribute('data-date')).toBe('2026-10-01');
-    expect(mounted.cells()[30].getAttribute('data-date')).toBe('2026-10-31');
+    expect(mounted.cells()).toHaveLength(42);
+    expect(mounted.el.querySelectorAll('.rv-calendar-day--outside')).toHaveLength(11);
+    const first = mounted.cells()[0];
+    expect(first.classList.contains('rv-calendar-day--outside')).toBe(true);
+    expect(first.getAttribute('aria-disabled')).toBeNull();
   });
 
   it('labels every day with its full date, and marks today', () => {
@@ -144,7 +152,9 @@ describe('rv-calendar — the grid', () => {
     mounted.settle();
     const selected = mounted.cells().find((cell) => cell.dataset['date'] === '2026-10-10');
     expect(selected?.getAttribute('aria-selected')).toBe('true');
-    expect(mounted.cells().filter((c) => c.getAttribute('aria-selected') === 'true')).toHaveLength(1);
+    expect(mounted.cells().filter((c) => c.getAttribute('aria-selected') === 'true')).toHaveLength(
+      1,
+    );
   });
 
   it('has a polite live heading', () => {

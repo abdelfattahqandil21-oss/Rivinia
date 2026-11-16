@@ -10,7 +10,14 @@ import type { RiviniaDate, RiviniaDateTime } from '../src/public-api';
 
 const d = (year: number, month: number, day: number): RiviniaDate => ({ year, month, day });
 const t = (hour: number, minute = 0, second = 0) => ({ hour, minute, second });
-const dt = (year: number, month: number, day: number, hour: number, minute = 0, second = 0): RiviniaDateTime => ({
+const dt = (
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute = 0,
+  second = 0,
+): RiviniaDateTime => ({
   date: d(year, month, day),
   time: t(hour, minute, second),
 });
@@ -80,7 +87,7 @@ const pickDay = (fixture: ComponentFixture<unknown>, el: HTMLElement, iso: strin
 };
 
 const ok = (fixture: ComponentFixture<unknown>, el: HTMLElement): void => {
-  (el.querySelector('.rv-time-ok') as HTMLButtonElement).click();
+  (el.querySelector('.rv-datetimepicker-apply') as HTMLButtonElement).click();
   fixture.detectChanges();
 };
 
@@ -169,13 +176,13 @@ describe('rv-datetimepicker — reactive forms', () => {
     expect(triggerText(el)).toBe('Choose date and time');
   });
 
-  it('the clear button empties the control, publishes null and marks it touched', () => {
+  it('Clear empties the control immediately and marks it touched', () => {
     host.control.setValue(dt(2026, 3, 15, 9, 45));
     fixture.detectChanges();
 
-    (el.querySelector('.rv-datepicker-clear') as HTMLButtonElement).click();
+    openPanel(fixture, el);
+    (el.querySelector('.rv-datetimepicker-clear') as HTMLButtonElement).click();
     fixture.detectChanges();
-
     expect(host.control.value).toBeNull();
     expect(host.control.touched).toBe(true);
     expect(host.changes.at(-1)).toBeNull();

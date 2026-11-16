@@ -7,7 +7,14 @@
       (click)="page(-1)"
     >
       <svg class="rv-calendar-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-        <path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+        <path
+          d="M10 3 5 8l5 5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
       </svg>
     </button>
 
@@ -19,10 +26,16 @@
       <button
         type="button"
         class="rv-calendar-heading"
-        [attr.aria-label]="heading() + ' — ' + (view() === 'day' ? labels().switchToMonthView : labels().switchToYearView)"
+        [attr.aria-label]="
+          heading() +
+          ' — ' +
+          (view() === 'day' ? labels().switchToMonthView : labels().switchToYearView)
+        "
         (click)="openBiggerView()"
       >
-        <span class="rv-calendar-heading-text" aria-live="polite" [id]="resolvedHeadingId()">{{ heading() }}</span>
+        <span class="rv-calendar-heading-text" aria-live="polite" [id]="resolvedHeadingId()">{{
+          heading()
+        }}</span>
       </button>
     }
 
@@ -33,7 +46,14 @@
       (click)="page(1)"
     >
       <svg class="rv-calendar-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-        <path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+        <path
+          d="m6 3 5 5-5 5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
       </svg>
     </button>
   </div>
@@ -51,7 +71,9 @@
         <thead>
           <tr>
             @for (day of weekdays(); track day.weekday) {
-              <th scope="col" class="rv-calendar-weekday" [attr.abbr]="day.long">{{ day.narrow }}</th>
+              <th scope="col" class="rv-calendar-weekday" [attr.abbr]="day.long">
+                {{ day.narrow }}
+              </th>
             }
           </tr>
         </thead>
@@ -71,6 +93,7 @@
                     [attr.tabindex]="cell.focused ? 0 : -1"
                     [class.rv-calendar-day--selected]="cell.selected"
                     [class.rv-calendar-day--today]="cell.today"
+                    [class.rv-calendar-day--outside]="cell.outside"
                     [class.rv-calendar-day--disabled]="cell.disabled"
                     (click)="pick(cell)"
                   >

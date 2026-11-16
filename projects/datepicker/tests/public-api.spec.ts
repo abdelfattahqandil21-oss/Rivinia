@@ -23,6 +23,11 @@ const d = (year: number, month: number, day: number) => ({ year, month, day });
  */
 
 const CORE_VALUE_EXPORTS = [
+  'RiviniaDateTimeDraft',
+  'validateDateTime',
+  'DEFAULT_TIME_ZONE_RESOLVER',
+  'RIVINIA_TIME_ZONE_RESOLVER',
+  'resolveDateTimeZone',
   // labels, styles, config helpers
   'DATE_STYLES',
   'DATEPICKER_LABELS_AR',

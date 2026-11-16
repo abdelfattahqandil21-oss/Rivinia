@@ -28,7 +28,8 @@
 
 .rv-datepicker-field {
   display: inline-flex;
-  align-items: stretch;
+  align-items: center;
+  gap: var(--rv-datepicker-field-gap, 0.25rem);
   /* The host carries the width (one definite number); the field fills it. */
   inline-size: 100%;
   box-sizing: border-box;
@@ -37,7 +38,8 @@
   font-size: var(--rv-datepicker-font-size, 0.875rem);
   line-height: 1.4;
   background: var(--rv-datepicker-bg, var(--rv-color-surface, light-dark(#ffffff, #18181b)));
-  border: 1px solid var(--rv-datepicker-border, var(--rv-color-border, light-dark(#e0e0e0, #3f3f46)));
+  border: 1px solid
+    var(--rv-datepicker-border, var(--rv-color-border, light-dark(#e0e0e0, #3f3f46)));
   border-radius: var(--rv-datepicker-radius, var(--rv-radius-md, 0.625rem));
   box-shadow: var(--rv-datepicker-shadow, none);
 }
@@ -72,12 +74,11 @@
 
 .rv-datepicker-trigger {
   display: inline-flex;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--rv-datepicker-gap, 0.5rem);
-  min-inline-size: 0;
-  padding: var(--rv-datepicker-padding, 0.5rem 0.75rem);
+  justify-content: center;
+  min-inline-size: 2.5rem;
+  padding: 0.5rem;
   color: inherit;
   font: inherit;
   line-height: inherit;
@@ -93,13 +94,19 @@
 }
 
 .rv-datepicker-value {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  clip-path: inset(50%);
   white-space: nowrap;
 }
 
 .rv-datepicker-icon {
+  display: block;
+  align-self: center;
   flex: 0 0 auto;
+  margin-inline-start: 0.75rem;
   inline-size: 16px;
   block-size: 16px;
   color: var(--rv-datepicker-icon-fg, var(--rv-color-text-muted, light-dark(#555555, #a1a1aa)));
@@ -107,37 +114,16 @@
 
 /* ── The clear button ───────────────────────────────────────────────────── */
 
-.rv-datepicker-clear {
-  display: inline-flex;
+.rv-datepicker-chevron {
   flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
-  inline-size: 1.75rem;
-  block-size: 1.75rem;
-  margin-inline-end: 0.25rem;
-  padding: 0;
+  inline-size: 16px;
+  block-size: 16px;
   color: var(--rv-datepicker-icon-fg, var(--rv-color-text-muted, light-dark(#555555, #a1a1aa)));
-  background: transparent;
-  border: 0;
-  border-radius: var(--rv-datepicker-radius, var(--rv-radius-md, 0.625rem));
-  cursor: pointer;
+  transition: rotate var(--rv-datepicker-chevron-duration, 160ms) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.rv-datepicker-clear:hover {
-  color: var(--rv-datepicker-fg, var(--rv-color-text, light-dark(#111111, #f4f4f5)));
-  background: var(--rv-datepicker-clear-hover-bg, color-mix(in srgb, currentColor 12%, transparent));
-}
-
-/* The field's ring already shows that focus is inside; a second ring on a
-   1.75rem icon button would draw a box inside a box. */
-.rv-datepicker-clear:focus-visible {
-  outline: none;
-}
-
-.rv-datepicker-clear-icon {
-  inline-size: 14px;
-  block-size: 14px;
+:host([data-open='true']) .rv-datepicker-chevron {
+  rotate: 180deg;
 }
 
 /* ── Panel ──────────────────────────────────────────────────────────────── */
@@ -214,10 +200,7 @@
     position-area: block-end span-inline-end;
     position-try-fallbacks: flip-block, flip-inline;
     inline-size: max(anchor-size(inline), var(--rv-datepicker-panel-width, 19.25rem));
-    max-inline-size: var(
-      --rv-datepicker-panel-max-width,
-      calc(100vw - 1rem)
-    );
+    max-inline-size: var(--rv-datepicker-panel-max-width, calc(100vw - 1rem));
   }
 
   /*
@@ -284,5 +267,69 @@
   to {
     opacity: 0;
     transform: translateY(-0.25rem);
+  }
+}
+
+/* Actions belong to the open panel, never the closed form field. */
+.rv-datepicker-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.625rem;
+  border-block-start: 1px solid var(--rv-color-border, light-dark(#e4e4e7, #3f3f46));
+}
+.rv-datepicker-actions-start {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.rv-datepicker-action {
+  font: inherit;
+  min-block-size: 2rem;
+  padding: 0.375rem 0.75rem;
+  color: inherit;
+  border: 1px solid var(--rv-color-border, light-dark(#d4d4d8, #52525b));
+  border-radius: var(--rv-radius-md, 0.625rem);
+  background: transparent;
+  cursor: pointer;
+}
+.rv-datepicker-now {
+  color: var(--rv-color-primary, light-dark(#16654c, #a1d9b8));
+  border-color: transparent;
+  background: color-mix(in srgb, var(--rv-color-primary, #16654c) 10%, transparent);
+}
+.rv-datepicker-clear-action {
+  color: var(--rv-color-text-muted, light-dark(#52525b, #a1a1aa));
+  border-color: transparent;
+}
+.rv-datepicker-action:hover:not(:disabled):not(.rv-datepicker-ok) {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.rv-datepicker-ok {
+  color: var(--rv-color-on-primary, light-dark(#ffffff, #10231a));
+  background: var(--rv-color-primary, light-dark(#16654c, #a1d9b8));
+  border-color: transparent;
+  font-weight: 600;
+}
+.rv-datepicker-ok:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--rv-color-primary, light-dark(#16654c, #a1d9b8)) 92%,
+    var(--rv-color-on-primary, light-dark(#ffffff, #10231a)) 8%
+  );
+}
+.rv-datepicker-action:focus-visible {
+  outline: 2px solid var(--rv-color-focus, light-dark(#005fcc, #8ab4ff));
+  outline-offset: 2px;
+}
+.rv-datepicker-action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv-datepicker-chevron {
+    transition: none;
   }
 }

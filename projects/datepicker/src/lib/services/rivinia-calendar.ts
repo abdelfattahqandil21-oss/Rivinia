@@ -31,12 +31,7 @@ import {
 } from '../utils/date-math';
 import { buildMonth } from '../utils/calendar-month';
 import { firstDayOf } from '../utils/week-info';
-import {
-  formatMonthName,
-  formatViewHeading,
-  formatYear,
-  weekdaysOf,
-} from '../utils/date-format';
+import { formatMonthName, formatViewHeading, formatYear, weekdaysOf } from '../utils/date-format';
 import { datepickerLabelsFor } from '../models/date-types';
 
 const FIRST_SUPPORTED_DATE: RiviniaDate = { year: 1, month: 1, day: 1 };
@@ -54,16 +49,14 @@ const LAST_SUPPORTED_DATE: RiviniaDate = { year: 9999, month: 12, day: 31 };
 export class RiviniaCalendar {
   private readonly config = inject<RiviniaDatepickerConfig>(DATE_PICKER_CONFIG);
 
+  private readonly _showOutsideDays = signal(false);
   private readonly _locale = signal(this.config.locale ?? 'en-US');
-  private readonly _firstDayOverride = signal<RiviniaWeekday | null>(
-    this.config.firstDay ?? null,
-  );
+  private readonly _firstDayOverride = signal<RiviniaWeekday | null>(this.config.firstDay ?? null);
   private readonly _selected = signal<RiviniaDate | null>(parseDate(this.config.selected));
   private readonly _min = signal<RiviniaDate | null>(parseDate(this.config.min));
+  private readonly _disabledDate = signal<((date: RiviniaDate) => boolean) | undefined>(undefined);
   private readonly _max = signal<RiviniaDate | null>(parseDate(this.config.max));
-  private readonly _today = signal<RiviniaDate>(
-    parseDate(this.config.today) ?? todayDate(),
-  );
+  private readonly _today = signal<RiviniaDate>(parseDate(this.config.today) ?? todayDate());
   private readonly _view = signal<RiviniaCalendarView>(this.config.view ?? 'day');
   private readonly _labelOverrides = signal<Partial<RiviniaDatepickerLabels>>({});
   /** Not clamped to the range: a disabled day is still focusable (aria-disabled). */
@@ -108,6 +101,7 @@ export class RiviniaCalendar {
     return buildMonth({
       year: focused.year,
       month: focused.month,
+      showOutsideDays: this._showOutsideDays(),
       firstDay: this.firstDay(),
       today: this._today(),
       selected: this._selected(),
@@ -157,22 +151,34 @@ export class RiviniaCalendar {
     const max = this._max();
     if (min && compare(date, min) < 0) return false;
     if (max && compare(date, max) > 0) return false;
-    return true;
+    return !this._disabledDate()?.(date);
   };
+
+  setDisabledDate(predicate: ((date: RiviniaDate) => boolean) | undefined): void {
+    this._disabledDate.set(predicate);
+  }
 
   /** A month is disabled only when the WHOLE month is out of range. */
   isMonthDisabled(year: number, month: number): boolean {
     const first = { year, month, day: 1 };
     const last = { year, month, day: daysInMonth(year, month) };
-    return !this.canSelect(first) && !this.canSelect(last);
+    return this.rangeOutsideBounds(first, last);
   }
 
   /** A year is disabled only when the WHOLE year is out of range. */
   isYearDisabled(year: number): boolean {
-    return (
-      !this.canSelect({ year, month: 1, day: 1 }) &&
-      !this.canSelect({ year, month: 12, day: 31 })
-    );
+    return this.rangeOutsideBounds({ year, month: 1, day: 1 }, { year, month: 12, day: 31 });
+  }
+
+  private rangeOutsideBounds(first: RiviniaDate, last: RiviniaDate): boolean {
+    if (!isValidDate(first) || !isValidDate(last)) return true;
+    const min = this._min();
+    const max = this._max();
+    return !!((min && compare(last, min) < 0) || (max && compare(first, max) > 0));
+  }
+
+  setShowOutsideDays(visible: boolean): void {
+    this._showOutsideDays.set(visible);
   }
 
   setLocale(locale: string): void {

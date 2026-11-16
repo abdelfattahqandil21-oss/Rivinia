@@ -12,11 +12,60 @@ import { Component, signal } from '@angular/core';
 import { RiviniaDatepickerComponent } from '@rivinia/datepicker/ui';
 import type { RiviniaDate } from '@rivinia/datepicker';
 @Component({
-  selector: 'app-flight-date', imports: [RiviniaDatepickerComponent],
+  selector: 'app-flight-date',
+  imports: [RiviniaDatepickerComponent],
   template: '<rv-datepicker [(value)]="date" locale="en-GB" format="dd/MM/yyyy" />',
 })
-export class FlightDateComponent { readonly date = signal<RiviniaDate | null>(null); }
+export class FlightDateComponent {
+  readonly date = signal<RiviniaDate | null>(null);
+}
 ```
+
+## Unreleased integration
+
+The ready-made controls retain their civil values and direct Angular Forms contract.
+Date/time confirmation now uses `RiviniaDateTimeDraft` from the core, enforcing
+inclusive date **and time** bounds and `disabledDate` / date-specific `disabledTime`.
+An unavailable draft stays editable but cannot be confirmed by OK or Enter.
+
+```html
+<rv-datetimepicker
+  [(value)]="appointment"
+  [min]="earliest"
+  [disabledTime]="isUnavailable"
+  timeZone="Africa/Cairo"
+  zoneCommitPolicy="explicit"
+/>
+```
+
+`zoneCommitPolicy="compatible"` keeps the previous DST policy. `explicit` blocks
+nonexistent wall times until corrected and requires an offset choice for overlaps.
+Unsupported zones/resolution block confirmation in both modes. Override
+`RIVINIA_TIME_ZONE_RESOLVER` to provide another synchronous resolver returning the
+same `RiviniaZoneResult`; the controls continue to use Intl-compatible zone names
+for formatting. The default resolver uses the existing Intl algorithm.
+
+The UI uses `@rivinia/popup` for connected native panels; the core has no Popup/UI
+imports. Exit animation, draft discard, panel exclusivity and focus restoration
+remain the Datepicker's responsibility. No `/forms` entry or wrapper is required.
+Date-only controls now also use explicit confirmation by default: picking a day
+or pressing Today edits the draft; Apply commits it. Clear immediately commits
+`null` and closes the panel, including for date/time controls. Set
+`commitMode="immediate"` to retain the original date-only auto-close behavior.
+Date values are editable as borderless, format-ordered segments inside the field;
+custom patterns such as `dd:MM:yyyy` and `yy:dd:MM` keep their token order. The
+time row's option tray is a nested Popup panel, so it can escape clipping and
+Escape dismisses only the tray before the date panel.
+Date/time controls share one panel footer for Now, Clear and Apply; the embedded
+time row hides its own footer while remaining independently usable with its
+default actions.
+The hour, minute, and optional second controls are text inputs with numeric
+keyboards, spinbutton semantics, direct two-digit entry, and keyboard stepping.
+With 12-hour display, the hour input accepts 1–12 and the adjacent AM/PM control
+sets the period; the stored `RiviniaTime.hour` remains 0–23.
+The ready calendar shows muted neighbouring days; headless `buildMonth` retains
+null padding unless `showOutsideDays` is enabled. The time-row layout is retained
+pending the separate compact-time design review.
 
 ## Why @rivinia/datepicker
 
@@ -38,16 +87,16 @@ npm install @rivinia/datepicker
 
 ## Two ways to use it
 
-| Ready-made UI | Headless controller |
-| --- | --- |
+| Ready-made UI            | Headless controller   |
+| ------------------------ | --------------------- |
 | `@rivinia/datepicker/ui` | `@rivinia/datepicker` |
 
 The UI and controller are independent; use either or combine them.
 
 ## Compatibility
 
-| Angular | Node | Browser verification |
-| --- | --- | --- |
+| Angular   | Node                               | Browser verification                             |
+| --------- | ---------------------------------- | ------------------------------------------------ |
 | `^22.0.0` | `^22.22.3 or ^24.15.0 or >=26.0.0` | Chromium and Firefox; native Safari not verified |
 
 ## Go further

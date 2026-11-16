@@ -2,19 +2,33 @@ import { Component, signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DATE_PICKER_CONFIG, nowInTimeZone, todayInTimeZone } from '../src/public-api';
+import {
+  DATE_PICKER_CONFIG,
+  RIVINIA_TIME_ZONE_RESOLVER,
+  nowInTimeZone,
+  todayInTimeZone,
+} from '../src/public-api';
 import type {
   RiviniaDate,
   RiviniaDateTime,
   RiviniaDateTimeResolution,
   RiviniaHour12,
   RiviniaTimeFormat,
+  RiviniaZoneCommitPolicy,
+  RiviniaTimeZoneResolver,
 } from '../src/public-api';
 import { RiviniaDatetimepickerComponent } from '../ui/src/public-api';
 
 const d = (year: number, month: number, day: number): RiviniaDate => ({ year, month, day });
 const t = (hour: number, minute = 0, second = 0) => ({ hour, minute, second });
-const dt = (year: number, month: number, day: number, hour: number, minute = 0, second = 0): RiviniaDateTime => ({
+const dt = (
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute = 0,
+  second = 0,
+): RiviniaDateTime => ({
   date: d(year, month, day),
   time: t(hour, minute, second),
 });
@@ -34,6 +48,11 @@ const TODAY = d(2026, 10, 25);
       [minuteStep]="minuteStep()"
       [hour12]="hour12()"
       [label]="label()"
+      [min]="min()"
+      [max]="max()"
+      [disabledDate]="disabledDate()"
+      [disabledTime]="disabledTime()"
+      [zoneCommitPolicy]="zoneCommitPolicy()"
       [theme]="theme()"
       [clearable]="clearable()"
       (valueChange)="value.set($event)"
@@ -54,6 +73,11 @@ class Host {
   readonly label = signal<string | undefined>(undefined);
   readonly theme = signal<'auto' | 'light' | 'dark' | undefined>(undefined);
   readonly clearable = signal<boolean | undefined>(undefined);
+  readonly min = signal<RiviniaDateTime | undefined>(undefined);
+  readonly max = signal<RiviniaDateTime | undefined>(undefined);
+  readonly disabledDate = signal<((date: RiviniaDate) => boolean) | undefined>(undefined);
+  readonly disabledTime = signal<((value: RiviniaDateTime) => boolean) | undefined>(undefined);
+  readonly zoneCommitPolicy = signal<RiviniaZoneCommitPolicy>('compatible');
   touches = 0;
   readonly resolved: RiviniaDateTimeResolution[] = [];
 }
@@ -70,6 +94,7 @@ interface MountOptions {
   readonly clearable?: boolean;
   readonly label?: string;
   readonly today?: RiviniaDate;
+  readonly resolver?: RiviniaTimeZoneResolver;
 }
 
 function mount(options: MountOptions = {}) {
@@ -77,6 +102,9 @@ function mount(options: MountOptions = {}) {
   TestBed.configureTestingModule({
     imports: [Host],
     providers: [
+      ...(options.resolver
+        ? [{ provide: RIVINIA_TIME_ZONE_RESOLVER, useValue: options.resolver }]
+        : []),
       {
         provide: DATE_PICKER_CONFIG,
         useValue: { today: options.today ?? TODAY, locale: options.locale ?? 'en-US' },
@@ -99,8 +127,7 @@ function mount(options: MountOptions = {}) {
 
   const el = fixture.nativeElement.querySelector('rv-datetimepicker') as HTMLElement;
   const trigger = el.querySelector('.rv-datepicker-trigger') as HTMLButtonElement;
-  const triggerText = () =>
-    (el.querySelector('.rv-datepicker-value')?.textContent ?? '').trim();
+  const triggerText = () => (el.querySelector('.rv-datepicker-value')?.textContent ?? '').trim();
   const open = (): HTMLElement | null => {
     trigger.click();
     fixture.detectChanges();
@@ -112,22 +139,20 @@ function mount(options: MountOptions = {}) {
   const hour = () => el.querySelector('.rv-time-hour') as HTMLInputElement | null;
   const minute = () => el.querySelector('.rv-time-minute') as HTMLInputElement | null;
   const second = () => el.querySelector('.rv-time-second') as HTMLInputElement | null;
-  const ok = () => el.querySelector('.rv-time-ok') as HTMLButtonElement | null;
-  const now = () => el.querySelector('.rv-time-now') as HTMLButtonElement | null;
+  const ok = () => el.querySelector('.rv-datetimepicker-apply') as HTMLButtonElement | null;
+  const now = () => el.querySelector('.rv-datetimepicker-now') as HTMLButtonElement | null;
   const meridiem = (period: 'am' | 'pm' | number) => {
     const buttons = el.querySelectorAll('.rv-time-meridiem-button');
-    return (
-      (typeof period === 'number' ? buttons[period] : buttons[period === 'am' ? 0 : 1]) as
-        | HTMLButtonElement
-        | undefined
-    );
+    return (typeof period === 'number' ? buttons[period] : buttons[period === 'am' ? 0 : 1]) as
+      HTMLButtonElement | undefined;
   };
   const timeToggle = () => el.querySelector('.rv-time-toggle') as HTMLButtonElement | null;
   const timeOptions = () => el.querySelector('.rv-time-options') as HTMLElement | null;
   const optionList = (name: string) =>
     el.querySelector(`[role="listbox"][aria-label="${name}"]`) as HTMLElement | null;
-  const optionItems = (name: string) =>
-    [...(optionList(name)?.querySelectorAll<HTMLButtonElement>('[role="option"]') ?? [])];
+  const optionItems = (name: string) => [
+    ...(optionList(name)?.querySelectorAll<HTMLButtonElement>('[role="option"]') ?? []),
+  ];
   const option = (name: string, text: string) =>
     optionItems(name).find((item) => item.textContent?.trim() === text) ?? null;
 
@@ -164,6 +189,25 @@ function typeInto(target: HTMLInputElement, value: string): void {
 }
 
 describe('rv-datetimepicker — the time row is inside the date panel', () => {
+  it('keeps the 12-hour input editable while typing two digits', () => {
+    const view = mount({ value: dt(2026, 10, 25, 19, 30), hour12: true });
+    view.open();
+    view.meridiem('am')?.click();
+    view.fixture.detectChanges();
+
+    const hour = view.hour()!;
+    typeInto(hour, '0');
+    view.fixture.detectChanges();
+    expect(hour.value).toBe('0');
+
+    typeInto(hour, '08');
+    view.fixture.detectChanges();
+    expect(hour.value).toBe('08');
+    view.ok()?.click();
+    view.fixture.detectChanges();
+    expect(view.host.value()?.time.hour).toBe(8);
+  });
+
   it('renders the trigger value, the calendar and the time row in one panel', () => {
     const view = mount({ value: dt(2026, 10, 25, 15, 30) });
     expect(view.triggerText()).toBe('Oct 25, 2026, 3:30 PM');
@@ -327,8 +371,18 @@ describe('rv-datetimepicker — the pointer-friendly time tray', () => {
     expect(view.panel()?.querySelector('.rv-calendar')).not.toBeNull();
     expect(view.optionList('Hour')?.getAttribute('role')).toBe('listbox');
     expect(view.optionList('Minute')?.getAttribute('role')).toBe('listbox');
-    expect(view.optionItems('Hour').find((item) => item.getAttribute('aria-selected') === 'true')?.textContent?.trim()).toBe('03');
-    expect(view.optionItems('Minute').find((item) => item.getAttribute('aria-selected') === 'true')?.textContent?.trim()).toBe('30');
+    expect(
+      view
+        .optionItems('Hour')
+        .find((item) => item.getAttribute('aria-selected') === 'true')
+        ?.textContent?.trim(),
+    ).toBe('03');
+    expect(
+      view
+        .optionItems('Minute')
+        .find((item) => item.getAttribute('aria-selected') === 'true')
+        ?.textContent?.trim(),
+    ).toBe('30');
     expect(document.activeElement?.textContent?.trim()).toBe('03');
   });
 
@@ -351,7 +405,7 @@ describe('rv-datetimepicker — the pointer-friendly time tray', () => {
       expect(stops[0].getAttribute('aria-selected')).toBe('true');
     }
 
-    const actions = view.panel()!.querySelector('.rv-time-actions')!;
+    const actions = view.panel()!.querySelector('.rv-datetimepicker-actions')!;
     expect(tray.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
@@ -429,7 +483,12 @@ describe('rv-datetimepicker — the pointer-friendly time tray', () => {
     const values = view.optionItems('Minute').map((item) => item.textContent?.trim());
     expect(values.slice(0, 4)).toEqual(['00', '05', '10', '15']);
     expect(values.at(-1)).toBe('59');
-    expect(view.optionItems('Minute').find((item) => item.getAttribute('aria-selected') === 'true')?.textContent?.trim()).toBe('59');
+    expect(
+      view
+        .optionItems('Minute')
+        .find((item) => item.getAttribute('aria-selected') === 'true')
+        ?.textContent?.trim(),
+    ).toBe('59');
   });
 
   it('adds the seconds column only when showSeconds is on', () => {
@@ -456,11 +515,21 @@ describe('rv-datetimepicker — the pointer-friendly time tray', () => {
     view.fixture.detectChanges();
 
     expect(view.optionList('الساعة')).not.toBeNull();
-    expect(view.optionItems('الساعة').find((item) => item.getAttribute('aria-selected') === 'true')?.textContent?.trim()).toBe('٠٣');
-    expect(view.optionItems('الساعة').find((item) => item.getAttribute('aria-selected') === 'true')?.getAttribute('aria-label')).toBe('٠٣, ٣ م');
+    expect(
+      view
+        .optionItems('الساعة')
+        .find((item) => item.getAttribute('aria-selected') === 'true')
+        ?.textContent?.trim(),
+    ).toBe('٠٣');
+    expect(
+      view
+        .optionItems('الساعة')
+        .find((item) => item.getAttribute('aria-selected') === 'true')
+        ?.getAttribute('aria-label'),
+    ).toBe('٠٣, ٣ م');
   });
 
-  it('keeps each row\'s visible text inside its accessible name (WCAG 2.5.3)', () => {
+  it("keeps each row's visible text inside its accessible name (WCAG 2.5.3)", () => {
     for (const locale of ['en-US', 'ar-EG']) {
       const view = mount({ value: dt(2026, 10, 25, 15, 30, 7), locale, showSeconds: true });
       view.open();
@@ -501,9 +570,10 @@ describe('rv-datetimepicker — the pointer-friendly time tray', () => {
     view.timeToggle()?.click();
     view.fixture.detectChanges();
 
-    view.panel()?.querySelector('.rv-calendar-heading')?.dispatchEvent(
-      new Event('pointerdown', { bubbles: true }),
-    );
+    view
+      .panel()
+      ?.querySelector('.rv-calendar-heading')
+      ?.dispatchEvent(new Event('pointerdown', { bubbles: true }));
     view.fixture.detectChanges();
     expect(view.timeOptions()).toBeNull();
     expect(view.panel()).not.toBeNull();
@@ -521,8 +591,7 @@ describe('rv-datetimepicker — closing, clearing and focus', () => {
 
     expect(view.trigger.getAttribute('aria-expanded')).toBe('false');
     expect(
-      view.panel() === null ||
-        view.panel()?.classList.contains('rv-datepicker-panel--closing'),
+      view.panel() === null || view.panel()?.classList.contains('rv-datepicker-panel--closing'),
     ).toBe(true);
     expect(document.activeElement).toBe(outside);
     expect(view.host.touches).toBe(1);
@@ -555,9 +624,10 @@ describe('rv-datetimepicker — closing, clearing and focus', () => {
     expect(view.host.value()).toEqual(dt(2026, 10, 25, 15, 30));
   });
 
-  it('clears the value and returns focus to the trigger', () => {
+  it('clears the committed date-time value immediately from the panel', () => {
     const view = mount({ value: dt(2026, 10, 25, 15, 30), clearable: true, label: 'Appointment' });
-    const clear = view.el.querySelector('.rv-datepicker-clear') as HTMLButtonElement;
+    view.open();
+    const clear = view.panel()?.querySelector('.rv-datetimepicker-clear') as HTMLButtonElement;
     expect(clear.getAttribute('aria-label')).toBe('Appointment: Clear date and time');
     clear.click();
     view.fixture.detectChanges();
@@ -738,11 +808,10 @@ describe('rv-datetimepicker — timezone, offsets and DST', () => {
     view.open();
     const warning = view.el.querySelector('.rv-datetimepicker-warning');
     expect(warning?.textContent).toContain('occurs twice');
-    const buttons = [...view.el.querySelectorAll('.rv-datetimepicker-offset')] as HTMLButtonElement[];
-    expect(buttons.map((button) => button.textContent?.trim())).toEqual([
-      'GMT+3',
-      'GMT+2',
-    ]);
+    const buttons = [
+      ...view.el.querySelectorAll('.rv-datetimepicker-offset'),
+    ] as HTMLButtonElement[];
+    expect(buttons.map((button) => button.textContent?.trim())).toEqual(['GMT+3', 'GMT+2']);
     expect(buttons[0].getAttribute('aria-pressed')).toBe('true');
 
     buttons[1].click();
@@ -828,5 +897,95 @@ describe('rv-datetimepicker — accessibility and RTL markup', () => {
     view.open();
     expect(view.el.querySelector('.rv-time-fields')?.getAttribute('dir')).toBe('ltr');
     expect(view.triggerText()).toContain('٣:٣٠ م');
+  });
+});
+
+describe('rv-datetimepicker — unified transaction', () => {
+  it('blocks OK and Enter outside exact bounds, then allows correction', () => {
+    const view = mount({ value: dt(2026, 10, 25, 9), hour12: false });
+    view.host.min.set(dt(2026, 10, 25, 9, 30));
+    view.fixture.detectChanges();
+    view.open();
+    expect(view.ok()?.disabled).toBe(true);
+    view.hour()?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    view.fixture.detectChanges();
+    expect(view.trigger.getAttribute('aria-expanded')).toBe('true');
+    expect(view.host.value()).toEqual(dt(2026, 10, 25, 9));
+    const minute = view.minute()!;
+    minute.value = '30';
+    minute.dispatchEvent(new Event('input', { bubbles: true }));
+    view.fixture.detectChanges();
+    expect(view.ok()?.disabled).toBe(false);
+    view.ok()?.click();
+    view.fixture.detectChanges();
+    expect(view.host.value()).toEqual(dt(2026, 10, 25, 9, 30));
+  });
+  it('revalidates changing availability and bounds while the panel is open', () => {
+    const view = mount({ value: dt(2026, 10, 25, 12) });
+    view.open();
+    view.host.max.set(dt(2026, 10, 25, 11));
+    view.fixture.detectChanges();
+    expect(view.ok()?.disabled).toBe(true);
+    view.host.max.set(undefined);
+    view.host.disabledTime.set((value) => value.date.day === 25 && value.time.hour === 12);
+    view.fixture.detectChanges();
+    expect(view.ok()?.disabled).toBe(true);
+    view.host.disabledTime.set(undefined);
+    view.host.disabledDate.set((date) => date.day === 25);
+    view.fixture.detectChanges();
+    expect(view.ok()?.disabled).toBe(true);
+    expect(view.day('2026-10-25')?.getAttribute('aria-disabled')).toBe('true');
+    view.host.disabledDate.set(undefined);
+    view.fixture.detectChanges();
+    expect(view.ok()?.disabled).toBe(false);
+  });
+  it('resets a discarded time edit from the form on reopening', () => {
+    const view = mount({ value: dt(2026, 10, 25, 12), hour12: false });
+    view.open();
+    const hour = view.hour()!;
+    hour.value = '15';
+    hour.dispatchEvent(new Event('input', { bubbles: true }));
+    view.fixture.detectChanges();
+    hour.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    view.fixture.detectChanges();
+    expect(view.host.value()).toEqual(dt(2026, 10, 25, 12));
+    view.open();
+    expect(view.hour()?.value).toBe('12');
+  });
+  it('requires an overlap choice in explicit mode and blocks gaps until corrected', () => {
+    const view = mount({ value: dt(2026, 10, 29, 23, 30), timeZone: 'Africa/Cairo' });
+    view.host.zoneCommitPolicy.set('explicit');
+    view.fixture.detectChanges();
+    view.open();
+    expect(view.ok()?.disabled).toBe(true);
+    const offsets = view.el.querySelectorAll<HTMLButtonElement>('.rv-datetimepicker-offset');
+    expect([...offsets].every((button) => button.getAttribute('aria-pressed') === 'false')).toBe(
+      true,
+    );
+    offsets[1].click();
+    view.fixture.detectChanges();
+    expect(view.ok()?.disabled).toBe(false);
+    view.ok()?.click();
+    view.fixture.detectChanges();
+    expect(view.host.resolved.at(-1)?.resolution.instant).toBe(Date.UTC(2026, 9, 29, 21, 30));
+    view.host.value.set(dt(2026, 4, 24, 0, 30));
+    view.fixture.detectChanges();
+    view.open();
+    expect(view.ok()?.disabled).toBe(true);
+    view.el.querySelector<HTMLButtonElement>('.rv-datetimepicker-warning button')?.click();
+    view.fixture.detectChanges();
+    expect(view.ok()?.disabled).toBe(false);
+  });
+  it('blocks unsupported resolution without emitting a fabricated instant', () => {
+    const view = mount({
+      value: dt(2026, 10, 25, 12),
+      timeZone: 'UTC',
+      resolver: { resolve: () => ({ kind: 'unsupported', reason: 'Unavailable data' }) },
+    });
+    view.open();
+    expect(view.ok()?.disabled).toBe(true);
+    expect(view.el.querySelector('.rv-datetimepicker-warning')).not.toBeNull();
+    view.hour()?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(view.host.resolved).toHaveLength(0);
   });
 });
