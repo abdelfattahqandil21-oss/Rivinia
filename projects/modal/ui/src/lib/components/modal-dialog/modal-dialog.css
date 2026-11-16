@@ -240,6 +240,9 @@
 .rv-modal[data-state='closing'] {
   animation: rv-modal-out var(--rv-modal-duration-out) var(--rv-modal-easing-out) forwards;
 }
+.rv-modal[data-state='closing']::backdrop {
+  animation: rv-modal-backdrop-out var(--rv-modal-duration-out) var(--rv-modal-easing-out) forwards;
+}
 @keyframes rv-modal-in {
   from {
     opacity: 0;
@@ -276,13 +279,28 @@
   }
 }
 @keyframes rv-modal-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
   to {
     opacity: 0;
-    transform: translateY(8px) scale(0.98);
+    transform: translateY(4px);
+  }
+}
+@keyframes rv-modal-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .rv-modal[data-animation] {
+    animation: none;
+  }
+  .rv-modal[data-state='closing']::backdrop {
     animation: none;
   }
 }

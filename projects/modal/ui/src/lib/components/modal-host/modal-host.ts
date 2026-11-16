@@ -63,6 +63,7 @@ export class RiviniaModalHost {
   /** Dialog size for every managed instance. @default 'md' */
   readonly size = input<RiviniaModalSize>('md');
   /** Render the header close button on every managed instance. @default true */
+  readonly closeLabel = input('Close dialog');
   readonly showCloseButton = input<boolean>(true);
   /** Resolve a title per instance. Default: `metadata.title` → `ref` → `''`. */
   readonly titleOf = input<(instance: ModalInstance<unknown>) => string | undefined>();

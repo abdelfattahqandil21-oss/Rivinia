@@ -13,6 +13,7 @@ import {
   model,
   output,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { RiviniaModalScrollLock } from '../modal-scroll-lock/modal-scroll-lock';
@@ -136,9 +137,10 @@ export class RiviniaModalDialog {
     // The viewport listener outlives the component otherwise.
     this.stopResizeWatch();
     if (this.settleTimer !== null) clearTimeout(this.settleTimer);
-    if (this.exitTimer !== null) clearTimeout(this.exitTimer);
+    this.clearExitWork();
     if (this.phase() !== 'closed') this.finalize(this.dialog()?.nativeElement ?? null);
   }
+  readonly closeLabel = input('Close dialog');
   readonly showCloseButton = input<boolean>(true);
   /**
    * Managed mode (for {@link RiviniaModalHost}): UI intents (X button,
@@ -180,6 +182,7 @@ export class RiviniaModalDialog {
   private readonly phase = signal<'closed' | 'open' | 'closing'>('closed');
   private readonly invoker: { current: Element | null } = { current: null };
   private exitTimer: ReturnType<typeof setTimeout> | null = null;
+  private exitAnimationCleanup: (() => void) | null = null;
 
   /** Template state for animation styling. Never rendered open on the server. */
   readonly state = computed(() => this.phase());
@@ -189,11 +192,15 @@ export class RiviniaModalDialog {
 
   constructor() {
     effect(() => {
-      if (this.open()) this.show();
-      // External close acts only while fully open: during 'closing' the
-      // exit animation owns teardown (its timer finalizes). This guard is
-      // what keeps `finish()` from cutting the animation via `open.set(false)`.
-      else if (this.phase() === 'open') this.hide();
+      const requestedOpen = this.open();
+      untracked(() => {
+        if (requestedOpen) this.show();
+        // External close acts only while fully open: during 'closing' the
+        // exit animation owns teardown. Keep phase reads out of this effect's
+        // dependencies, or a managed host's always-true `open` input would
+        // reopen the native dialog when `finalize()` changes phase to closed.
+        else if (this.phase() === 'open') this.hide();
+      });
     });
     effect(() => {
       // Managed exit: the manager moved this instance to `closing`.
@@ -328,10 +335,7 @@ export class RiviniaModalDialog {
 
   private teardown(animate: boolean): void {
     if (!animate) {
-      if (this.exitTimer) {
-        clearTimeout(this.exitTimer);
-        this.exitTimer = null;
-      }
+      this.clearExitWork();
       this.finalize(this.dialog()?.nativeElement ?? null);
       return;
     }
@@ -340,42 +344,71 @@ export class RiviniaModalDialog {
 
   /** Plays the exit animation (when warranted), then runs `done`. Idempotent. */
   private playExit(done: () => void): void {
-    if (this.phase() !== 'open') {
+    if (this.phase() === 'closed') {
       done();
       return;
     }
-    if (this.exitTimer) {
-      clearTimeout(this.exitTimer);
-      this.exitTimer = null;
-    }
+    // A repeated close request while an exit is already running must not
+    // acknowledge teardown early and remove the native dialog mid-animation.
+    if (this.phase() === 'closing') return;
+    this.clearExitWork();
     const el = this.dialog()?.nativeElement ?? null;
     const animated = this.animation() !== 'none' && this.prefersMotion() && !!el?.open;
-    this.phase.set(animated ? 'closing' : 'closed');
     if (!animated) {
+      this.phase.set('closed');
       this.finalize(el);
       done();
       return;
     }
-    // Honor consumer-overridden durations instead of a fixed fallback, so a
-    // longer `--rv-modal-duration-out` is never cut short.
-    this.exitTimer = setTimeout(() => {
+
+    let completed = false;
+    const finish = (): void => {
+      if (completed) return;
+      completed = true;
+      this.clearExitWork();
       this.finalize(el);
       done();
-    }, this.exitDurationMs(el));
+    };
+    const onAnimationEnd = (event: AnimationEvent): void => {
+      if (event.target === el && event.animationName === 'rv-modal-out') finish();
+    };
+    const onAnimationCancel = (event: AnimationEvent): void => {
+      if (event.target === el && event.animationName === 'rv-modal-out') finish();
+    };
+    el?.addEventListener('animationend', onAnimationEnd);
+    el?.addEventListener('animationcancel', onAnimationCancel);
+    this.exitAnimationCleanup = () => {
+      el?.removeEventListener('animationend', onAnimationEnd);
+      el?.removeEventListener('animationcancel', onAnimationCancel);
+    };
+    // The CSS custom property is stable before Angular updates data-state.
+    // Use it only as a safety net; the normal path closes on animationend.
+    this.exitTimer = setTimeout(finish, this.exitDurationMs(el) + 50);
+    this.phase.set('closing');
   }
 
   private exitDurationMs(el: HTMLDialogElement | null): number {
     try {
-      const raw = el ? getComputedStyle(el).animationDuration : '';
-      const seconds = raw
-        .split(',')
-        .map((part) => parseFloat(part))
-        .filter((n) => Number.isFinite(n));
-      if (seconds.length > 0) return Math.max(0, Math.max(...seconds) * 1000) + 50;
+      const raw = el ? getComputedStyle(el).getPropertyValue('--rv-modal-duration-out') : '';
+      const duration = /^(-?(?:\d+\.?\d*|\.\d+))(ms|s)$/.exec(raw.trim());
+      if (duration) {
+        const value = Number(duration[1]);
+        const milliseconds = duration[2] === 'ms' ? value : value * 1000;
+        if (Number.isFinite(milliseconds)) return Math.max(0, milliseconds);
+      }
     } catch {
       // Non-CSS environments (tests): fall through to the fallback.
     }
     return EXIT_FALLBACK_MS;
+  }
+
+  private clearExitWork(): void {
+    this.exitAnimationCleanup?.();
+    this.exitAnimationCleanup = null;
+    if (this.exitTimer !== null) {
+      clearTimeout(this.exitTimer);
+      this.exitTimer = null;
+    }
   }
 
   private finalize(el: HTMLDialogElement | null): void {

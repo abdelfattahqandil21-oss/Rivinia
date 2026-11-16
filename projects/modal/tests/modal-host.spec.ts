@@ -72,9 +72,14 @@ describe('RiviniaModalHost', () => {
 
     expect(handle.dismiss('host-x')).toBe(true);
     expect(await handle.result).toEqual({ status: 'dismissed', reason: 'host-x' });
-    // Manual teardown (closingTimeout 0): host confirms after the exit.
-    vi.advanceTimersByTime(1000);
     fixture.detectChanges();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    expect(dialog.open).toBe(true);
+    const exitAnimationEnd = new Event('animationend');
+    Object.defineProperty(exitAnimationEnd, 'animationName', { value: 'rv-modal-out' });
+    dialog.dispatchEvent(exitAnimationEnd);
+    fixture.detectChanges();
+    // Manual teardown (closingTimeout 0): host confirms on the exit event.
     expect(modal.debugState()).toMatchObject({ active: [], queued: [], closing: [] });
   });
 

@@ -33,7 +33,7 @@
           type="button"
           class="rv-modal-close"
           (click)="onCloseButton()"
-          aria-label="Close dialog"
+          [attr.aria-label]="closeLabel()"
         >
           <span aria-hidden="true">&times;</span>
         </button>

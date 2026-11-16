@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — local integration (not published)
+
+- Add closeLabel to the dialog and managed host; preserve the English default and allow reactive localized accessible names.
+- Synchronize dialog teardown with the exit animation event and fade the native backdrop during close.
+
 ## 1.0.4
 
 - Update published internal dependency metadata and version-pinned documentation links for the synchronized Rivinia 1.0 patch. No public API changes.
