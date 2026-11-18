@@ -2,6 +2,9 @@
 
 ## Unreleased — local integration (not published)
 
+- Add managed and direct `ng-template` Header/Footer slots, plus responsive scroll sections and configurable separators.
+- Add optional `@rivinia/modal/actions` entry point for backend action objects. Modal core and UI no longer depend on Menu.
+- Add `RiviniaActionBar` conventions for `id`/`name`/`color`/`order`, field bindings, pinned/visible controls, explicit `buttons` layout, and identity-preserving events.
 - Add closeLabel to the dialog and managed host; preserve the English default and allow reactive localized accessible names.
 - Synchronize dialog teardown with the exit animation event and fade the native backdrop during close.
 

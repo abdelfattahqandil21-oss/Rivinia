@@ -41,6 +41,7 @@ npm install @rivinia/modal
 | Ready-made UI | Headless manager |
 | --- | --- |
 | `@rivinia/modal/ui` | `@rivinia/modal` |
+| `@rivinia/modal/actions` (optional; requires `@rivinia/menu`) | `@rivinia/modal` |
 
 The UI and controller are independent; use either or combine them.
 

@@ -9,6 +9,8 @@ const configurations = [
   'tailwind',
   'tailwind-no-preflight',
   'tailwind-prefix',
+  'tailwind-v3',
+  'bootstrap-tailwind',
   'bootstrap',
   'scss',
   'less',
@@ -52,6 +54,13 @@ for (const script of ['build:popup', 'build:select', 'build:datepicker', 'build:
   run(['run', script]);
 }
 
+run(['exec', 'ng', 'build', 'modal']);
+run([
+  'dlx', 'tailwindcss@3.4.18',
+  '-i', 'projects/theme-compat-e2e/src/styles/tailwind-v3.css',
+  '-o', 'dist/theme-compat-e2e/tailwind-v3-generated.css',
+  '--content', './projects/theme-compat-e2e/src/**/*.{html,ts}',
+]);
 run(['exec', 'ng', 'build', 'menu-e2e']);
 run(['exec', 'ng', 'build', 'i18n-e2e', '--configuration', 'csr']);
 const beforeExisting = await existingHarnessFingerprints();

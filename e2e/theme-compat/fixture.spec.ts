@@ -1,5 +1,26 @@
 import { expect, test } from '@playwright/test';
 
+test('modal surface inherits scoped semantic tokens and keeps its footer usable', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('open-modal').click();
+  const dialog = page.getByRole('dialog', { name: 'CSS stack modal' });
+  await expect(dialog).toBeVisible();
+  const styles = await dialog.evaluate((element) => {
+    const dialogStyle = getComputedStyle(element);
+    const footer = element.querySelector('.rv-modal-footer')!;
+    return {
+      background: dialogStyle.backgroundColor,
+      footerDisplay: getComputedStyle(footer).display,
+      width: element.getBoundingClientRect().width,
+    };
+  });
+  expect(styles.background).toBe('rgb(218, 235, 255)');
+  expect(styles.footerDisplay).toBe('flex');
+  expect(styles.width).toBeGreaterThan(0);
+  await page.getByTestId('close-modal').click();
+  await expect(dialog).toHaveCount(0);
+});
+
 const configuration = process.env['RV_THEME_CONFIG'] ?? 'plain';
 
 async function resolvedTokenColor(locator: import('@playwright/test').Locator, token = '--rv-bg') {

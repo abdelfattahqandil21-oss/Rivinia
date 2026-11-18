@@ -5,6 +5,8 @@ const configurations = [
   'tailwind',
   'tailwind-no-preflight',
   'tailwind-prefix',
+  'tailwind-v3',
+  'bootstrap-tailwind',
   'bootstrap',
   'scss',
   'less',

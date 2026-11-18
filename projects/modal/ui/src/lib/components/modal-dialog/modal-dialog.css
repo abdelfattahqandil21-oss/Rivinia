@@ -1,4 +1,6 @@
 .rv-modal {
+  display: flex;
+  flex-direction: column;
   color-scheme: light dark;
   /*
    * The PALETTE tokens are NOT declared here.
@@ -15,6 +17,7 @@
    */
   --rv-modal-pad: 20px;
   --rv-modal-gap: 12px;
+  --rv-modal-section-divider: var(--rv-color-border-subtle, color-mix(in srgb, currentColor 12%, transparent));
   /*
    * Responsive widths.
    *
@@ -67,6 +70,10 @@
     inset var(--rv-modal-size-duration, 180ms) var(--rv-modal-easing, ease-out),
     margin var(--rv-modal-size-duration, 180ms) var(--rv-modal-easing, ease-out);
 }
+.rv-modal:not([open]) {
+  display: none;
+}
+
 /*
  * While the viewport is being resized, the transition is OFF.
  *
@@ -76,7 +83,7 @@
  * dialog snaps instead, which is what the eye expects from a resize.
  */
 .rv-modal[data-resizing='true'] {
-  transition: none !important;
+  transition: none;
 }
 /*
  * The loader shown while a dialog's data is still in flight.
@@ -280,11 +287,9 @@
 }
 @keyframes rv-modal-out {
   from {
-    opacity: 1;
     transform: translateY(0);
   }
   to {
-    opacity: 0;
     transform: translateY(4px);
   }
 }
@@ -297,7 +302,10 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .rv-modal[data-animation] {
+  .rv-modal[data-animation]:not([data-animation='none'])[data-state='open'] {
+    animation: none;
+  }
+  .rv-modal[data-state='closing'] {
     animation: none;
   }
   .rv-modal[data-state='closing']::backdrop {
@@ -306,9 +314,11 @@
 }
 .rv-modal-header {
   display: flex;
+  flex: 0 0 auto;
   align-items: flex-start;
   gap: var(--rv-modal-gap);
-  padding: var(--rv-modal-pad) var(--rv-modal-pad) 0;
+  padding: var(--rv-modal-pad);
+  border-block-end: 1px solid var(--rv-modal-section-divider);
 }
 .rv-modal-header-custom > :first-child {
   flex: 1;
@@ -350,15 +360,18 @@
   outline-offset: 2px;
 }
 .rv-modal-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
   padding: var(--rv-modal-pad);
   overflow: auto;
-  max-height: inherit;
 }
 .rv-modal-footer {
   display: flex;
+  flex: 0 0 auto;
   gap: var(--rv-modal-gap);
   justify-content: flex-end;
-  padding: 0 var(--rv-modal-pad) var(--rv-modal-pad);
+  padding: var(--rv-modal-pad);
+  border-block-start: 1px solid var(--rv-modal-section-divider);
 }
 .rv-modal-footer:empty {
   display: none;

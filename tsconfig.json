@@ -18,6 +18,7 @@
       "@rivinia/toast/ui": ["./dist/toast/ui"],
       "@rivinia/modal": ["./dist/modal"],
       "@rivinia/modal/ui": ["./dist/modal/ui"],
+      "@rivinia/modal/actions": ["./dist/modal/actions"],
       "@rivinia/i18n": ["./dist/i18n"],
       "@rivinia/i18n/ui": ["./dist/i18n/ui"],
       "@rivinia/i18n/select": ["./dist/i18n/select"],

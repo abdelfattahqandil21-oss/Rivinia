@@ -3,6 +3,13 @@
 
   <section class="fixture-scope booking-scope" data-testid="booking-scope" data-bs-theme="light">
     <h2>Booking scope</h2>
+    <button type="button" data-testid="open-modal" (click)="modalOpen.set(true)">Open Modal</button>
+    <rv-modal-dialog [(open)]="modalOpen" title="CSS stack modal" size="sm">
+      <p>Modal package styles remain isolated from consumer CSS stacks.</p>
+      <div rv-modal-footer rvModalFooter>
+        <button type="button" data-testid="close-modal" (click)="modalOpen.set(false)">Close</button>
+      </div>
+    </rv-modal-dialog>
     <rv-select
       id="booking-select"
       label="Booking status"

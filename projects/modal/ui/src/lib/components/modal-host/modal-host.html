@@ -20,6 +20,13 @@
       (dismissRequested)="onIntent(instance.id, $event)"
       (exitDone)="onExitDone(instance.id)"
     >
+      @if (contentSlots(instance).header(); as header) {
+        <div rv-modal-header rvModalHeader>
+          <ng-container
+            *ngTemplateOutlet="header; context: templateContext(instance); injector: contextInjector(instance)"
+          ></ng-container>
+        </div>
+      }
       @if (isLoading(instance)) {
         <!--
         The data has not arrived yet. A loader says so; an empty dialog
@@ -31,7 +38,7 @@
         </div>
       } @else if (instance.content.kind === 'template') {
         <ng-container
-          *ngTemplateOutlet="instance.content.template; context: templateContext(instance)"
+          *ngTemplateOutlet="instance.content.template; context: templateContext(instance); injector: contextInjector(instance)"
         ></ng-container>
       } @else {
         <ng-container
@@ -41,6 +48,13 @@
             injector: contextInjector(instance)
           "
         ></ng-container>
+      }
+      @if (contentSlots(instance).footer(); as footer) {
+        <div rv-modal-footer rvModalFooter>
+          <ng-container
+            *ngTemplateOutlet="footer; context: templateContext(instance); injector: contextInjector(instance)"
+          ></ng-container>
+        </div>
       }
     </rv-modal-dialog>
   }

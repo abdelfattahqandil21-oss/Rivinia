@@ -1,6 +1,5 @@
 import {
   Component,
-  OnDestroy,
   Directive,
   DOCUMENT,
   ElementRef,
@@ -11,11 +10,15 @@ import {
   inject,
   input,
   model,
+  OnDestroy,
   output,
   signal,
+  TemplateRef,
   untracked,
   viewChild,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { MODAL_CONTENT_SLOT_REGISTRY } from '../../models/modal-content-slots';
 import { RiviniaModalScrollLock } from '../modal-scroll-lock/modal-scroll-lock';
 import type {
   RiviniaModalAnimation,
@@ -27,23 +30,44 @@ import type {
 const EXIT_FALLBACK_MS = 200;
 
 /**
- * Marker for custom header content. Put it on the element carrying
- * `rv-modal-header` — its presence (not just the attribute) tells the
- * dialog to hide the default title + close button:
+ * Marker for custom header content. In a direct dialog, put it on the element
+ * carrying `rv-modal-header`. In managed content, put it on an `ng-template`
+ * so the host can render it in the header region:
  *
  * ```html
  * <div rv-modal-header rvModalHeader>My header</div>
  * ```
  */
 @Directive({ selector: '[rvModalHeader]', standalone: true })
-export class RvModalHeader {}
+export class RvModalHeader implements OnDestroy {
+  readonly templateRef = inject<TemplateRef<unknown> | null>(TemplateRef, { optional: true });
+  private readonly registry = inject(MODAL_CONTENT_SLOT_REGISTRY, { optional: true });
+  private readonly unregister = this.templateRef
+    ? this.registry?.register('header', this.templateRef)
+    : undefined;
+
+  ngOnDestroy(): void {
+    this.unregister?.();
+  }
+}
 
 /**
  * Marker for custom footer content. Put it on the element carrying
- * `rv-modal-footer`. Without it the footer region never renders.
+ * `rv-modal-footer` for direct projection, or on an `ng-template` for managed
+ * host content. Without it the footer region never renders.
  */
 @Directive({ selector: '[rvModalFooter]', standalone: true })
-export class RvModalFooter {}
+export class RvModalFooter implements OnDestroy {
+  readonly templateRef = inject<TemplateRef<unknown> | null>(TemplateRef, { optional: true });
+  private readonly registry = inject(MODAL_CONTENT_SLOT_REGISTRY, { optional: true });
+  private readonly unregister = this.templateRef
+    ? this.registry?.register('footer', this.templateRef)
+    : undefined;
+
+  ngOnDestroy(): void {
+    this.unregister?.();
+  }
+}
 
 /**
  * Ready-made modal dialog on the native `<dialog>` element (top layer,
@@ -61,6 +85,7 @@ export class RvModalFooter {}
  */
 @Component({
   selector: 'rv-modal-dialog',
+  imports: [NgTemplateOutlet],
   // Unencapsulated like rv-menu: custom projected headers/footers belong to
   // the consumer's template, which emulated selectors cannot reach. Every
   // rule is scoped under `.rv-modal`, so nothing leaks.
@@ -188,7 +213,11 @@ export class RiviniaModalDialog {
   readonly state = computed(() => this.phase());
   readonly hasCustomHeader = computed(() => this.headerSlot() !== undefined);
   readonly hasCustomFooter = computed(() => this.footerSlot() !== undefined);
-  readonly computedLabel = computed(() => this.ariaLabel() || null);
+  readonly headerTemplate = computed(() => this.headerSlot()?.templateRef ?? null);
+  readonly footerTemplate = computed(() => this.footerSlot()?.templateRef ?? null);
+  readonly computedLabel = computed(() =>
+    this.ariaLabel() || (this.hasCustomHeader() ? this.title() || 'Dialog' : null),
+  );
 
   constructor() {
     effect(() => {
@@ -426,6 +455,11 @@ export class RiviniaModalDialog {
       invoker?.focus?.();
     } catch {
       // Invoker gone (navigated away) — nothing to restore to.
+    }
+    if (!invoker?.isConnected) {
+      const openDialogs = this.doc?.querySelectorAll<HTMLDialogElement>('dialog[open]');
+      const parentDialog = openDialogs?.item((openDialogs.length ?? 0) - 1);
+      parentDialog?.focus({ preventScroll: true });
     }
   }
 

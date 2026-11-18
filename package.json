@@ -42,7 +42,8 @@
     "check:skills": "node scripts/check-skill-compatibility.mjs",
     "check:versioned-doc-links": "node scripts/check-versioned-doc-links.mjs",
     "test:scripts": "vitest run scripts/tests",
-    "validate:ci": "node scripts/validate-ci.mjs"
+    "validate:ci": "node scripts/validate-ci.mjs",
+    "test:modal-css-compat": "node scripts/modal-css-compat-test.mjs"
   },
   "private": true,
   "packageManager": "pnpm@12.8.1",
