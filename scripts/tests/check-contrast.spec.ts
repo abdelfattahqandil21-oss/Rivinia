@@ -187,11 +187,11 @@ describe('auditThemeCss', () => {
   });
 
   it('measures the decorative border without failing on it', () => {
-    const report = auditThemeCss(stylesheet());
+    const report = auditPalette({ light: { ...light, border: '#cccccc' }, dark });
     const border = report.rows.find((row) => row.pair.fg === 'border' && row.scheme === 'light');
     expect(border?.enforced).toBe(false);
     expect(border?.ratio).toBeLessThan(3);
-    expect(report.ok).toBe(true);
+    expect(report.problems).toEqual([]);
   });
 
   it('prints one line per pair with the verdict', () => {
