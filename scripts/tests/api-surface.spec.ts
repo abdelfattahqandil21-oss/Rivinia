@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ENTRY_POINTS,
+  HISTORICAL_SNAPSHOT_FILE,
   committedSnapshot,
   currentSurface,
   diffSurface,
@@ -16,12 +17,27 @@ import {
  */
 
 describe('the frozen surface', () => {
-  it('still publishes exactly the names the freeze recorded', () => {
+  it('publishes exactly the names in the approved 2.0.0-alpha.1 baseline', () => {
     expect(diffSurface(committedSnapshot(), currentSurface())).toEqual([]);
   });
 
-  it('covers all eight entry points, at the counts docs/releases/1.0/API-SURFACE.md states', () => {
+  it('covers all eight entry points at the counts in docs/releases/2.0/API-SURFACE.md', () => {
     const snapshot = committedSnapshot();
+    expect(Object.keys(snapshot).sort()).toEqual(ENTRY_POINTS.map(([spec]) => spec).sort());
+    expect(Object.fromEntries(Object.entries(snapshot).map(([k, v]) => [k, v.length]))).toEqual({
+      '@rivinia/i18n': 35,
+      '@rivinia/i18n/select': 5,
+      '@rivinia/i18n/ui': 5,
+      '@rivinia/menu': 16,
+      '@rivinia/menu/ui': 25,
+      '@rivinia/select': 15,
+      '@rivinia/select/ui': 12,
+      '@rivinia/theme': 0,
+    });
+  });
+
+  it('preserves the historical 1.0 entry-point counts separately', () => {
+    const snapshot = committedSnapshot(HISTORICAL_SNAPSHOT_FILE);
     expect(Object.keys(snapshot).sort()).toEqual(ENTRY_POINTS.map(([spec]) => spec).sort());
     expect(Object.fromEntries(Object.entries(snapshot).map(([k, v]) => [k, v.length]))).toEqual({
       '@rivinia/i18n': 35,

@@ -2,6 +2,7 @@
 
 | Release | Purpose | Status |
 | --- | --- | --- |
+| [2.0.0-alpha.1 API surface](2.0/API-SURFACE.md) | Owner-approved candidate baseline for the initial four packages | Candidate; not publish authorization |
 | [1.0 rc.4 release record](1.0/RC4.md) | Popup added to the existing 1.0 synchronized line; published by the owner on 2026-11-05 |
 | [1.0 records](1.0/README.md) | Historical 1.0 release-candidate evidence and runbook | Closed record; not a current procedure |
 | [1.1 publish runbook](1.1/README.md) | Historical 1.1 plan; Popup first ships in 1.0.0-rc.4 | Superseded for Popup first publish |

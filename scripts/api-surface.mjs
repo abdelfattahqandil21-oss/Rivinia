@@ -1,10 +1,9 @@
 /**
- * The published name lists of the four 1.0 packages.
+ * The published name lists for the initial four synchronized packages.
  *
- * S8 freezes the API surface, and a freeze is only real if a later change to it
- * shows up as a diff someone has to explain. `scripts/tests/api-surface.spec.ts`
- * compares what the entry points export today against
- * `scripts/api-surface.snapshot.json`, committed with the freeze.
+ * The active snapshot pins their 2.0.0-alpha.1 candidate surface. The original
+ * 1.0 surface remains archived separately so the live gate can follow the
+ * current candidate without rewriting the historical freeze.
  *
  * Only the eight `public-api.ts` files are read. They use explicit
  * `export { … }` lists — `grep -c "export \*"` returns 0 for every one of them —
@@ -31,6 +30,7 @@ export const ENTRY_POINTS = Object.freeze([
 ]);
 
 export const SNAPSHOT_FILE = join(ROOT, 'scripts', 'api-surface.snapshot.json');
+export const HISTORICAL_SNAPSHOT_FILE = join(ROOT, 'scripts', 'api-surface-1.0.snapshot.json');
 
 /** `//` and `/* … *​/` comments never publish a name. */
 function withoutComments(source) {
