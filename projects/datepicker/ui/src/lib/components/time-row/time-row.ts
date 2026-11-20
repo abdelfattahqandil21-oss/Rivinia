@@ -89,6 +89,7 @@ export class RiviniaTimeRowComponent {
   protected readonly minuteEdit = signal<string | null>(null);
   protected readonly secondEdit = signal<string | null>(null);
 
+  private readonly rowRef = viewChild<ElementRef<HTMLElement>>('timeRow');
   private readonly toggleRef = viewChild<ElementRef<HTMLButtonElement>>('timeToggle');
   private readonly optionsRef = viewChild<ElementRef<HTMLElement>>('timeOptions');
   /** Focus the selected option once, after the tray exists. */
@@ -171,23 +172,13 @@ export class RiviniaTimeRowComponent {
   );
 
   constructor() {
-    // Every column opens on its own selected value, not just the focused one:
-    // a 15:30 draft must not show the hour at 15 and the minutes still at 00.
-    afterRenderEffect(() => {
-      this.optionsOpen();
-      this.value();
-      this.effectiveHour12();
-      if (!this.optionsOpen()) return;
-      this.scrollSelectedOptions();
-    });
-
     // The tray is nested inside the date panel, whose overflow may clip an
     // absolutely positioned child. Promote it to the top layer and connect it
     // as a child popup so it escapes clipping and dismisses one level at a time.
     afterRenderEffect((onCleanup) => {
       const opened = this.optionsOpen();
       const panel = this.optionsRef()?.nativeElement;
-      const origin = this.toggleRef()?.nativeElement;
+      const origin = this.rowRef()?.nativeElement;
       if (!opened || !panel || !origin || typeof document === 'undefined') return;
       const popover = panel as HTMLElement & {
         showPopover?: () => void;
@@ -213,6 +204,9 @@ export class RiviniaTimeRowComponent {
             origin,
             panel,
             parent: 'auto',
+            placement: 'bottom-start',
+            offset: 4,
+            padding: 4,
             onDismiss: () => this.optionsOpen.set(false),
           });
           disconnect = () => connection.destroy();
@@ -220,11 +214,29 @@ export class RiviniaTimeRowComponent {
           this.optionsOpen.set(false);
         }
       }
+      // Wait for the top-layer popup to receive its final geometry before
+      // centering the selected options. Keep each column's scroll independent
+      // after opening so choosing one unit does not move the others.
+      if (typeof requestAnimationFrame === 'function') {
+        let settleFrame = 0;
+        const scrollFrame = requestAnimationFrame(() => {
+          // The popup's fixed-position connection and top-layer layout can
+          // settle one frame after the popover opens. Measuring earlier may
+          // see a zero-height list and leave the selected value off screen.
+          settleFrame = requestAnimationFrame(() => this.scrollSelectedOptions());
+        });
+        onCleanup(() => {
+          cancelAnimationFrame(scrollFrame);
+          if (settleFrame) cancelAnimationFrame(settleFrame);
+        });
+      } else {
+        this.scrollSelectedOptions();
+      }
       const selected = panel.querySelector<HTMLElement>('[role="option"][aria-selected="true"]');
       const first = panel.querySelector<HTMLElement>('[role="option"]');
       if (this.focusOptionsAfterRender && (selected ?? first)) {
         this.focusOptionsAfterRender = false;
-        (selected ?? first)?.focus();
+        (selected ?? first)?.focus({ preventScroll: true });
       }
     });
 
@@ -323,7 +335,12 @@ export class RiviniaTimeRowComponent {
     }
 
     event.preventDefault();
-    options[next]?.focus();
+    const option = options[next];
+    option.focus({ preventScroll: true });
+    const top = option.offsetTop;
+    const bottom = top + option.offsetHeight;
+    if (top < list.scrollTop) list.scrollTop = top;
+    else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
   }
 
   protected onOptionsFocusOut(event: FocusEvent): void {

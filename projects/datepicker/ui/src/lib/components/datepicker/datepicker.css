@@ -44,6 +44,17 @@
   box-shadow: var(--rv-datepicker-shadow, none);
 }
 
+.rv-datepicker-format-hint {
+  display: block;
+  margin-block-start: 0.25rem;
+  color: var(--rv-color-text-muted, light-dark(#64748b, #a1a1aa));
+  font-family: var(--rv-datepicker-font, var(--rv-font-family, system-ui, sans-serif));
+  font-size: 0.6875rem;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.025em;
+}
+
 .rv-datepicker-field:hover {
   background: var(
     --rv-datepicker-hover-bg,
@@ -279,10 +290,11 @@
   padding: 0.625rem;
   border-block-start: 1px solid var(--rv-color-border, light-dark(#e4e4e7, #3f3f46));
 }
-.rv-datepicker-actions-start {
+.rv-datepicker-actions-end {
   display: flex;
   flex-wrap: wrap;
   gap: 0.375rem;
+  margin-inline-start: auto;
 }
 .rv-datepicker-action {
   font: inherit;
@@ -300,8 +312,48 @@
   background: color-mix(in srgb, var(--rv-color-primary, #16654c) 10%, transparent);
 }
 .rv-datepicker-clear-action {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 2.25rem;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  inline-size: 2.25rem;
+  padding: 0.375rem;
   color: var(--rv-color-text-muted, light-dark(#52525b, #a1a1aa));
   border-color: transparent;
+}
+.rv-datepicker-clear-action svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+.rv-datepicker-clear-action::after {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: calc(100% + 0.375rem);
+  z-index: 100;
+  padding: 0.3rem 0.45rem;
+  color: var(--rv-color-surface, light-dark(#ffffff, #18181b));
+  background: var(--rv-color-text, light-dark(#27272a, #f4f4f5));
+  border-radius: 0.375rem;
+  content: attr(data-tooltip);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 0.15rem);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+  visibility: hidden;
+}
+.rv-datepicker-clear-action:hover::after,
+.rv-datepicker-clear-action:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  visibility: visible;
 }
 .rv-datepicker-action:hover:not(:disabled):not(.rv-datepicker-ok) {
   background: color-mix(in srgb, currentColor 10%, transparent);
@@ -332,4 +384,37 @@
   .rv-datepicker-chevron {
     transition: none;
   }
+}
+
+.rv-datepicker-panel-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--rv-space-2, 0.5rem);
+  margin-block: var(--rv-space-2, 0.5rem) var(--rv-space-3, 0.75rem);
+}
+
+.rv-datepicker-panel-editor rv-date-segments {
+  flex: 1 0 9rem;
+  min-block-size: 2rem;
+  box-sizing: border-box;
+  padding-inline: var(--rv-space-2, 0.5rem);
+  background: var(--rv-color-surface-raised, light-dark(#f5f7fa, #202d38));
+  border: 1px solid var(--rv-color-border, light-dark(#d4d4d8, #52525b));
+  border-radius: var(--rv-radius-md, 0.5rem);
+}
+/* Give the embedded time controls a dedicated section above the footer. */
+.rv-picker-time-section {
+  box-sizing: border-box;
+  margin-block-start: var(--rv-space-2, 0.5rem);
+  padding: var(--rv-space-3, 0.75rem) var(--rv-space-2, 0.5rem);
+  background: var(--rv-color-surface-raised, light-dark(#f5f7fa, #202d38));
+  border-radius: var(--rv-radius-md, 0.5rem);
+  --rv-time-border: transparent;
+  --rv-time-row-padding: 0;
+  --rv-time-row-gap: 0.625rem;
+  --rv-time-field-width: clamp(2.75rem, 7vw, 3.25rem);
+  --rv-time-field-padding: 0.5rem 0.25rem;
+  --rv-time-meridiem-padding: 0.5rem 0.375rem;
+  --rv-time-toggle-size: 2.25rem;
 }

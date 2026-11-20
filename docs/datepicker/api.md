@@ -46,10 +46,10 @@ error.
 | ------------- | ---------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `value`       | `RiviniaDate \| null`              | config              | Two-way: `[(value)]`. Starts at `provideRiviniaDatepicker({ selected })`.                                                                 |
 | `locale`      | `string`                           | config, `en-US`     | Any BCP-47 tag. Digits, names, week start and direction follow it.                                                                        |
-| `format`      | `RiviniaDateFormat`                | `'medium'`          | A style or a date-only pattern.                                                                                                           |
+| `format`      | `RiviniaDateFormat`                | `'medium'`          | A style or a date-only pattern; the ready-made field shows the active format in a quiet hint below it.                                      |
 | `firstDay`    | `RiviniaWeekday` (`0`–`6`)         | CLDR                | Overrides the locale's first day of the week.                                                                                             |
 | `min` / `max` | `RiviniaDate`                      | config              | Bounds. A bound day is focusable but cannot be picked.                                                                                    |
-| `labels`      | `Partial<RiviniaDatepickerLabels>` | locale              | Per-instance label overrides (`chooseDate`, `previousMonth`, …).                                                                          |
+| `labels`      | `Partial<RiviniaDatepickerLabels>` | locale              | Per-instance label overrides (`chooseDate`, `previousMonth`, `cancel`, …).                                                                 |
 | `disabled`    | `boolean`                          | `false`             | A form binds this automatically when the control is disabled.                                                                             |
 | `placeholder` | `string`                           | `labels.chooseDate` | Trigger text when there is no value.                                                                                                      |
 | `label`       | `string`                           | —                   | The field name ("Departure"). Becomes the trigger's accessible name: `Departure: Oct 25, 2026`.                                           |
@@ -75,7 +75,7 @@ grid), and the panel contains the same `<rv-calendar>` plus an
 | ------------- | ---------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `value`       | `RiviniaDateTime \| null`          | `null`                  | Two-way: `[(value)]`. Civil, with no zone.                                                                        |
 | `locale`      | `string`                           | config, `en-US`         | Same locale rules as the date picker.                                                                             |
-| `format`      | `RiviniaDateFormat`                | `'medium'`              | The **date** half only; time tokens still throw.                                                                  |
+| `format`      | `RiviniaDateFormat`                | `'medium'`              | The **date** half only; time tokens still throw. The ready-made field shows this format in a quiet hint below it. |
 | `timeFormat`  | `RiviniaTimeFormat`                | `'short'`               | `short`, `medium`, or a time pattern.                                                                             |
 | `showSeconds` | `boolean`                          | `false` (config)        | Adds the seconds spinbutton. The value always carries seconds.                                                    |
 | `minuteStep`  | `number`                           | `1` (config)            | Step for `PageUp`/`PageDown` on minutes/seconds; arrows stay ±1.                                                  |
@@ -83,7 +83,7 @@ grid), and the panel contains the same `<rv-calendar>` plus an
 | `timeZone`    | `string`                           | config, unset           | An IANA zone or fixed UTC offset (`+03:00`) used for the offset, DST checks and "today". Not stored in the value. |
 | `firstDay`    | `RiviniaWeekday` (`0`–`6`)         | CLDR                    | Forwarded to the calendar.                                                                                        |
 | `min` / `max` | `RiviniaDateTime`                  | config                  | Bounds. The grid uses their `date`; the time half is not restricted.                                              |
-| `labels`      | `Partial<RiviniaDatepickerLabels>` | locale                  | Includes the time labels (`chooseTime`, `hour`, `minute`, `ok`, `now`, `dstGap`, …).                              |
+| `labels`      | `Partial<RiviniaDatepickerLabels>` | locale                  | Includes the time labels (`chooseTime`, `hour`, `minute`, `cancel`, `ok`, `now`, `dstGap`, …).                    |
 | `disabled`    | `boolean`                          | `false`                 | A form binds this automatically.                                                                                  |
 | `placeholder` | `string`                           | `labels.chooseDateTime` | Trigger text when empty.                                                                                          |
 | `label`       | `string`                           | —                       | Field name; joins the trigger and clear-button accessible names.                                                  |
@@ -163,24 +163,12 @@ label to its control, so a click on a day would also click the trigger and
 re-open the panel. The panel cancels that forwarding (measured in Chrome), but
 a sibling label is the markup that does not need the workaround.
 
-### The clear button
+### Clear and confirmation
 
-`[clearable]="true"` (or `provideRiviniaDatepicker({ clearable: true })`) adds a
-× button inside the field, next to the trigger:
-
-```html
-<rv-datepicker label="Departure" [clearable]="true" [(value)]="departure" />
-```
-
-- It exists **only while a value is set**, and disappears on a disabled picker —
-  a required date must not look optional, which is why `clearable` is opt-in.
-- Pressing it sets the value to `null`, emits `valueChange(null)`, marks the
-  control touched, closes an open panel, and returns focus to the trigger (the
-  button itself disappears with the value).
-- Its accessible name includes the field name: `Departure: Clear date`, or
-  `المغادرة: مسح التاريخ`, so a screen reader user knows which field is cleared.
-- `rv-datetimepicker` uses the same button with `clearDateTime`:
-  `Appointment: Clear date and time` / `الموعد: مسح التاريخ والوقت`.
+Enable Clear with `[clearable]="true"`. Clear in the panel stages a null draft.
+OK commits it and Cancel discards it. Both pickers emit `applied` with
+`{ value, changed }` after a successful confirmation. `valueChange` is emitted
+before `applied` when the confirmed value changes.
 
 ### Several pickers on one page
 

@@ -10,6 +10,9 @@
  */
 
 :host {
+  --_rv-time-column-width: var(--rv-time-field-width, 3rem);
+  --_rv-time-separator-width: 0.375rem;
+  --_rv-time-tray-gap: calc(var(--_rv-time-separator-width) + 2 * var(--rv-time-fields-gap, 0.125rem));
   position: relative;
   display: block;
   min-inline-size: 0;
@@ -38,7 +41,8 @@
 }
 
 .rv-time-input {
-  inline-size: var(--rv-time-field-width, 2.5rem);
+  box-sizing: border-box;
+  inline-size: var(--_rv-time-column-width);
   min-inline-size: 0;
   padding: var(--rv-time-field-padding, 0.25rem);
   color: var(
@@ -115,6 +119,8 @@
 }
 
 .rv-time-separator {
+  inline-size: var(--_rv-time-separator-width);
+  text-align: center;
   color: var(--rv-time-separator, var(--rv-color-text-muted, light-dark(#52525b, #a1a1aa)));
   font-weight: 600;
 }
@@ -208,40 +214,50 @@
   );
 }
 
-/* The tray overlays the calendar instead of growing the panel. The panel has
-   a fixed height that already fits the viewport; adding 189px of list would
-   push it off-screen on a 912px-tall window (measured: panel bottom 959px).
-   Anchoring the tray above the time row keeps it inside the panel and makes
-   the panel's block size independent of the list. */
+/* Match the columns to the numeric inputs, including the separator space. */
 .rv-time-options {
   position: fixed;
   z-index: 1000;
   inset: auto;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  gap: var(--rv-time-options-gap, 0.25rem);
-  min-inline-size: 0;
-  padding: var(--rv-time-options-padding, 0.5rem);
+  grid-auto-columns: var(--_rv-time-column-width);
+  gap: var(--_rv-time-tray-gap);
+  inline-size: max-content;
+  padding: 0;
   background: var(
     --rv-time-options-bg,
-    var(--rv-datepicker-panel-bg, var(--rv-color-surface, light-dark(#ffffff, #18181b)))
+    var(--rv-color-surface, light-dark(#ffffff, #18181b))
   );
   border: 1px solid
-    var(--rv-time-options-border, var(--rv-color-border, light-dark(#d4d4d8, #3f3f46)));
+    var(--rv-time-options-border, var(--rv-color-border, light-dark(#e4e4e7, #3f3f46)));
   border-radius: var(--rv-time-options-radius, var(--rv-radius-md, 0.625rem));
   box-shadow: var(
     --rv-time-options-shadow,
-    var(--rv-shadow-md, 0 12px 32px light-dark(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.65)))
+    var(--rv-shadow-md, 0 8px 22px light-dark(rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0.4)))
   );
   direction: ltr;
 }
 
 .rv-time-option-column {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--rv-time-option-heading-gap, 0.25rem);
   min-inline-size: 0;
+  padding-block: calc(var(--rv-time-options-padding, 0.5rem) / 2);
+}
+
+.rv-time-option-column:not(:last-child)::after {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: calc(var(--_rv-time-tray-gap) / -2);
+  inline-size: 1px;
+  background: var(
+    --rv-time-options-divider,
+    var(--rv-color-border, light-dark(#e4e4e7, #3f3f46))
+  );
+  content: '';
 }
 
 .rv-time-option-heading {
@@ -259,19 +275,19 @@
   display: flex;
   flex-direction: column;
   max-block-size: var(--rv-time-options-max-height, 10rem);
+  max-block-size: min(var(--rv-time-options-max-height, 10rem), 30dvh);
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--rv-time-option-list-bg, var(--rv-color-surface, light-dark(#ffffff, #18181b)));
-  border: 1px solid
-    var(--rv-time-option-list-border, var(--rv-color-border, light-dark(#d4d4d8, #3f3f46)));
-  border-radius: var(--rv-time-option-list-radius, var(--rv-radius-md, 0.5rem));
-  scrollbar-width: thin;
+  background: var(--rv-time-option-list-bg, transparent);
+  border: 0;
+  border-radius: 0;
+  scrollbar-width: none;
 }
 
 .rv-time-option {
   flex: 0 0 auto;
   min-block-size: var(--rv-time-option-size, 1.75rem);
-  padding: var(--rv-time-option-padding, 0.25rem 0.375rem);
+  padding: var(--rv-time-option-padding, 0.25rem 0.2rem);
   color: var(
     --rv-time-option-fg,
     var(--rv-time-fg, var(--rv-color-text, light-dark(#111111, #f4f4f5)))

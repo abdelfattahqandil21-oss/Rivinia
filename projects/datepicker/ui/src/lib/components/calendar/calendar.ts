@@ -70,6 +70,17 @@ export class RiviniaCalendarComponent {
   protected readonly labels = computed(() => this.calendar().labels());
   protected readonly weekdays = computed(() => this.calendar().weekdays());
   protected readonly grid = computed(() => this.calendar().monthGrid());
+  protected readonly visibleWeeks = computed(() => {
+    const weeks = this.grid().weeks;
+    let end = weeks.length;
+    while (
+      end > 1 &&
+      !weeks[end - 1].cells.some((cell) => cell !== null && !cell.outside)
+    ) {
+      end--;
+    }
+    return weeks.slice(0, end);
+  });
   protected readonly months = computed(() => this.calendar().months());
   protected readonly years = computed(() => this.calendar().years());
   protected readonly heading = computed(() => this.calendar().heading());
@@ -140,6 +151,7 @@ export class RiviniaCalendarComponent {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
+    if (event.defaultPrevented || (event.target as Element | null)?.closest("[calendarEditor]")) return;
     const action = resolveCalendarKey({
       key: event.key,
       shiftKey: event.shiftKey,

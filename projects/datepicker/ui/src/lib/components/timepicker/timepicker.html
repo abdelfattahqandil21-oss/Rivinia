@@ -1,0 +1,42 @@
+<span class="rv-datepicker-field" (focusout)="onFocusOut($event)">
+  <button #trigger type="button" class="rv-datepicker-trigger rv-timepicker-trigger"
+    [disabled]="blocked()" aria-haspopup="dialog" [attr.aria-expanded]="opened()"
+    [attr.aria-controls]="opened() ? panelId : null"
+    [attr.aria-label]="label() ? label() + ': ' + text() : text()" (click)="toggle()">
+    <svg class="rv-datepicker-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.25" />
+      <path d="M8 4.75V8l2.25 1.5" fill="none" stroke="currentColor" stroke-width="1.25" />
+    </svg>
+    <span class="rv-timepicker-text">{{ text() }}</span>
+    <svg class="rv-datepicker-chevron" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="m3.5 6 4.5 4.5L12.5 6" fill="none" stroke="currentColor" stroke-width="1.5" />
+    </svg>
+  </button>
+</span>
+@if (opened()) {
+  <div #panel class="rv-datepicker-panel rv-timepicker-panel" [id]="panelId"
+    role="dialog" [attr.aria-label]="label() ?? effectiveLabels().chooseTime ?? effectiveLabels().chooseDateTime"
+    (keydown)="onPanelKeydown($event)" (focusout)="onFocusOut($event)">
+    <rv-time-row class="rv-picker-time-section" [value]="rowValue()" [locale]="effectiveLocale()" [labels]="effectiveLabels()"
+      [hour12]="effectiveHour12()" [showSeconds]="effectiveSeconds()" [minuteStep]="effectiveStep()"
+      [showActions]="false" (valueChange)="updateDraft($event)" (commit)="apply()" />
+    <div class="rv-datepicker-actions">
+      @if (effectiveClearable()) {
+        <button type="button" class="rv-datepicker-action rv-datepicker-clear-action"
+          [attr.aria-label]="effectiveLabels().clearDateTime"
+          [attr.data-tooltip]="effectiveLabels().clearDateTime"
+          [attr.aria-disabled]="draft() === null"
+          (click)="clear()">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M2.75 4.25h10.5M6 4.25v-1.5h4v1.5m2.25 0-.6 9H4.35l-.6-9m3 2.25v4.5m3.5-4.5v4.5"
+              fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" />
+          </svg>
+        </button>
+      }
+      <div class="rv-datepicker-actions-end">
+        <button type="button" class="rv-datepicker-action" (click)="cancel()">{{ effectiveLabels().cancel ?? 'Cancel' }}</button>
+        <button type="button" class="rv-datepicker-action rv-datepicker-ok" [disabled]="!canApply()" (click)="apply()">{{ effectiveLabels().ok }}</button>
+      </div>
+    </div>
+  </div>
+}

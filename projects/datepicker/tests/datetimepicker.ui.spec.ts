@@ -5,8 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   DATE_PICKER_CONFIG,
   RIVINIA_TIME_ZONE_RESOLVER,
-  nowInTimeZone,
-  todayInTimeZone,
 } from '../src/public-api';
 import type {
   RiviniaDate,
@@ -33,6 +31,18 @@ const dt = (
   time: t(hour, minute, second),
 });
 const TODAY = d(2026, 10, 25);
+
+describe('rv-datetimepicker — format hint', () => {
+  it('shows the active date format under the combined input', () => {
+    const mounted = mount({ format: 'yyyy-MM-dd' });
+    expect(mounted.el.querySelector('.rv-datepicker-format-hint')?.textContent?.trim()).toBe(
+      'YYYY-MM-DD',
+    );
+    expect(
+      mounted.el.querySelector('rv-date-segments')?.getAttribute('aria-describedby'),
+    ).toBe(mounted.el.querySelector('.rv-datepicker-format-hint')?.id);
+  });
+});
 
 @Component({
   selector: 'rv-datetime-host',
@@ -142,7 +152,7 @@ function mount(options: MountOptions = {}) {
   const minute = () => el.querySelector('.rv-time-minute') as HTMLInputElement | null;
   const second = () => el.querySelector('.rv-time-second') as HTMLInputElement | null;
   const ok = () => el.querySelector('.rv-datetimepicker-apply') as HTMLButtonElement | null;
-  const now = () => el.querySelector('.rv-datetimepicker-now') as HTMLButtonElement | null;
+  const cancel = () => el.querySelector('.rv-datetimepicker-cancel') as HTMLButtonElement | null;
   const meridiem = (period: 'am' | 'pm' | number) => {
     const buttons = el.querySelectorAll('.rv-time-meridiem-button');
     return (typeof period === 'number' ? buttons[period] : buttons[period === 'am' ? 0 : 1]) as
@@ -171,7 +181,7 @@ function mount(options: MountOptions = {}) {
     minute,
     second,
     ok,
-    now,
+    cancel,
     meridiem,
     timeToggle,
     timeOptions,
@@ -429,8 +439,8 @@ describe('rv-datetimepicker — the pointer-friendly time tray', () => {
     view.fixture.detectChanges();
 
     const tray = view.timeOptions()!;
-    // Tabbing from the clock button must reach the tray before the meridiem
-    // and the actions; the old markup put the tray last.
+    // Tab reaches the meridiem before the clock and then enters the tray.
+    expect(toggle.previousElementSibling?.classList.contains('rv-time-meridiem')).toBe(true);
     expect(toggle.nextElementSibling).toBe(tray);
 
     for (const name of ['Hour', 'Minute', 'Second']) {
@@ -659,38 +669,51 @@ describe('rv-datetimepicker — closing, clearing and focus', () => {
     expect(view.host.value()).toEqual(dt(2026, 10, 25, 15, 30));
   });
 
-  it('clears the committed date-time value immediately from the panel', () => {
+  it('clears the committed date-time value after OK from the panel', () => {
     const view = mount({ value: dt(2026, 10, 25, 15, 30), clearable: true, label: 'Appointment' });
     view.open();
     const clear = view.panel()?.querySelector('.rv-datetimepicker-clear') as HTMLButtonElement;
     expect(clear.getAttribute('aria-label')).toBe('Appointment: Clear date and time');
+    expect(clear.textContent?.trim()).toBe('');
+    expect(clear.querySelector('svg')).not.toBeNull();
+    expect(clear.dataset['tooltip']).toBe('Clear date and time');
     clear.click();
     view.fixture.detectChanges();
 
+    expect(view.host.value()).not.toBeNull();
+    (view.el.querySelector('.rv-datetimepicker-ok') as HTMLButtonElement).click();
+    view.fixture.detectChanges();
     expect(view.host.value()).toBeNull();
     expect(view.triggerText()).toBe('Choose date and time');
     expect(document.activeElement).toBe(view.trigger);
     expect(view.host.touches).toBe(1);
   });
 
-  it('Now moves the draft to today in the zone; OK commits it', () => {
-    const before = nowInTimeZone('Africa/Cairo');
-    const view = mount({
-      value: dt(2020, 1, 1, 0, 0),
-      timeZone: 'Africa/Cairo',
-      locale: 'en-GB',
-    });
+  it('shows Cancel and OK and discards date-time edits on Cancel', () => {
+    const initial = dt(2026, 10, 25, 15, 30);
+    const view = mount({ value: initial });
     view.open();
-    view.now()?.click();
+    expect(view.cancel()?.textContent?.trim()).toBe('Cancel');
+    expect(view.ok()?.textContent?.trim()).toBe('OK');
+    keydown(view.hour()!, 'ArrowUp');
     view.fixture.detectChanges();
-    keydown(view.hour()!, 'Enter');
+    view.cancel()?.click();
     view.fixture.detectChanges();
 
-    const after = nowInTimeZone('Africa/Cairo');
-    const value = view.host.value();
-    expect(value).not.toBeNull();
-    expect([before.date, after.date, todayInTimeZone('Africa/Cairo')]).toContainEqual(value?.date);
     expect(view.panel()).toBeNull();
+    expect(view.host.value()).toEqual(initial);
+    view.open();
+    expect(view.hour()?.value).toBe('03');
+    expect(view.minute()?.value).toBe('30');
+  });
+
+  it('keeps only Clear, Cancel and OK in the panel footer', () => {
+    const view = mount({ value: dt(2020, 1, 1, 0, 0), clearable: true });
+    const panel = view.open()!;
+    expect(panel.querySelector('.rv-datetimepicker-now')).toBeNull();
+    expect(panel.querySelector('.rv-datetimepicker-clear')).not.toBeNull();
+    expect(view.cancel()?.textContent?.trim()).toBe('Cancel');
+    expect(view.ok()?.textContent?.trim()).toBe('OK');
   });
 });
 

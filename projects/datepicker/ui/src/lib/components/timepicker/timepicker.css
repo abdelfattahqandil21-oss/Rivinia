@@ -1,0 +1,32 @@
+:host {
+  inline-size: var(--rv-timepicker-width, 11rem);
+}
+
+.rv-timepicker-trigger {
+  inline-size: 100%;
+  gap: var(--rv-space-2, 0.5rem);
+  padding-inline: 0.75rem;
+}
+
+.rv-timepicker-text {
+  flex: 1;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.rv-timepicker-panel.rv-datepicker-panel {
+  position-anchor: auto;
+  position-area: none;
+  position-try-fallbacks: none;
+  inline-size: var(--rv-timepicker-panel-width, 20rem);
+  max-inline-size: calc(100vw - 1rem);
+}
+
+.rv-timepicker-panel .rv-picker-time-section {
+  margin-block: 0 var(--rv-space-2, 0.5rem);
+}
+
+.rv-timepicker-panel [aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: default;
+}

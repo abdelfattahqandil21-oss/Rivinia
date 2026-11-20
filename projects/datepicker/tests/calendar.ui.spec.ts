@@ -124,10 +124,11 @@ describe('rv-calendar — the grid', () => {
     expect(headers[0].textContent?.trim()).toBe('S');
   });
 
-  it('renders 42 dates with muted, selectable neighbouring days', () => {
-    expect(mounted.el.querySelectorAll('tbody td')).toHaveLength(42);
-    expect(mounted.cells()).toHaveLength(42);
-    expect(mounted.el.querySelectorAll('.rv-calendar-day--outside')).toHaveLength(11);
+  it('renders only needed weeks with muted, selectable neighbouring days', () => {
+    expect(mounted.el.querySelectorAll('tbody tr')).toHaveLength(5);
+    expect(mounted.el.querySelectorAll('tbody td')).toHaveLength(35);
+    expect(mounted.cells()).toHaveLength(35);
+    expect(mounted.el.querySelectorAll('.rv-calendar-day--outside')).toHaveLength(4);
     const first = mounted.cells()[0];
     expect(first.classList.contains('rv-calendar-day--outside')).toBe(true);
     expect(first.getAttribute('aria-disabled')).toBeNull();

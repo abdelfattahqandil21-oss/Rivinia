@@ -1,4 +1,5 @@
 <div
+  #timeRow
   class="rv-time-row"
   role="group"
   [attr.aria-label]="labels().time"
@@ -70,6 +71,29 @@
       />
     }
   </div>
+
+  @if (effectiveHour12()) {
+    <div class="rv-time-meridiem" role="group" [attr.aria-label]="labels().meridiem">
+      <button
+        type="button"
+        class="rv-time-meridiem-button"
+        [attr.aria-pressed]="meridiem() === 'am'"
+        [disabled]="disabled()"
+        (click)="setMeridiem('am')"
+      >
+        {{ periods().am }}
+      </button>
+      <button
+        type="button"
+        class="rv-time-meridiem-button"
+        [attr.aria-pressed]="meridiem() === 'pm'"
+        [disabled]="disabled()"
+        (click)="setMeridiem('pm')"
+      >
+        {{ periods().pm }}
+      </button>
+    </div>
+  }
 
   <button
     #timeToggle
@@ -177,29 +201,6 @@
           </div>
         </div>
       }
-    </div>
-  }
-
-  @if (effectiveHour12()) {
-    <div class="rv-time-meridiem" role="group" [attr.aria-label]="labels().meridiem">
-      <button
-        type="button"
-        class="rv-time-meridiem-button"
-        [attr.aria-pressed]="meridiem() === 'am'"
-        [disabled]="disabled()"
-        (click)="setMeridiem('am')"
-      >
-        {{ periods().am }}
-      </button>
-      <button
-        type="button"
-        class="rv-time-meridiem-button"
-        [attr.aria-pressed]="meridiem() === 'pm'"
-        [disabled]="disabled()"
-        (click)="setMeridiem('pm')"
-      >
-        {{ periods().pm }}
-      </button>
     </div>
   }
 

@@ -140,12 +140,15 @@ describe('rv-datepicker — reactive forms', () => {
     expect(triggerText(el)).toBe('Choose date');
   });
 
-  it('Clear empties the control immediately and marks it touched', () => {
+  it('Clear empties the control after OK and marks it touched', () => {
     host.control.setValue(d(2026, 3, 15));
     fixture.detectChanges();
 
     openPanel(fixture, el);
     (el.querySelector('.rv-datepicker-clear-action') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(host.control.value).not.toBeNull();
+    (el.querySelector('.rv-datepicker-ok') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(host.control.value).toBeNull();
     expect(host.control.touched).toBe(true);

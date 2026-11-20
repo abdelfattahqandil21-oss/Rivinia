@@ -95,6 +95,8 @@ export interface RiviniaDatepickerLabels {
   readonly meridiem: string;
   readonly now: string;
   readonly ok: string;
+  /** Label of the action that discards a panel draft. */
+  readonly cancel?: string;
   /** Optional panel action labels; older complete label objects remain valid. */
   readonly today?: string;
   readonly apply?: string;
@@ -129,6 +131,7 @@ export const DATEPICKER_LABELS_EN: RiviniaDatepickerLabels = {
   meridiem: 'AM or PM',
   now: 'Now',
   ok: 'OK',
+  cancel: 'Cancel',
   today: 'Today',
   apply: 'Apply',
   clear: 'Clear',
@@ -163,6 +166,7 @@ export const DATEPICKER_LABELS_AR: RiviniaDatepickerLabels = {
   meridiem: 'صباحًا أو مساءً',
   now: 'الآن',
   ok: 'موافق',
+  cancel: 'إلغاء',
   today: 'اليوم',
   apply: 'تطبيق',
   clear: 'مسح',
