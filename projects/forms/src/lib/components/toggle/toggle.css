@@ -1,0 +1,38 @@
+.switch input {
+  appearance: none;
+  box-sizing: border-box;
+  display: grid;
+  align-items: center;
+  inline-size: 2.5rem;
+  block-size: 1.45rem;
+  padding: .16rem;
+  border: 1px solid var(--rv-color-border, GrayText);
+  border-radius: 999px;
+  background: var(--rv-switch-track, var(--rv-color-surface, Canvas));
+  transition: background-color 160ms, border-color 160ms;
+}
+.switch input::before {
+  content: '';
+  border-radius: 50%;
+  inline-size: 1rem;
+  block-size: 1rem;
+  background: var(--rv-color-text-muted, GrayText);
+  transition: translate 160ms ease;
+}
+.switch input:checked {
+  background: var(--rv-choice-accent, var(--rv-color-primary, Highlight));
+  border-color: transparent;
+}
+.switch input:checked::before {
+  background: var(--rv-color-on-primary, HighlightText);
+  translate: 1rem 0;
+}
+.switch:dir(rtl) input:checked::before { translate: -1rem 0; }
+
+@media (forced-colors: active) {
+  .switch input { appearance: auto; inline-size: 1.1rem; block-size: 1.1rem; }
+  .switch input::before { content: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .switch input, .switch input::before { transition: none; }
+}

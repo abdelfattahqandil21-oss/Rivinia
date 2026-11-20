@@ -1,0 +1,17 @@
+<label class="rv-choice" [class.disabled]="disabled()" [class.switch]="variant() === 'switch'">
+  <input
+    #editor
+    type="checkbox"
+    [attr.role]="variant() === 'switch' ? 'switch' : null"
+    [attr.name]="name() || null"
+    [checked]="checked()"
+    [disabled]="disabled()"
+    [required]="required()"
+    [indeterminate]="variant() === 'checkbox' && indeterminate()"
+    [attr.aria-invalid]="invalid() ? 'true' : null"
+    [attr.aria-describedby]="describedBy() || null"
+    (change)="checked.set(editor.checked)"
+    (blur)="touch.emit()"
+  />
+  <span>{{ label() }}</span>
+</label>

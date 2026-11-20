@@ -1,0 +1,57 @@
+@let floating = variant() === 'minimal';
+@let customIcon = icon();
+@let defaultIcon = customIcon === undefined
+  ? (type() === 'email' ? 'mail' : type() === 'search' ? 'search' : null)
+  : null;
+@let canClear = clearable() && !disabled() && !readonly() && !!value();
+
+<rv-form-field [controlId]="controlId()" [description]="description()" [hint]="hint()"
+  [error]="error()" [pending]="pendingText()" [warning]="warning()" [success]="success()"
+  [reserveMessageSpace]="reserveMessageSpace()">
+  @if (!floating) {
+    <label [attr.for]="controlId()">{{ label() }}</label>
+  }
+
+  <div [class.rv-floating-field]="floating" [class.rv-icon-field]="!!customIcon || !!defaultIcon" [class.has-clear]="canClear">
+    @if (customIcon) {
+      <span class="rv-input-icon" aria-hidden="true"
+        ><ng-container [ngTemplateOutlet]="customIcon"
+      /></span>
+    } @else if (defaultIcon) {
+      <rv-input-icon [name]="defaultIcon" />
+    }
+    <input
+      #editor
+      rvInput
+      [rvInputVariant]="variant()"
+      [id]="controlId()"
+      [attr.name]="name() || null"
+      [type]="type()"
+      [attr.autocomplete]="autocomplete() || null"
+      [attr.autocapitalize]="autocapitalize() || null"
+      [placeholder]="floating ? ' ' : placeholder()"
+      [value]="value()"
+      [required]="required()"
+      [disabled]="disabled()"
+      [readOnly]="readonly()"
+      [attr.aria-describedby]="descriptionIds()"
+      [attr.aria-invalid]="invalid() || error() ? 'true' : null"
+      (input)="edit(editor, $event)"
+      (compositionend)="value.set(editor.value)"
+    />
+    @if (floating) {
+      <label [attr.for]="controlId()">{{ label() }}</label>
+    }
+    @if (canClear) {
+      <button class="clear" type="button" [attr.aria-label]="clearLabel()" (click)="clear()">
+        @if (clearIcon(); as customClear) {
+          <span aria-hidden="true"><ng-container [ngTemplateOutlet]="customClear" /></span>
+        } @else {
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m7 7 10 10M17 7 7 17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        }
+      </button>
+    }
+  </div>
+</rv-form-field>

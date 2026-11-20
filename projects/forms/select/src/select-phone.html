@@ -1,0 +1,22 @@
+<rv-phone-field [controlId]="controlId()" [name]="name()" [label]="label()" [hint]="hint()"
+  [error]="error()" [describedBy]="describedBy()" [autocomplete]="autocomplete()"
+  [icon]="icon()" [disabled]="disabled()" [readonly]="readonly()" [required]="required()"
+  [invalid]="invalid()" [countrySelect]="options().length ? countryPicker : undefined"
+  [(value)]="value" (touch)="touch.emit()" />
+
+<ng-template #countryPicker let-disabled="disabled">
+  <rv-select [ariaLabel]="countryLabel()" [placeholder]="countryPlaceholder()" [options]="options()"
+    [optionTemplate]="countryRow" [disabled]="disabled" [value]="country()" (valueChange)="select($event)" />
+</ng-template>
+
+<ng-template #countryRow let-option>
+  <span class="country-option">
+    <span class="country-copy">
+      <strong class="dial-code">{{ option.label }}</strong>
+      <span class="country-name">{{ option.hint }}</span>
+    </span>
+    @if (country() === option.id) {
+      <span class="country-check" aria-hidden="true">✓</span>
+    }
+  </span>
+</ng-template>

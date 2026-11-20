@@ -1,0 +1,22 @@
+@let floating = variant() === 'minimal';
+
+@if (!floating) {
+  <label [attr.for]="controlId()">{{ label() }}</label>
+}
+<div [class.rv-floating-field]="floating">
+  <textarea #editor rvInput [rvInputVariant]="variant()" [id]="controlId()"
+    [attr.name]="name() || null" [rows]="minimumRows()" [class.auto-grow]="autoGrow()"
+    [style.--_rv-textarea-min-rows]="minimumRows()" [style.--_rv-textarea-max-rows]="maximumRows()" [attr.maxlength]="maxLength() ?? null"
+    [placeholder]="floating ? ' ' : placeholder()" [value]="value()"
+    [required]="required()" [disabled]="disabled()" [readOnly]="readonly()"
+    [attr.aria-describedby]="description()" [attr.aria-invalid]="invalid() ? 'true' : null"
+    (input)="edit(editor, $event)" (compositionend)="value.set(editor.value)" (blur)="touch.emit()"></textarea>
+  @if (floating) {
+    <label [attr.for]="controlId()">{{ label() }}</label>
+  }
+</div>
+@if (showCount()) {
+  <p class="count" [id]="controlId() + '-count'">
+    <span class="sr-only">{{ countLabel() }}: </span>{{ count() }}@if (maxLength() !== undefined) { / {{ maxLength() }} }
+  </p>
+}

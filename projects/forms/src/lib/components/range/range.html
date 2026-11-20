@@ -1,0 +1,22 @@
+<div class="heading">
+  <label [attr.for]="controlId()">{{ label() }}</label>
+  @if (showValue()) {
+    <span class="value" aria-hidden="true">{{ valueText() || value() }}</span>
+  }
+</div>
+<input
+  #slider
+  type="range"
+  [id]="controlId()"
+  [attr.name]="name() || null"
+  [min]="min() ?? 0"
+  [max]="max() ?? 100"
+  [step]="step()"
+  [value]="value()"
+  [disabled]="disabled()"
+  [attr.aria-valuetext]="valueText() || null"
+  [attr.aria-invalid]="invalid() ? 'true' : null"
+  [attr.aria-describedby]="describedBy() || null"
+  (input)="value.set(slider.valueAsNumber)"
+  (blur)="touch.emit()"
+/>

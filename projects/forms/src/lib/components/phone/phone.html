@@ -1,0 +1,47 @@
+<rv-form-field [controlId]="controlId()" [label]="label()" [hint]="hint()" [error]="error()">
+  <div class="phone" [class.with-country]="!!(countrySelect() || countries().length)" [class.rv-input-surface]="!!(countrySelect() || countries().length)" [class.invalid]="invalid() || !!error()" dir="ltr">
+    @if (countrySelect(); as selector) {
+      <div class="rv-field-select leading">
+        <ng-container [ngTemplateOutlet]="selector" [ngTemplateOutletContext]="{ disabled: disabled() || readonly() }" />
+      </div>
+    } @else if (countries().length) {
+      <select #regions [attr.aria-label]="countryLabel()"
+        [disabled]="disabled() || readonly()" (change)="country.set(regions.value)">
+        <option value="" [selected]="!hasCountry()">—</option>
+        @for (option of countries(); track option.code) {
+          <option [value]="option.code" [selected]="country() === option.code">
+            {{ option.label }} ({{ option.dialCode }})
+          </option>
+        }
+      </select>
+    }
+    <div dir="ltr" [class.rv-icon-field]="icon() !== null">
+    @if (icon(); as custom) {
+      <span class="rv-input-icon" aria-hidden="true" dir="ltr"
+        ><ng-container [ngTemplateOutlet]="custom"
+      /></span>
+    } @else if (icon() !== null) {
+      <rv-input-icon name="phone" />
+    }
+    <input
+      [class.rv-input]="!countrySelect() && !countries().length"
+      #editor
+      type="tel"
+      inputmode="tel"
+      dir="ltr"
+      [id]="controlId()"
+      [name]="name()"
+      [autocomplete]="autocomplete()"
+      [value]="value()"
+      [disabled]="disabled()"
+      [readOnly]="readonly()"
+      [required]="required()"
+      [attr.aria-describedby]="descriptionIds()"
+      [attr.aria-invalid]="invalid() || error() ? 'true' : null"
+      (input)="onInput(editor, $event)"
+      (compositionend)="value.set(editor.value)"
+
+    />
+  </div>
+  </div>
+</rv-form-field>

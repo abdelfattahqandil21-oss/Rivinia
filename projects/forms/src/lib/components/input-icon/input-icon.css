@@ -1,0 +1,5 @@
+svg {
+  display: block;
+  inline-size: var(--rv-input-icon-size, 1.125rem);
+  block-size: var(--rv-input-icon-size, 1.125rem);
+}

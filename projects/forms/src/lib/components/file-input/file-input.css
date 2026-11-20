@@ -1,0 +1,153 @@
+:host { display: grid; gap: .45rem; min-inline-size: 0; }
+label { font-weight: 650; }
+input {
+  box-sizing: border-box; inline-size: 100%; min-inline-size: 0; padding: .35rem;
+  border: 1px solid var(--rv-input-border, var(--rv-color-border, GrayText));
+  border-radius: var(--rv-input-radius, .65rem);
+  background: var(--rv-input-surface, var(--rv-color-surface, Canvas)); color: inherit; font: inherit;
+}
+input::file-selector-button, button {
+  border: 0; border-radius: .4rem; min-block-size: 2rem; padding-inline: .65rem;
+  background: var(--rv-color-primary, Highlight); color: var(--rv-color-on-primary, HighlightText);
+  font: inherit; cursor: pointer;
+}
+input::file-selector-button { margin-inline-end: .55rem; }
+input:disabled::file-selector-button, button:disabled { opacity: .55; cursor: default; }
+input:focus-visible, button:focus-visible { outline: 2px solid var(--rv-color-focus, Highlight); outline-offset: 2px; }
+ul { display: grid; gap: .4rem; list-style: none; padding: 0; margin: 0; }
+li { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+li span { min-inline-size: 0; overflow-wrap: anywhere; }
+
+.dropzone {
+  display: grid;
+  gap: .55rem;
+  padding: .85rem;
+  border: 1px dashed var(--rv-input-border, var(--rv-color-border, GrayText));
+  border-radius: var(--rv-input-radius, .65rem);
+  background: var(--rv-dropzone-surface, var(--rv-color-surface, Canvas));
+  transition: border-color 160ms, background-color 160ms;
+}
+.dropzone p { margin: 0; color: var(--rv-color-text-muted, CanvasText); }
+.dropzone.dragging {
+  border-color: var(--rv-color-focus, Highlight);
+  background: var(--rv-dropzone-active-surface, color-mix(in srgb, var(--rv-color-focus, Highlight) 12%, Canvas));
+}
+@media (prefers-reduced-motion: reduce) { .dropzone { transition: none; } }
+
+.file-details { display: flex; min-inline-size: 0; align-items: center; gap: .6rem; }
+.file-details img {
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  object-fit: cover;
+  border-radius: .4rem;
+  background: var(--rv-input-surface, var(--rv-color-surface, Canvas));
+  flex: none;
+}
+
+.visually-hidden {
+  position: absolute; inline-size: 1px; block-size: 1px; padding: 0; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+.dropzone { position: relative; text-align: center; }
+.dropzone:focus-within { outline: 2px solid var(--rv-color-focus, Highlight); outline-offset: -2px; }
+.drop-action {
+  display: grid; justify-items: center; align-content: center; gap: .55rem;
+  padding: .55rem; min-block-size: 4rem; cursor: pointer;
+}
+.blocked .drop-action { cursor: default; color: GrayText; }
+.upload-icon {
+  display: grid; place-items: center; inline-size: 2.5rem; block-size: 2.5rem;
+  border-radius: .65rem; color: var(--rv-color-primary, Highlight);
+  background: color-mix(in srgb, currentColor 9%, var(--rv-color-surface, Canvas));
+}
+.upload-icon svg, .action-icon svg { inline-size: 1.25rem; block-size: 1.25rem; vertical-align: middle; }
+.hint { margin: 0; font-size: .84em; color: var(--rv-color-text-muted, CanvasText); }
+.image-zone .drop-action { min-block-size: var(--rv-image-input-preview-height, 9rem); }
+.hero {
+  inline-size: 100%; max-inline-size: 22rem; block-size: var(--rv-image-input-preview-height, 9rem);
+  object-fit: var(--rv-image-input-fit, contain); border-radius: .45rem;
+  background: var(--rv-input-surface, Canvas);
+}
+li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; padding: .6rem;
+  border: 1px solid var(--rv-color-border, GrayText); border-radius: .6rem;
+}
+li.failed { border-color: var(--rv-color-danger, #a02e25); }
+li progress { grid-column: 1 / -1; inline-size: 100%; accent-color: var(--rv-color-primary, Highlight); }
+.file-copy { display: grid; gap: .2rem; }
+.file-copy strong { overflow-wrap: anywhere; font-size: .9em; }
+.retry { grid-column: 1 / -1; justify-self: start; }
+
+ul.gallery {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+  gap: .7rem;
+}
+.gallery li { align-content: start; align-items: center; gap: .45rem; padding: .45rem; }
+.gallery .tile-preview {
+  grid-column: 1 / -1;
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 4 / 3;
+  min-block-size: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: .4rem;
+  background: var(--rv-input-surface, Canvas);
+}
+.gallery .tile-preview img, img.tile-preview { inline-size: 100%; block-size: 100%; object-fit: cover; }
+.gallery .file-copy strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gallery .file-copy { display: block; min-inline-size: 0; }
+.view-link { grid-column: 1 / -1; justify-self: start; }
+dialog {
+  box-sizing: border-box;
+  inline-size: min(44rem, calc(100% - 1.25rem));
+  max-block-size: calc(100% - 1.25rem);
+  padding: .85rem;
+  border: 1px solid var(--rv-color-border, GrayText);
+  border-radius: .8rem;
+  background: var(--rv-color-surface, Canvas);
+  color: var(--rv-color-text, CanvasText);
+}
+dialog::backdrop { background: rgb(18 24 23 / .72); }
+.viewer-header, .viewer-nav { display: flex; align-items: center; justify-content: space-between; gap: .55rem; }
+.viewer-header strong { min-inline-size: 0; overflow-wrap: anywhere; }
+.viewer-image { display: block; inline-size: 100%; block-size: min(58dvh, 30rem); object-fit: contain; margin-block: .75rem; }
+
+.viewer-action {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--rv-color-border, GrayText);
+  background: var(--rv-color-surface, Canvas);
+  color: var(--rv-color-text, CanvasText);
+}
+.viewer-action svg {
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.viewer-action:dir(rtl) .direction-icon { transform: scaleX(-1); }
+.viewer-action:not(:disabled):is(:hover, :focus-visible)::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  z-index: 1;
+  inset-inline-end: 0;
+  inset-block-start: calc(100% + .35rem);
+  padding: .25rem .5rem;
+  border-radius: .35rem;
+  background: var(--rv-color-text, CanvasText);
+  color: var(--rv-color-surface, Canvas);
+  font-size: .75rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.viewer-nav .viewer-action::after { inset-block: auto calc(100% + .35rem); }
+.viewer-nav .viewer-action:first-child::after { inset-inline: 0 auto; }

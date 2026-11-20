@@ -1,0 +1,24 @@
+<fieldset
+  [disabled]="disabled()"
+  [attr.aria-describedby]="describedBy() || null"
+  [attr.aria-invalid]="invalid() ? 'true' : null"
+>
+  <legend>{{ label() }}</legend>
+  <div class="options" [class.inline]="variant() === 'inline'">
+    @for (option of options(); track option.value) {
+      <label class="rv-choice" [class.disabled]="disabled() || option.disabled">
+        <input
+          #editor
+          type="radio"
+          [name]="name()"
+          [value]="option.value"
+          [checked]="value() === option.value"
+          [disabled]="disabled() || !!option.disabled"
+          [required]="required()"
+          (change)="value.set(option.value)"
+        />
+        <span>{{ option.label }}</span>
+      </label>
+    }
+  </div>
+</fieldset>

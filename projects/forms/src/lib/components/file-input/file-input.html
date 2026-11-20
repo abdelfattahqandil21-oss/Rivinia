@@ -1,0 +1,106 @@
+<label class="field-label" [attr.for]="controlId()" [id]="controlId() + '-label'">{{ label() }}</label>
+<div [class.dropzone]="variant() === 'dropzone'" [class.dragging]="dragging()"
+  [class.image-zone]="previewLayout() === 'image'" [class.blocked]="blocked()"
+  (dragover)="variant() === 'dropzone' && dragOver($event)"
+  (dragleave)="variant() === 'dropzone' && dragLeave($event)"
+  (drop)="variant() === 'dropzone' && drop($event)">
+  <input #picker type="file" [id]="controlId()" [accept]="accept()" [multiple]="multiple()"
+    [class.visually-hidden]="variant() === 'dropzone'" [disabled]="blocked()"
+    [attr.aria-labelledby]="controlId() + '-label'" [attr.aria-required]="required() ? 'true' : null"
+    [attr.aria-invalid]="invalid() ? 'true' : null" [attr.aria-describedby]="descriptions()"
+    (change)="select(picker)" />
+  @if (variant() === 'dropzone') {
+    <label class="drop-action" [attr.for]="controlId()">
+      @if (previewLayout() === 'image' && files()[0] && previews().get(files()[0]); as image) {
+        <img class="hero" [src]="image" alt="" />
+      }
+      <span class="upload-icon" aria-hidden="true">
+        @if (uploadIcon(); as custom) {
+          <ng-container [ngTemplateOutlet]="custom" />
+        } @else {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 16a4 4 0 0 1 1-7.9 6 6 0 0 1 11.5.9A3.5 3.5 0 0 1 19 16M12 20v-8m-3 3 3-3 3 3" />
+          </svg>
+        }
+      </span>
+      <strong>{{ chooseLabel() }}</strong>
+    </label>
+    @if (dropHint()) { <p [id]="controlId() + '-drop-hint'">{{ dropHint() }}</p> }
+  }
+</div>
+@if (hint()) { <p class="hint" [id]="controlId() + '-file-hint'">{{ hint() }}</p> }
+@if (files().length) {
+  <ul [class.gallery]="previewLayout() === 'gallery'">
+    @for (file of files(); track $index) {
+      @let upload = uploadStates()?.get(file);
+      <li [class.failed]="upload?.state === 'failed'">
+        @if (previewLayout() === 'gallery' && previews().get(file); as image) {
+          @if (viewer() !== 'none') {
+            <button type="button" class="tile-preview" [attr.aria-label]="viewLabel() + ' ' + file.name"
+              (click)="openView(file)">
+              <img [src]="image" alt="" loading="lazy" />
+            </button>
+          } @else {
+            <img class="tile-preview" [src]="image" alt="" loading="lazy" />
+          }
+        }
+        <span class="file-details">
+          @if (previewLayout() === 'thumbnail' && previews().get(file); as thumbnail) {
+            <img [src]="thumbnail" alt="" loading="lazy" />
+          }
+          <span class="file-copy">
+            <strong>{{ file.name }}</strong>
+            <span class="hint">{{ sizeLabel(file.size) }}@if (upload) {
+              · {{ upload.message || (upload.state === 'uploading' ? 'Uploading' : upload.state === 'complete' ? 'Complete' : 'Failed') }}
+            }</span>
+          </span>
+        </span>
+        <button type="button" [disabled]="blocked()" [attr.aria-label]="removeLabel() + ' ' + file.name"
+          (click)="remove($index)">
+          @if (removeIcon(); as custom) { <span class="action-icon" aria-hidden="true"><ng-container [ngTemplateOutlet]="custom" /></span> }
+          @else { {{ removeLabel() }} }
+        </button>
+        @if (previewLayout() !== 'gallery' && viewer() !== 'none' && previews().has(file)) {
+          <button type="button" class="view-link" [attr.aria-label]="viewLabel() + ' ' + file.name"
+            (click)="openView(file)">{{ viewLabel() }}</button>
+        }
+        @if (upload?.state === 'uploading' && upload) {
+          <progress [attr.aria-label]="'Upload progress for ' + file.name" max="100" [attr.value]="progress(upload)"></progress>
+        }
+        @if (upload?.state === 'failed' && retryLabel()) {
+          <button class="retry" type="button" [disabled]="blocked()" (click)="retry.emit(file)">{{ retryLabel() }}</button>
+        }
+      </li>
+    }
+  </ul>
+}
+
+
+
+@if (viewer() === 'dialog') {
+  <dialog #imageDialog [attr.aria-labelledby]="controlId() + '-viewer-title'" (close)="viewedFile.set(null)">
+    <div class="viewer-header">
+      <strong [id]="controlId() + '-viewer-title'">{{ viewedFile()?.name || viewLabel() }}</strong>
+      <button type="button" class="viewer-action" autofocus [attr.aria-label]="closeViewLabel()"
+        [attr.data-tooltip]="closeViewLabel()" (click)="imageDialog.close()">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18" /></svg>
+      </button>
+    </div>
+    @if (viewedUrl(); as image) {
+      <img class="viewer-image" [src]="image" [alt]="viewedFile()?.name || ''" />
+    }
+    @if (viewableFiles().length > 1) {
+      <div class="viewer-nav">
+        <button type="button" class="viewer-action" [disabled]="viewingIndex() <= 0"
+          [attr.aria-label]="previousViewLabel()" [attr.data-tooltip]="previousViewLabel()" (click)="moveView(-1)">
+          <svg class="direction-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 6-6 6 6 6" /></svg>
+        </button>
+        <span aria-live="polite">{{ viewingIndex() + 1 }} / {{ viewableFiles().length }}</span>
+        <button type="button" class="viewer-action" [disabled]="viewingIndex() >= viewableFiles().length - 1"
+          [attr.aria-label]="nextViewLabel()" [attr.data-tooltip]="nextViewLabel()" (click)="moveView(1)">
+          <svg class="direction-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 6 6 6-6 6" /></svg>
+        </button>
+      </div>
+    }
+  </dialog>
+}

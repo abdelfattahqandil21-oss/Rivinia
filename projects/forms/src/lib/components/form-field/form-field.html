@@ -1,0 +1,13 @@
+@if (label()) {
+  <label [attr.for]="controlId()">{{ label() }}</label>
+}
+<ng-content />
+@if (description()) {
+  <p [id]="controlId() + '-description'">{{ description() }}</p>
+}
+@if (message(); as feedback) {
+  <p class="rv-field-message" [class.rv-field-error]="feedback.kind === 'error'" [attr.data-kind]="feedback.kind"
+    [id]="controlId() + '-message'">{{ feedback.text }}</p>
+} @else if (reserveMessageSpace()) {
+  <div class="rv-field-spacer" aria-hidden="true"></div>
+}

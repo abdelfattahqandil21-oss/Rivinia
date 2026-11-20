@@ -1,0 +1,46 @@
+@let leading = prefix() || selectedCurrency()?.symbol;
+@let adorned = !!(leading || suffix() || showSteppers() || currencySelect() || currencies().length);
+<div [class.amount-control]="adorned" [class.rv-input-surface]="adorned"
+  [class.invalid]="adorned && (invalid() || rejected())">
+  @if (leading) { <span class="unit">{{ leading }}</span> }
+  <input
+  [class.rv-input]="!adorned"
+  #editor
+  type="text"
+  inputmode="decimal"
+  [id]="controlId()"
+  [name]="name()"
+  [value]="draft()"
+  [disabled]="disabled()"
+  [readOnly]="readonly()"
+  [required]="required()"
+  [attr.aria-describedby]="describedBy() || null"
+  [attr.aria-invalid]="invalid() || rejected() ? 'true' : null"
+  (input)="edit(editor.value)"
+  (blur)="finish()"
+  (keydown.enter)="finish()"
+  (keydown.escape)="cancel($event)"
+  (compositionstart)="composing = true"
+  (compositionend)="endComposition(editor.value)"
+/>
+  @if (suffix()) { <span class="unit">{{ suffix() }}</span> }
+  @if (showSteppers()) {
+    <span class="steppers">
+      <button type="button" [disabled]="!canStep()" [attr.aria-label]="decrementLabel()" (click)="stepBy(-1)">−</button>
+      <button type="button" [disabled]="!canStep()" [attr.aria-label]="incrementLabel()" (click)="stepBy(1)">+</button>
+    </span>
+  }
+  @if (currencySelect(); as selector) {
+    <div class="rv-field-select trailing">
+      <ng-container [ngTemplateOutlet]="selector" [ngTemplateOutletContext]="{ disabled: disabled() || readonly() }" />
+    </div>
+  } @else if (currencies().length) {
+    <select #codes class="currency" [attr.aria-label]="currencyLabel()"
+      [disabled]="readonly() || disabled()" (change)="currency.set(codes.value)">
+      <option value="" [selected]="!selectedCurrency()">—</option>
+      @for (option of currencies(); track option.code) {
+        <option [value]="option.code" [selected]="currency() === option.code">{{ option.code }}</option>
+      }
+    </select>
+  }
+</div>

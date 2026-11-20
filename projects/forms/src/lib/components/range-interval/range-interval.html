@@ -1,0 +1,29 @@
+<fieldset [disabled]="disabled()" [attr.aria-invalid]="invalid() ? 'true' : null">
+  <legend>{{ label() }}</legend>
+  <label>
+    <span>{{ lowerLabel() }}</span
+    ><span class="value" aria-hidden="true">{{ value()[0] }}</span>
+    <input
+      #lower
+      type="range"
+      [min]="lowerBound()"
+      [max]="upperBound()"
+      [step]="step()"
+      [value]="value()[0]"
+      (input)="move(0, lower)"
+    />
+  </label>
+  <label>
+    <span>{{ upperLabel() }}</span
+    ><span class="value" aria-hidden="true">{{ value()[1] }}</span>
+    <input
+      #upper
+      type="range"
+      [min]="lowerBound()"
+      [max]="upperBound()"
+      [step]="step()"
+      [value]="value()[1]"
+      (input)="move(1, upper)"
+    />
+  </label>
+</fieldset>

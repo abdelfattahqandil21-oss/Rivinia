@@ -1,0 +1,25 @@
+:host { display: block; min-inline-size: 0; }
+.card {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  min-inline-size: 0;
+  padding: .75rem;
+  border: 1px solid var(--rv-saved-card-border, var(--rv-color-border, GrayText));
+  border-radius: var(--rv-saved-card-radius, .65rem);
+  background: var(--rv-saved-card-surface, var(--rv-color-surface, Canvas));
+  color: var(--rv-color-text, CanvasText);
+}
+.icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  border-radius: .5rem;
+  background: var(--rv-saved-card-icon-surface, color-mix(in srgb, currentColor 7%, Canvas));
+}
+svg { inline-size: 1.25rem; block-size: 1.25rem; }
+.details { display: grid; gap: .2rem; min-inline-size: 0; overflow-wrap: anywhere; }
+.details span { color: var(--rv-color-text-muted, CanvasText); font-size: .875em; }
+bdi { font-variant-numeric: tabular-nums; }

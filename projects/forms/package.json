@@ -1,0 +1,16 @@
+{
+  "name": "@rivinia/forms",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Experimental native-first form controls for Angular 22.",
+  "license": "MIT",
+  "sideEffects": ["**/*.css"],
+  "exports": { "./input.css": { "style": "./input.css", "default": "./input.css" } },
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/forms": "^22.0.0",
+    "@rivinia/select": "^1.0.4 || 2.0.0-alpha.1"
+  },
+  "peerDependenciesMeta": { "@rivinia/select": { "optional": true } }
+}
