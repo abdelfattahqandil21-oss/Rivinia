@@ -1,5 +1,15 @@
 # @rivinia/theme
 
+## Unreleased
+
+- Replace the old semantic token names with the unified V2 token contract and
+  migrate Rivinia component styles and adapters to it. This is a breaking
+  change for consumer overrides; see the migration guide before upgrading.
+- Add opt-in Angular headless theme state, a ready-made toggle UI, and an
+  independent View Transition service/CSS entry.
+- Add an Angular `ng add` schematic for registering the CSS stylesheet and
+  creating a consumer-owned token override file.
+
 ## 1.0.4
 
 - Update published internal dependency metadata and version-pinned documentation links for the synchronized Rivinia 1.0 patch. No public API changes.

@@ -14,22 +14,22 @@ Every colour reads its own token, then the shared semantic layer, then a
 built-in default:
 
 ```css
---rv-select-bg  →  --rv-bg  →  #ffffff
+--rv-select-bg  →  --rv-color-surface  →  #ffffff
 ```
 
 | Level          | Token            | Scope                               |
 | -------------- | ---------------- | ----------------------------------- |
 | 1. per package | `--rv-select-bg` | that component only                 |
-| 2. global      | `--rv-bg`        | every Rivinia component, everywhere |
+| 2. global      | `--rv-color-surface`        | every Rivinia component, everywhere |
 | 3. default     | —                | what you get if you set nothing     |
 
 ```css
 @import '@rivinia/theme';
 
 :root {
-  --rv-bg: #ffffff;
-  --rv-fg: #111111;
-  --rv-border: #e0e0e0;
+  --rv-color-surface: #ffffff;
+  --rv-color-text: #111111;
+  --rv-color-border: #e0e0e0;
 }
 ```
 
@@ -44,13 +44,13 @@ exception: that scoping is what it is for.
 
 | Token                                                                                                                                 | Falls back to                               | Built-in default                    | Applies to                    |
 | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ----------------------------------- | ----------------------------- |
-| `--rv-select-bg`                                                                                                                      | `--rv-bg`                                   | `#ffffff`                           | trigger + panel               |
-| `--rv-select-fg`                                                                                                                      | `--rv-fg`                                   | `#111111`                           | trigger + panel               |
-| `--rv-select-border`                                                                                                                  | `--rv-border`                               | `#e0e0e0`                           | trigger + search              |
-| `--rv-select-muted`                                                                                                                   | `--rv-muted`                                | `#555555`                           | chevron, empty state          |
-| `--rv-select-error`                                                                                                                   | `--rv-danger`                               | `#dc2626`                           | invalid trigger               |
-| `--rv-select-radius`                                                                                                                  | `--rv-radius`                               | `0.625rem` / `0.75rem` / `0.875rem` | trigger, panel, premium panel |
-| `--rv-select-shadow`                                                                                                                  | `--rv-shadow`                               | `0 16px 48px rgba(0, 0, 0, .22)`    | panel                         |
+| `--rv-select-bg`                                                                                                                      | `--rv-color-surface`                                   | `#ffffff`                           | trigger + panel               |
+| `--rv-select-fg`                                                                                                                      | `--rv-color-text`                                   | `#111111`                           | trigger + panel               |
+| `--rv-select-border`                                                                                                                  | `--rv-color-border`                               | `#e0e0e0`                           | trigger + search              |
+| `--rv-select-muted`                                                                                                                   | `--rv-color-text-muted`                                | `#555555`                           | chevron, empty state          |
+| `--rv-select-error`                                                                                                                   | `--rv-color-danger`                               | `#dc2626`                           | invalid trigger               |
+| `--rv-select-radius`                                                                                                                  | `--rv-radius-md`                               | `0.625rem` / `0.75rem` / `0.875rem` | trigger, panel, premium panel |
+| `--rv-select-shadow`                                                                                                                  | `--rv-shadow-md`                               | `0 16px 48px rgba(0, 0, 0, .22)`    | panel                         |
 | `--rv-select-width`                                                                                                                   | —                                           | `14rem`                             | the control's reference width |
 | `--rv-select-font`                                                                                                                    | —                                           | `system-ui, -apple-system, …`       | trigger and panel text        |
 | `--rv-select-popup-bg` / `--rv-select-popup-fg` / `--rv-select-popup-border` / `--rv-select-popup-muted` / `--rv-select-popup-radius` | the matching `--rv-select-*`, then `--rv-*` | the panel's own values              | the opened panel              |
@@ -81,7 +81,7 @@ rv-select {
   --rv-select-item-padding: 0.75rem 0.875rem;
   --rv-select-item-radius: 0.25rem;
   --rv-select-item-min-height: 2.75rem;
-  --rv-select-focus-ring: 2px solid var(--rv-accent);
+  --rv-select-focus-ring: 2px solid var(--rv-color-primary);
 }
 ```
 
@@ -117,9 +117,9 @@ overflowing control.
 
 ## Accent and forced colors
 
-`--rv-accent` paints the interactive layer: the premium trigger's focus ring,
+`--rv-color-primary` paints the interactive layer: the premium trigger's focus ring,
 the search field's ring, the row focus ring, the active row's tint and the
-selected tick. Each read is `var(--rv-accent, <its previous value>)`, so a page
+selected tick. Each read is `var(--rv-color-primary, <its previous value>)`, so a page
 that never imports the theme looks exactly as it did before — unless you set
 `--rv-select-focus-ring`, which still wins over all of it.
 

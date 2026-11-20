@@ -13,14 +13,14 @@
  *
  * The pair table is the contract, and it is deliberately narrow:
  *
- *  - text (4.5:1): `--rv-fg` and `--rv-muted` on `--rv-bg`, plus
- *    `--rv-accent` because S5b paints selected/active labels with it.
+ *  - text (4.5:1): `--rv-color-text` and `--rv-color-text-muted` on `--rv-color-surface`, plus
+ *    `--rv-color-primary` because S5b paints selected/active labels with it.
  *  - indicator (3:1): the four status tokens. They are used as borders and as
  *    tinted backgrounds; the shipped components never set text in them, and
  *    the light defaults (ok 3.30, warning 3.19) cannot reach 4.5 without
  *    changing the palette's look, which is a consumer-visible change D87 does
  *    not cover.
- *  - decorative (reported, not enforced): `--rv-border`. It is the hairline
+ *  - decorative (reported, not enforced): `--rv-color-border`. It is the hairline
  *    around surfaces, not the sole boundary of a control, and it measures
  *    1.32:1 on white today. Enforcing 3:1 would repaint every component's
  *    borders; that is a design decision, not a dark-mode one.
@@ -39,21 +39,21 @@ export const DEFAULT_CSS = join(ROOT, 'projects', 'theme', 'styles', 'theme.css'
 export const PALETTE = Object.freeze({
   light: Object.freeze({
     bg: '#ffffff',
-    fg: '#111111',
-    muted: '#555555',
-    border: '#e0e0e0',
-    accent: '#5b5bd6',
+    fg: '#101820',
+    muted: '#454f58',
+    border: '#767676',
+    accent: '#005fcc',
     danger: '#dc2626',
     ok: '#16a34a',
     info: '#2563eb',
     warning: '#d97706',
   }),
   dark: Object.freeze({
-    bg: '#161616',
-    fg: '#f2f2f2',
-    muted: '#a1a1aa',
-    border: '#3f3f46',
-    accent: '#8b8bf0',
+    bg: '#182028',
+    fg: '#f5f7fa',
+    muted: '#c4ced8',
+    border: '#8292a1',
+    accent: '#8ab4ff',
     danger: '#f87171',
     ok: '#4ade80',
     info: '#60a5fa',
@@ -184,10 +184,21 @@ function canonical(selector) {
   return selector.replace(/\s+/g, ' ').replace(/'/g, '"').trim();
 }
 
-const LIGHT_SELECTOR = ':root';
-const DARK_ATTRIBUTE_SELECTOR = ':root[data-rv-theme="dark"]';
-const DARK_MEDIA_SELECTOR = ':root:not([data-rv-theme="light"])';
+const LIGHT_SELECTOR = ':root, [data-rv-theme="light"], [data-rv-theme="system"]';
+const DARK_ATTRIBUTE_SELECTOR = '[data-rv-theme="dark"]';
+const DARK_MEDIA_SELECTOR = '[data-rv-theme="system"]';
 const DARK_MEDIA = /prefers-color-scheme:\s*dark/;
+const TOKEN_NAMES = Object.freeze({
+  bg: '--rv-color-surface',
+  fg: '--rv-color-text',
+  muted: '--rv-color-text-muted',
+  border: '--rv-color-border',
+  accent: '--rv-color-primary',
+  danger: '--rv-color-danger',
+  ok: '--rv-color-success',
+  info: '--rv-color-info',
+  warning: '--rv-color-warning',
+});
 
 function findBlock(blocks, selector, media) {
   return blocks.find(
@@ -247,7 +258,7 @@ export function auditPalette(palette = PALETTE) {
       });
       if (!passes) {
         problems.push(
-          `${scheme}: --rv-${pair.fg} on --rv-${pair.bg} is ${ratio.toFixed(2)}:1, below ${minimum}:1 (${pair.kind})`,
+          `${scheme}: ${TOKEN_NAMES[pair.fg]} on ${TOKEN_NAMES[pair.bg]} is ${ratio.toFixed(2)}:1, below ${minimum}:1 (${pair.kind})`,
         );
       }
     }
@@ -327,11 +338,11 @@ export function auditThemeCss(source) {
   const rows = [];
   for (const scheme of ['light', 'dark']) {
     for (const [token, value] of Object.entries(PALETTE[scheme])) {
-      const actual = declared[scheme].get(`--rv-${token}`);
+      const actual = declared[scheme].get(TOKEN_NAMES[token]);
       if (actual === undefined) {
-        problems.push(`${scheme}: --rv-${token} is not declared in the ${scheme} block`);
+        problems.push(`${scheme}: ${TOKEN_NAMES[token]} is not declared in the ${scheme} block`);
       } else if (actual !== value) {
-        problems.push(`${scheme}: --rv-${token} is ${actual}, the palette says ${value}`);
+        problems.push(`${scheme}: ${TOKEN_NAMES[token]} is ${actual}, the palette says ${value}`);
       }
     }
   }
@@ -348,7 +359,7 @@ export function formatRows(rows) {
     const verdict = row.enforced ? (row.passes ? 'pass' : 'FAIL') : 'info';
     const minimum = row.enforced ? `min ${row.minimum}` : `recommended ${row.minimum}`;
     lines.push(
-      `  ${row.pair.kind.padEnd(10)} --rv-${row.pair.fg} on --rv-${row.pair.bg}  ${row.fg} on ${row.bg}  ` +
+      `  ${row.pair.kind.padEnd(10)} ${TOKEN_NAMES[row.pair.fg]} on ${TOKEN_NAMES[row.pair.bg]}  ${row.fg} on ${row.bg}  ` +
         `${row.ratio.toFixed(2).padStart(5)}:1 (${minimum})  ${verdict}`,
     );
   }

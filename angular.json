@@ -395,6 +395,13 @@
                 "projects/theme-compat-e2e/src/styles/token-overrides.css"
               ]
             },
+            "tailwind-v3": {
+              "outputPath": "dist/theme-compat-e2e/tailwind-v3",
+              "styles": [
+                "dist/theme-compat-e2e/tailwind-v3-generated.css",
+                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+              ]
+            },
             "tailwind-no-preflight": {
               "outputPath": "dist/theme-compat-e2e/tailwind-no-preflight",
               "styles": [
@@ -406,6 +413,13 @@
               "outputPath": "dist/theme-compat-e2e/tailwind-prefix",
               "styles": [
                 "projects/theme-compat-e2e/src/styles/tailwind-prefix.css",
+                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+              ]
+            },
+            "bootstrap-tailwind": {
+              "outputPath": "dist/theme-compat-e2e/bootstrap-tailwind",
+              "styles": [
+                "projects/theme-compat-e2e/src/styles/bootstrap-tailwind.css",
                 "projects/theme-compat-e2e/src/styles/token-overrides.css"
               ]
             },

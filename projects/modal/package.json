@@ -13,7 +13,8 @@
   "peerDependencies": {
     "@angular-devkit/schematics": "^22.0.0",
     "@angular/common": "^22.0.0",
-    "@angular/core": "^22.0.0"
+    "@angular/core": "^22.0.0",
+    "@rivinia/menu": "^1.0.4"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",
@@ -28,5 +29,10 @@
   },
   "engines": {
     "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@rivinia/menu": {
+      "optional": true
+    }
   }
 }

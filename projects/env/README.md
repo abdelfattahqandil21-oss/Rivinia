@@ -1,89 +1,81 @@
 # @rivinia/env
 
 [![npm version](https://img.shields.io/npm/v/@rivinia/env.svg)](https://www.npmjs.com/package/@rivinia/env)
-[![license](https://img.shields.io/npm/l/@rivinia/env.svg)](https://www.npmjs.com/package/@rivinia/env)
+[![license](https://img.shields.io/npm/l/@rivinia/env.svg)](https://opensource.org/licenses/MIT)
 
-A typed application environment contract and Angular CLI schematic.
+Typed application environment contracts and Angular CLI schematics for inspecting, planning, and applying build-time environment configuration.
 
 Package version: **1.0.4**
 
 ```ts
 import type { BaseEnvironment } from '@rivinia/env';
+
 export interface AppEnvironment extends BaseEnvironment {
   readonly apiUrl: string;
 }
 ```
 
-## Why @rivinia/env
-
-- A reusable `BaseEnvironment` contract types application configuration.
-- The CLI schematic scaffolds environment files and build replacements.
-- Angular selects a statically imported file at build time; the package does not read values at runtime.
-
 ## Install
 
 ```bash
 npm install @rivinia/env
-ng add @rivinia/env
 ```
 
-## Quick start
+## Inspect and plan environment configuration
 
-1. Install the package in an Angular CLI workspace.
-2. Run `ng add @rivinia/env` and choose environments.
-3. Import the generated environment and read its typed values.
-
-## Use the selected environment
-
-Always import the base path from the app, not a stage/prod-specific file:
-
-```ts
-// src/app/trip.service.ts
-import { Service } from '@angular/core';
-import { environment } from '../environments/environment';
-
-@Service()
-export class TripService {
-  readonly apiUrl = environment.apiUrl;
-}
-```
-
-After `ng add @rivinia/env`, build with the short configuration names:
+The `inspect` schematic is read-only. It records the selected application's environment sources, build configurations, and diagnostics in a plan file:
 
 ```bash
-ng build --configuration dev
-ng build --configuration stag
-ng build --configuration prod
+ng generate @rivinia/env:inspect --project=admin --plan-file=plans/environment-inspection.json
 ```
 
-These are actual keys in `angular.json`, not Angular CLI aliases. If you
-maintain custom configurations, inspect the selected project's
-`architect.build.configurations` and ensure each key has the intended
-`fileReplacements`; `ng build --configuration` uses the key exactly as written.
+To propose changes, explicitly select source and destination paths in a proposal JSON file, then create a reviewable plan:
 
-The generated files are compile-time configuration, not secrets: values
-included in a browser build are visible to its users. `BaseEnvironment`
-requires only readonly `production: boolean` and `version: string`; extend
-AppEnvironment with the fields your app needs.
+```bash
+ng generate @rivinia/env:propose --project=admin \
+  --proposal-file=plans/environment-proposals.json \
+  --plan-file=plans/environment-plan.json
+```
+
+Review the plan and its selected source files before applying it. Supply the plan digest and any decision flags requested by the plan:
+
+```bash
+ng generate @rivinia/env:apply --project=admin \
+  --plan-file=plans/environment-plan.json \
+  --reviewed-digest=<plan-integrity-digest>
+```
+
+The `validate-plan` schematic checks a saved plan without mutating the workspace. The optional `environment-model` schematic can propose and apply a supported typed model after separate explicit review. Full proposal formats, supported builders, failure cases, and security limits are documented in [the environment workflow guide](../../docs/env/explicit-workflow.md).
+
+## One `ng add` schematic
+
+The existing scaffold behavior stays available when `ng add @rivinia/env` is run with only `--project` and/or `--environments`. It creates missing development/staging/production examples and wires build configurations without overwriting files. Review generated values and configuration changes before use.
+
+The same `ng add` schematic also accepts an explicit proposal plus `--apply`, or a reviewed plan and digest. Those options select the review-first path; see [the environment workflow guide](../../docs/env/explicit-workflow.md). Separate `inspect`, `propose`, `apply`, `validate-plan`, and `environment-model` schematics are available for step-by-step workflows.
+
+## Environment values are public
+
+Angular environment files are compiled into the application bundle. Treat every value in them as public; never put secrets, credentials, or private keys there. The schematics do not execute consumer TypeScript or transform environment values. Unsupported builders and server rendering modes fail closed.
 
 ## Public API
 
-| Export            | Kind | Purpose                                                                |
-| ----------------- | ---- | ---------------------------------------------------------------------- |
-| `BaseEnvironment` | type | Required `production` and `version` fields for app environment models. |
-
-## License
-
-MIT.
+| Export | Kind | Purpose |
+| --- | --- | --- |
+| `BaseEnvironment` | type | Requires readonly `production: boolean` and `version: string` fields. |
 
 ## Compatibility
 
-| Angular CLI | Node | Runtime behavior |
+| Angular CLI | Node | Package behavior |
 | --- | --- | --- |
-| `^22.0.0` | `^22.22.3 or ^24.15.0 or >=26.0.0` | Type contract and build-time file replacement; no runtime service |
+| `^22.0.0` | `^22.22.3 or ^24.15.0 or >=26.0.0` | Type contract and build-time schematics; no runtime environment service |
 
 ## Go further
 
 | Topic | Read |
 | --- | --- |
-| Scaffold environments | [Scaffold environments](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/env/v1.0.4/docs/env/scaffolding.md) |
+| Reviewed workflow | [Environment workflow](../../docs/env/explicit-workflow.md) |
+| Existing scaffold options | [Scaffold environments](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/env/v1.0.4/docs/env/scaffolding.md) |
+
+## License
+
+MIT.

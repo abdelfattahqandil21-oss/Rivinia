@@ -24,10 +24,10 @@ import {
 
 const light: Record<string, string> = {
   bg: '#ffffff',
-  fg: '#111111',
-  muted: '#555555',
-  border: '#e0e0e0',
-  accent: '#5b5bd6',
+  fg: '#101820',
+  muted: '#454f58',
+  border: '#767676',
+  accent: '#005fcc',
   danger: '#dc2626',
   ok: '#16a34a',
   info: '#2563eb',
@@ -35,11 +35,11 @@ const light: Record<string, string> = {
 };
 
 const dark: Record<string, string> = {
-  bg: '#161616',
-  fg: '#f2f2f2',
-  muted: '#a1a1aa',
-  border: '#3f3f46',
-  accent: '#8b8bf0',
+  bg: '#182028',
+  fg: '#f5f7fa',
+  muted: '#c4ced8',
+  border: '#8292a1',
+  accent: '#8ab4ff',
   danger: '#f87171',
   ok: '#4ade80',
   info: '#60a5fa',
@@ -47,7 +47,12 @@ const dark: Record<string, string> = {
 };
 
 function block(tokens: Record<string, string>, scheme: string): string {
-  const lines = Object.entries(tokens).map(([name, value]) => `    --rv-${name}: ${value};`);
+  const names: Record<string, string> = {
+    bg: 'color-surface', fg: 'color-text', muted: 'color-text-muted',
+    border: 'color-border', accent: 'color-primary', danger: 'color-danger',
+    ok: 'color-success', info: 'color-info', warning: 'color-warning',
+  };
+  const lines = Object.entries(tokens).map(([name, value]) => `    --rv-${names[name]}: ${value};`);
   return `    color-scheme: ${scheme};\n${lines.join('\n')}`;
 }
 
@@ -58,15 +63,17 @@ function stylesheet(
   const lightTokens = { ...light, ...overrides.light };
   const darkTokens = { ...dark, ...overrides.dark };
   return `@layer rivinia-theme {
-  :root {
+  :root,
+  [data-rv-theme='light'],
+  [data-rv-theme='system'] {
 ${block(lightTokens, 'light')}
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-rv-theme='light']) {
+    [data-rv-theme='system'] {
 ${block(darkTokens, 'dark')}
     }
   }
-  :root[data-rv-theme='dark'] {
+  [data-rv-theme='dark'] {
 ${block(darkTokens, 'dark')}
   }
 }
@@ -135,32 +142,32 @@ describe('auditThemeCss', () => {
     const report = auditThemeCss(stylesheet({ light: { muted: '#999999' } }));
     expect(report.ok).toBe(false);
     expect(report.problems.join('\n')).toMatch(
-      /light: --rv-muted is #999999, the palette says #555555/,
+      /light: --rv-color-text-muted is #999999, the palette says #454f58/,
     );
   });
 
   it('reports a dark value that lands in only one of the two dark blocks', () => {
     const css = stylesheet().replace(
-      `  :root[data-rv-theme='dark'] {\n${block(dark, 'dark')}`,
-      `  :root[data-rv-theme='dark'] {\n${block({ ...dark, muted: '#808080' }, 'dark')}`,
+      `  [data-rv-theme='dark'] {\n${block(dark, 'dark')}`,
+      `  [data-rv-theme='dark'] {\n${block({ ...dark, muted: '#808080' }, 'dark')}`,
     );
     const report = auditThemeCss(css);
     expect(report.ok).toBe(false);
-    expect(report.problems.join('\n')).toMatch(/the two dark blocks disagree \(--rv-muted\)/);
+    expect(report.problems.join('\n')).toMatch(/the two dark blocks disagree \(--rv-color-text-muted\)/);
   });
 
   it('reports a missing block', () => {
-    const css = stylesheet().replace(/:root\[data-rv-theme='dark'\] \{[\s\S]*?\n  \}\n/, '');
+    const css = stylesheet().replace(/\[data-rv-theme='dark'\] \{[\s\S]*?\n  \}\n/, '');
     const report = auditThemeCss(css);
     expect(report.ok).toBe(false);
-    expect(report.problems.join('\n')).toMatch(/no `:root\[data-rv-theme="dark"\]` block/);
+    expect(report.problems.join('\n')).toMatch(/no `\[data-rv-theme="dark"\]` block/);
   });
 
   it('reports a canonical block declared twice', () => {
     // findBlock reads the first; the browser applies the last.
-    const css = `${stylesheet()}\n:root { --rv-bg: #ffffff; }\n`;
+    const css = `${stylesheet()}\n:root, [data-rv-theme='light'], [data-rv-theme='system'] { --rv-color-surface: #ffffff; }\n`;
     const report = auditThemeCss(css);
-    expect(report.problems.join('\n')).toMatch(/declares `:root` 2 times/);
+    expect(report.problems.join('\n')).toMatch(/declares `:root, \[data-rv-theme="light"\], \[data-rv-theme="system"\]` 2 times/);
   });
 
   it('reports a block that lost its color-scheme', () => {
@@ -169,14 +176,14 @@ describe('auditThemeCss', () => {
   });
 
   it('reports a token that is missing from both dark blocks', () => {
-    const report = auditThemeCss(stylesheet().replace(/ *--rv-ok: [^\n]*\n/g, ''));
-    expect(report.problems.join('\n')).toMatch(/dark: --rv-ok is not declared in the dark block/);
+    const report = auditThemeCss(stylesheet().replace(/ *--rv-color-success: [^\n]*\n/g, ''));
+    expect(report.problems.join('\n')).toMatch(/dark: --rv-color-success is not declared in the dark block/);
   });
 
   it('fails a palette whose dark muted grey drops under 4.5:1', () => {
     // Palette-level, so the drift check does not answer first.
     const report = auditPalette({ light, dark: { ...dark, muted: '#666666' } });
-    expect(report.problems.join('\n')).toMatch(/dark: --rv-muted .* below 4.5:1/);
+    expect(report.problems.join('\n')).toMatch(/dark: --rv-color-text-muted .* below 4.5:1/);
   });
 
   it('measures the decorative border without failing on it', () => {
@@ -192,9 +199,9 @@ describe('auditThemeCss', () => {
     const text = formatRows(report.rows);
     expect(text.split('\n')).toHaveLength(report.rows.length);
     expect(text).toMatch(
-      /text +--rv-fg on --rv-bg +#111111 on #ffffff +18\.\d+:1 \(min 4\.5\) +pass/,
+      /text +--rv-color-text on --rv-color-surface +#101820 on #ffffff +17\.\d+:1 \(min 4\.5\) +pass/,
     );
-    expect(text).toMatch(/decorative --rv-border on --rv-bg .*recommended 3\) +info/);
+    expect(text).toMatch(/decorative --rv-color-border on --rv-color-surface .*recommended 3\) +info/);
   });
 });
 
@@ -209,18 +216,22 @@ describe('the shipped stylesheet', () => {
     // Read from the file, not from PALETTE: the gate must cover what ships.
     const blocks = parseBlocks(readFileSync(DEFAULT_CSS, 'utf8'));
     const declared = {
-      light: blocks.find((block) => block.selector === ':root' && block.media === null),
+      light: blocks.find((block) => block.selector === ':root, [data-rv-theme="light"], [data-rv-theme="system"]' && block.media === null),
       dark: blocks.find(
-        (block) => block.selector === ':root[data-rv-theme="dark"]' && block.media === null,
+        (block) => block.selector === '[data-rv-theme="dark"]' && block.media === null,
       ),
     };
-    expect(declared.light, 'a top-level :root block').toBeDefined();
-    expect(declared.dark, 'a top-level :root[data-rv-theme="dark"] block').toBeDefined();
+    expect(declared.light, 'a light/system token scope block').toBeDefined();
+    expect(declared.dark, 'a dark token scope block').toBeDefined();
+    const names: Record<string, string> = {
+      bg: 'color-surface', fg: 'color-text', muted: 'color-text-muted',
+      border: 'color-border', accent: 'color-primary', danger: 'color-danger',
+      ok: 'color-success', info: 'color-info', warning: 'color-warning',
+    };
     for (const scheme of ['light', 'dark'] as const) {
       for (const token of Object.keys(PALETTE[scheme])) {
-        expect(declared[scheme]?.declarations.get(`--rv-${token}`), `${scheme} --rv-${token}`).toBe(
-          PALETTE[scheme][token],
-        );
+        const name = `--rv-${names[token]}`;
+        expect(declared[scheme]?.declarations.get(name), `${scheme} ${name}`).toBe(PALETTE[scheme][token]);
       }
     }
   });

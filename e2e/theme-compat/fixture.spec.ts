@@ -1,5 +1,26 @@
 import { expect, test } from '@playwright/test';
 
+test('modal surface inherits scoped semantic tokens and keeps its footer usable', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('open-modal').click();
+  const dialog = page.getByRole('dialog', { name: 'CSS stack modal' });
+  await expect(dialog).toBeVisible();
+  const styles = await dialog.evaluate((element) => {
+    const dialogStyle = getComputedStyle(element);
+    const footer = element.querySelector('.rv-modal-footer')!;
+    return {
+      background: dialogStyle.backgroundColor,
+      footerDisplay: getComputedStyle(footer).display,
+      width: element.getBoundingClientRect().width,
+    };
+  });
+  expect(styles.background).toBe('rgb(218, 235, 255)');
+  expect(styles.footerDisplay).toBe('flex');
+  expect(styles.width).toBeGreaterThan(0);
+  await page.getByTestId('close-modal').click();
+  await expect(dialog).toHaveCount(0);
+});
+
 const configuration = process.env['RV_THEME_CONFIG'] ?? 'plain';
 
 async function resolvedTokenColor(locator: import('@playwright/test').Locator, token = '--rv-bg') {
@@ -53,7 +74,9 @@ test('opens Select and both Datepicker panels as native popovers', async ({ page
   await page.keyboard.press('Escape');
   await expect(datetimePanel).toBeHidden();
 
-  const selectTrigger = page.locator('#booking-select').getByRole('button', { name: /Booking status/ });
+  const selectTrigger = page
+    .locator('#booking-select')
+    .getByRole('button', { name: /Booking status/ });
   await selectTrigger.click();
   const selectPanel = page.locator('#booking-select .rv-select-popup-panel');
   await expect(selectPanel).toBeVisible();
@@ -64,14 +87,18 @@ test('opens Select and both Datepicker panels as native popovers', async ({ page
   await expect(selectPanel).toBeHidden();
 });
 
-test('keeps semantic, scoped and instance tokens through native top-layer popovers', async ({ page }) => {
+test('keeps semantic, scoped and instance tokens through native top-layer popovers', async ({
+  page,
+}) => {
   await page.goto('/');
   const rootBackground = await resolvedTokenColor(page.locator('html'));
   const scopedBackground = await resolvedTokenColor(page.getByTestId('booking-scope'));
   expect(scopedBackground).toBe('rgb(218, 235, 255)');
   expect(scopedBackground).not.toBe(rootBackground);
 
-  const scopedDateTrigger = page.locator('#booking-date').getByRole('button', { name: /^Booking date/ });
+  const scopedDateTrigger = page
+    .locator('#booking-date')
+    .getByRole('button', { name: /^Booking date/ });
   await scopedDateTrigger.click();
   const scopedDatePanel = page.locator('#booking-date .rv-datepicker-panel');
   await expect(scopedDatePanel).toBeVisible();
@@ -80,7 +107,9 @@ test('keeps semantic, scoped and instance tokens through native top-layer popove
     .toBe('rgb(218, 235, 255)');
   await page.keyboard.press('Escape');
 
-  const instanceDateTrigger = page.locator('#instance-date').getByRole('button', { name: /^Instance date/ });
+  const instanceDateTrigger = page
+    .locator('#instance-date')
+    .getByRole('button', { name: /^Instance date/ });
   await instanceDateTrigger.click();
   const instanceDatePanel = page.locator('#instance-date .rv-datepicker-panel');
   await expect(instanceDatePanel).toBeVisible();
@@ -96,12 +125,16 @@ test('keeps semantic, scoped and instance tokens through native top-layer popove
   const instanceSelectPanel = page.locator('#instance-select .rv-select-popup-panel');
   await expect(instanceSelectPanel).toBeVisible();
   await expect
-    .poll(() => instanceSelectPanel.evaluate((element) => getComputedStyle(element).backgroundColor))
+    .poll(() =>
+      instanceSelectPanel.evaluate((element) => getComputedStyle(element).backgroundColor),
+    )
     .toBe('rgb(255, 224, 224)');
   await page.keyboard.press('Escape');
 });
 
-test('retains DateTime business values when editing a seconds-enabled 24-hour control', async ({ page }) => {
+test('retains DateTime business values when editing a seconds-enabled 24-hour control', async ({
+  page,
+}) => {
   await page.goto('/');
 
   const trigger = page
@@ -115,12 +148,14 @@ test('retains DateTime business values when editing a seconds-enabled 24-hour co
   await expect(panel.locator('.rv-time-meridiem')).toHaveCount(0);
 
   await hour.fill('22');
-  await panel.getByRole('button', { name: 'OK' }).click();
+  await panel.getByRole('button', { name: 'Apply' }).click();
   await expect(page.getByTestId('appointment-24-value')).toHaveText('22:5:7');
   await expect(panel).toBeHidden();
 });
 
-test('keeps overlays within a narrow RTL viewport and exposes focus-visible styling', async ({ page }) => {
+test('keeps overlays within a narrow RTL viewport and exposes focus-visible styling', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto('/');
 
@@ -150,7 +185,9 @@ test('keeps overlays within a narrow RTL viewport and exposes focus-visible styl
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
 });
 
-test('applies dark and light themes at the root and scoped Bootstrap boundary', async ({ page }) => {
+test('applies dark and light themes at the root and scoped Bootstrap boundary', async ({
+  page,
+}) => {
   await page.goto('/');
 
   if (configuration === 'bootstrap') {
@@ -166,17 +203,13 @@ test('applies dark and light themes at the root and scoped Bootstrap boundary', 
     const bookingScope = page.getByTestId('booking-scope');
     await bookingScope.evaluate((element) => element.setAttribute('data-bs-theme', 'dark'));
     await expect.poll(() => resolvedTokenColor(bookingScope)).toBe(rootDark);
-    await expect
-      .poll(() => resolvedTokenColor(defaultScope))
-      .toBe(scopedLight);
+    await expect.poll(() => resolvedTokenColor(defaultScope)).toBe(scopedLight);
   } else {
     const root = page.locator('html');
     const bookingScope = page.getByTestId('booking-scope');
     await root.evaluate((element) => element.setAttribute('data-rv-theme', 'dark'));
     await expect.poll(() => resolvedTokenColor(root)).toBe('rgb(22, 22, 22)');
-    await expect
-      .poll(() => resolvedTokenColor(bookingScope))
-      .toBe('rgb(218, 235, 255)');
+    await expect.poll(() => resolvedTokenColor(bookingScope)).toBe('rgb(218, 235, 255)');
 
     await root.evaluate((element) => element.setAttribute('data-rv-theme', 'light'));
     await expect.poll(() => resolvedTokenColor(root)).toBe('rgb(255, 255, 255)');
@@ -184,13 +217,19 @@ test('applies dark and light themes at the root and scoped Bootstrap boundary', 
 });
 
 test('emits usable Tailwind v4 utilities only in Tailwind configurations', async ({ page }) => {
-  test.skip(!configuration.startsWith('tailwind'), 'This browser assertion is specific to Tailwind builds.');
+  test.skip(
+    !configuration.startsWith('tailwind'),
+    'This browser assertion is specific to Tailwind builds.',
+  );
   await page.goto('/');
 
-  const selector = configuration === 'tailwind-prefix' ? '#tailwind-prefix-probe' : '#tailwind-utility-probe';
+  const selector =
+    configuration === 'tailwind-prefix' ? '#tailwind-prefix-probe' : '#tailwind-utility-probe';
   const probe = page.locator(selector);
   await expect(probe).toBeVisible();
   await expect(probe).toHaveCSS('padding', '16px');
-  const probeBackground = await probe.evaluate((element) => getComputedStyle(element).backgroundColor);
+  const probeBackground = await probe.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
   expect(probeBackground).toBe('rgb(255, 255, 255)');
 });

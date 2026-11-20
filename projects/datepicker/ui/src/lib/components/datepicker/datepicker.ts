@@ -14,6 +14,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { connectPopup } from '@rivinia/popup';
 import type { FormValueControl } from '@angular/forms/signals';
 import {
   DEFAULT_DATE_FORMAT,
@@ -32,6 +33,7 @@ import type {
 } from '@rivinia/datepicker';
 import { DATE_PICKER_CONFIG } from '@rivinia/datepicker';
 import { RiviniaCalendarComponent } from '../calendar/calendar';
+import { RiviniaDateSegmentsComponent } from '../date-segments/date-segments';
 import { DatepickerPanelRegistry } from '../../services/datepicker-panel-registry';
 import {
   PANEL_EXIT_FALLBACK_MS,
@@ -60,7 +62,7 @@ let nextId = 0;
  */
 @Component({
   selector: 'rv-datepicker',
-  imports: [RiviniaCalendarComponent],
+  imports: [RiviniaCalendarComponent, RiviniaDateSegmentsComponent],
   templateUrl: './datepicker.html',
   styleUrl: './datepicker.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -97,7 +99,10 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
   readonly max = input<RiviniaDate | undefined>(undefined);
   readonly labels = input<Partial<RiviniaDatepickerLabels>>({});
   /** Disabled state, bound by a form or by the consumer. */
+  /** Explicit confirmation is the default; immediate preserves the original date-only behavior. */
+  readonly commitMode = input<'explicit' | 'immediate'>('explicit');
   readonly disabled = input(false);
+  readonly disabledDate = input<((date: RiviniaDate) => boolean) | undefined>();
   /** Overrides the trigger text when there is no value. */
   readonly placeholder = input<string | undefined>(undefined);
   /**
@@ -141,6 +146,7 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
   protected readonly headingId = `rv-datepicker-heading-${this.uid}`;
 
   private readonly triggerRef = viewChild<ElementRef<HTMLButtonElement>>('trigger');
+  private readonly fieldRef = viewChild<ElementRef<HTMLElement>>('field');
   private readonly panelRef = viewChild<ElementRef<HTMLElement>>('panel');
   private readonly calendarComponent = viewChild(RiviniaCalendarComponent);
   private focusGridAfterValueChange = false;
@@ -165,7 +171,7 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
   protected readonly canClear = computed(
     () =>
       (this.clearable() ?? this.config.clearable ?? false) &&
-      this.normalized() !== null &&
+      (this.normalized() !== null || (this.open() && this.calendar.selected() !== null)) &&
       !this.isDisabled(),
   );
 
@@ -222,22 +228,25 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
     });
 
     effect(() => this.calendar.setLabels(this.labels()));
+    effect(() => this.calendar.setDisabledDate(this.disabledDate()));
 
     // Value → calendar (a form write brings the grid to that month).
     effect(() => {
       const value = this.normalized();
-      if (isSameDay(value, this.calendar.selected())) return;
+      untracked(() => {
+        if (isSameDay(value, this.calendar.selected())) return;
 
-      // Capture whether the user's focus is inside the panel BEFORE the grid
-      // re-renders: afterwards the old cell is gone and focus has fallen to
-      // `<body>`, so the question can no longer be answered.
-      const panel = this.panelRef()?.nativeElement;
-      this.focusGridAfterValueChange =
-        typeof document !== 'undefined' &&
-        !!panel &&
-        panel.contains(document.activeElement as Node | null);
+        // Capture whether the user's focus is inside the panel BEFORE the grid
+        // re-renders: afterwards the old cell is gone and focus has fallen to
+        // `<body>`, so the question can no longer be answered.
+        const panel = this.panelRef()?.nativeElement;
+        this.focusGridAfterValueChange =
+          typeof document !== 'undefined' &&
+          !!panel &&
+          panel.contains(document.activeElement as Node | null);
 
-      this.calendar.setSelected(value);
+        this.calendar.setSelected(value);
+      });
     });
 
     afterRenderEffect(() => {
@@ -260,30 +269,35 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
     // warning line, a wrapped action row).
     afterRenderEffect((onCleanup) => {
       const panel = this.panelRef()?.nativeElement;
-      this.open();
-      if (!this.open() || !panel) {
+      const origin = this.fieldRef()?.nativeElement;
+      if (!this.open() || !panel || !origin) {
         this.panelShift.set(0);
         return;
       }
-      const update = (): void => {
-        this.panelShift.set(panelViewportShift(panel, this.triggerRef()?.nativeElement));
-      };
-      update();
-      if (typeof ResizeObserver === 'undefined') return;
-      const observer = new ResizeObserver(update);
-      observer.observe(panel);
-      const onResize = (): void => update();
-      window.addEventListener('resize', onResize);
-      onCleanup(() => {
-        observer.disconnect();
-        window.removeEventListener('resize', onResize);
+      if (typeof panel.showPopover !== 'function') return;
+      const anchored =
+        panel.ownerDocument.defaultView?.CSS?.supports('anchor-name', '--rv-datepicker-anchor') ??
+        false;
+      const connection = connectPopup({
+        origin,
+        panel,
+        parent: 'auto',
+        closeOnWidthChange: true,
+        ...(anchored
+          ? {
+              position: () => {
+                this.panelShift.set(panelViewportShift(panel, origin));
+              },
+            }
+          : {}),
+        onDismiss: (reason) => this.closePanel(reason === 'escape'),
       });
+      onCleanup(() => connection.destroy());
     });
 
-    // Outside pointerdown closes WITHOUT stealing focus back: the user chose
-    // where to click (same rule as the menu, D36).
     effect((onCleanup) => {
       if (!this.open() || typeof document === 'undefined') return;
+      if (typeof this.panelRef()?.nativeElement.showPopover === 'function') return;
       const onPointerDown = (event: Event): void => {
         const target = event.target as Node | null;
         if (target && this.hostRef.nativeElement.contains(target)) return;
@@ -308,25 +322,46 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
   }
 
   protected onPicked(date: RiviniaDate): void {
-    // Setting the model is what notifies the form AND a `[(value)]` parent:
-    // `valueChange` belongs to the model. It emits only when the value really
-    // changes, so re-picking the same day is silent.
-    this.value.set(date);
+    this.calendar.setSelected(date);
+    if (this.commitMode() === 'immediate') this.commit();
+  }
+
+  protected readonly canCommit = computed(() => {
+    const selected = this.calendar.selected();
+    return !this.isDisabled() && !!selected && this.calendar.canSelect(selected);
+  });
+
+  protected onNow(): void {
+    if (this.isDisabled()) return;
+    const today = this.calendar.today();
+    if (this.calendar.canSelect(today)) this.onPicked(today);
+  }
+
+  protected clearValue(): void {
+    if (!this.canClear()) return;
+    this.value.set(null);
+    this.calendar.setSelected(null);
     this.closePanel(true);
   }
 
-  /**
-   * Clears the value. Focus returns to the trigger because the button that was
-   * clicked disappears with the value, and an open panel has nothing left to
-   * show. `touch` fires because clearing is a finished interaction.
-   */
-  protected clearDate(): void {
-    if (!this.canClear()) return;
-    const wasOpen = this.open();
-    this.value.set(null);
-    if (wasOpen) this.closePanel(false);
-    else this.touch.emit();
-    this.triggerRef()?.nativeElement.focus();
+  protected commit(): void {
+    const selected = this.calendar.selected();
+    if (this.isDisabled()) return;
+    if (!selected || !this.calendar.canSelect(selected)) return;
+    this.value.set({ ...selected });
+    this.closePanel(true);
+  }
+
+  protected onTypedDate(date: RiviniaDate): void {
+    if (this.isDisabled() || !this.calendar.canSelect(date)) return;
+    this.value.set({ ...date });
+    this.calendar.setSelected(date);
+  }
+
+  protected onPanelKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
+    event.preventDefault();
+    this.dismiss();
   }
 
   protected dismiss(): void {
@@ -383,6 +418,8 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
     // Reopening during the exit animation cancels the exit and reuses the
     // panel that is still in the DOM.
     this.finishClose();
+    this.calendar.setSelected(this.normalized());
+    if (!this.normalized()) this.calendar.goToToday();
     // Claim BEFORE opening: the previously open picker closes while this one
     // mounts, and never pulls focus back to itself.
     this.panels.claim(this);

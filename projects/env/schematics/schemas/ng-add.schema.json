@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Configure application environments",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "Angular application name. The scaffold uses the default project when omitted; review-first setup requires a project when the workspace is ambiguous.",
+      "default": ""
+    },
+    "proposalFile": {
+      "type": "string",
+      "description": "Workspace-relative JSON file explicitly selecting source files, destination paths, and build configuration mappings for safe first-run setup. Requires --apply to authorize writes."
+    },
+    "apply": {
+      "type": "boolean",
+      "default": false,
+      "description": "Explicitly authorize applying a conflict-free proposalFile setup."
+    },
+    "planFile": {
+      "type": "string"
+    },
+    "reviewedDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "acceptConfigurationMapping": {
+      "type": "boolean",
+      "default": false
+    },
+    "acceptEnvironmentSemantics": {
+      "type": "boolean",
+      "default": false
+    },
+    "force": {
+      "type": "boolean",
+      "default": false
+    },
+    "environments": {
+      "type": [
+        "array",
+        "string"
+      ],
+      "description": "Which environments to scaffold and wire: array, or comma-separated string on the CLI (--environments stage,prod). Model + base file always. Omit for all three.",
+      "default": [
+        "dev",
+        "stage",
+        "prod"
+      ],
+      "items": {
+        "type": "string",
+        "enum": [
+          "dev",
+          "stage",
+          "prod",
+          "stag"
+        ]
+      },
+      "x-prompt": {
+        "message": "Which environments should ng-add scaffold and wire?",
+        "type": "list",
+        "multiselect": true,
+        "items": [
+          {
+            "value": "dev",
+            "label": "dev \u2014 base file, no replacement"
+          },
+          {
+            "value": "stage",
+            "label": "stage \u2014 staging file + configuration"
+          },
+          {
+            "value": "prod",
+            "label": "prod \u2014 prod file + replacement"
+          }
+        ]
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "proposalFile"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "planFile"
+            ]
+          },
+          {
+            "required": [
+              "reviewedDigest"
+            ]
+          },
+          {
+            "required": [
+              "acceptConfigurationMapping"
+            ]
+          },
+          {
+            "required": [
+              "acceptEnvironmentSemantics"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "planFile",
+        "reviewedDigest"
+      ],
+      "not": {
+        "required": [
+          "proposalFile"
+        ]
+      }
+    },
+    {
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "proposalFile"
+            ]
+          },
+          {
+            "required": [
+              "planFile"
+            ]
+          },
+          {
+            "required": [
+              "reviewedDigest"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -847,9 +847,9 @@ Density presets set `--rv-table-row-height` and the cell padding:
 Tokens follow the three-level chain (D42/D46):
 
 ```
---rv-table-bg        → --rv-bg      → default
---rv-table-border    → --rv-border  → default
---rv-table-radius    → --rv-radius  → default
+--rv-table-bg        → --rv-color-surface      → default
+--rv-table-border    → --rv-color-border  → default
+--rv-table-radius    → --rv-radius-md  → default
 --rv-table-row-height              → default
 --rv-table-cell-padding            → default
 --rv-table-header-bg               → default

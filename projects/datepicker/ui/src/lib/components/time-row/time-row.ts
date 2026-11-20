@@ -10,11 +10,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import type {
-  RiviniaDatepickerLabels,
-  RiviniaHour12,
-  RiviniaTime,
-} from '@rivinia/datepicker';
+import { connectPopup } from '@rivinia/popup';
+import type { RiviniaDatepickerLabels, RiviniaHour12, RiviniaTime } from '@rivinia/datepicker';
 import {
   addMinutes,
   addSeconds,
@@ -72,6 +69,10 @@ export class RiviniaTimeRowComponent {
   readonly showSeconds = input(false);
   readonly minuteStep = input(1);
   readonly disabled = input(false);
+  /** Blocks confirmation while allowing the visitor to correct the time. */
+  readonly commitDisabled = input(false);
+  /** Hides the standalone footer when the row is embedded in a picker panel. */
+  readonly showActions = input(true);
 
   readonly valueChange = output<RiviniaTime>();
   readonly commit = output<void>();
@@ -84,6 +85,9 @@ export class RiviniaTimeRowComponent {
    */
   protected readonly optionsOpen = signal(false);
   protected readonly optionsId = `rv-time-options-${++nextTimeRowId}`;
+  protected readonly hourEdit = signal<string | null>(null);
+  protected readonly minuteEdit = signal<string | null>(null);
+  protected readonly secondEdit = signal<string | null>(null);
 
   private readonly toggleRef = viewChild<ElementRef<HTMLButtonElement>>('timeToggle');
   private readonly optionsRef = viewChild<ElementRef<HTMLElement>>('timeOptions');
@@ -113,6 +117,9 @@ export class RiviniaTimeRowComponent {
   protected readonly secondText = computed(() =>
     formatTimeUnit(this.locale(), this.value().second, 2),
   );
+  protected readonly hourInputText = computed(() => this.hourEdit() ?? this.hourText());
+  protected readonly minuteInputText = computed(() => this.minuteEdit() ?? this.minuteText());
+  protected readonly secondInputText = computed(() => this.secondEdit() ?? this.secondText());
 
   protected readonly periods = computed(() => dayPeriodsOf(this.locale()));
   protected readonly meridiem = computed(() => (this.value().hour < 12 ? 'am' : 'pm'));
@@ -164,20 +171,6 @@ export class RiviniaTimeRowComponent {
   );
 
   constructor() {
-    // Focus the selected option once, after the tray has been rendered. An
-    // effect that runs on every render would steal focus from the inputs.
-    afterRenderEffect(() => {
-      this.optionsOpen();
-      if (!this.focusOptionsAfterRender) return;
-      this.focusOptionsAfterRender = false;
-      const root = this.optionsRef()?.nativeElement;
-      const selected = root?.querySelector<HTMLElement>(
-        '[role="option"][aria-selected="true"]',
-      );
-      const first = root?.querySelector<HTMLElement>('[role="option"]');
-      (selected ?? first)?.focus();
-    });
-
     // Every column opens on its own selected value, not just the focused one:
     // a 15:30 draft must not show the hour at 15 and the minutes still at 00.
     afterRenderEffect(() => {
@@ -186,6 +179,53 @@ export class RiviniaTimeRowComponent {
       this.effectiveHour12();
       if (!this.optionsOpen()) return;
       this.scrollSelectedOptions();
+    });
+
+    // The tray is nested inside the date panel, whose overflow may clip an
+    // absolutely positioned child. Promote it to the top layer and connect it
+    // as a child popup so it escapes clipping and dismisses one level at a time.
+    afterRenderEffect((onCleanup) => {
+      const opened = this.optionsOpen();
+      const panel = this.optionsRef()?.nativeElement;
+      const origin = this.toggleRef()?.nativeElement;
+      if (!opened || !panel || !origin || typeof document === 'undefined') return;
+      const popover = panel as HTMLElement & {
+        showPopover?: () => void;
+        hidePopover?: () => void;
+      };
+      let disconnect: (() => void) | null = null;
+      onCleanup(() => {
+        disconnect?.();
+        if (panel.matches(':popover-open')) popover.hidePopover?.();
+      });
+      try {
+        if (typeof popover.showPopover === 'function' && !panel.matches(':popover-open')) {
+          popover.showPopover();
+        }
+      } catch {
+        // Older browsers use the fixed-position fallback.
+      }
+      if (!panel.matches(':popover-open')) panel.removeAttribute('popover');
+      const bounds = origin.getBoundingClientRect();
+      if (bounds.width > 0 && bounds.height > 0) {
+        try {
+          const connection = connectPopup({
+            origin,
+            panel,
+            parent: 'auto',
+            onDismiss: () => this.optionsOpen.set(false),
+          });
+          disconnect = () => connection.destroy();
+        } catch {
+          this.optionsOpen.set(false);
+        }
+      }
+      const selected = panel.querySelector<HTMLElement>('[role="option"][aria-selected="true"]');
+      const first = panel.querySelector<HTMLElement>('[role="option"]');
+      if (this.focusOptionsAfterRender && (selected ?? first)) {
+        this.focusOptionsAfterRender = false;
+        (selected ?? first)?.focus();
+      }
     });
 
     // A click anywhere outside the tray (or its toggle) closes the tray; the
@@ -252,15 +292,11 @@ export class RiviniaTimeRowComponent {
     if (event.key === 'Tab') return;
 
     const list = event.currentTarget as HTMLElement;
-    const options = [
-      ...list.querySelectorAll<HTMLButtonElement>('[role="option"]'),
-    ];
+    const options = [...list.querySelectorAll<HTMLButtonElement>('[role="option"]')];
     if (!options.length) return;
 
     const current = options.indexOf(document.activeElement as HTMLButtonElement);
-    const selected = options.findIndex(
-      (option) => option.getAttribute('aria-selected') === 'true',
-    );
+    const selected = options.findIndex((option) => option.getAttribute('aria-selected') === 'true');
     let next = current >= 0 ? current : selected >= 0 ? selected : 0;
 
     switch (event.key) {
@@ -292,6 +328,7 @@ export class RiviniaTimeRowComponent {
 
   protected onOptionsFocusOut(event: FocusEvent): void {
     const related = event.relatedTarget as Node | null;
+    if (!related) return;
     const tray = this.optionsRef()?.nativeElement;
     const toggle = this.toggleRef()?.nativeElement;
     if (related && (tray?.contains(related) || related === toggle)) return;
@@ -301,6 +338,7 @@ export class RiviniaTimeRowComponent {
   protected onToggleFocusOut(event: FocusEvent): void {
     if (!this.optionsOpen()) return;
     const related = event.relatedTarget as Node | null;
+    if (!related) return;
     if (related && this.optionsRef()?.nativeElement.contains(related)) return;
     this.optionsOpen.set(false);
   }
@@ -309,36 +347,34 @@ export class RiviniaTimeRowComponent {
     const root = this.optionsRef()?.nativeElement;
     if (!root) return;
     for (const list of root.querySelectorAll<HTMLElement>('[role="listbox"]')) {
-      const selected = list.querySelector<HTMLElement>(
-        '[role="option"][aria-selected="true"]',
-      );
+      const selected = list.querySelector<HTMLElement>('[role="option"][aria-selected="true"]');
       if (!selected) continue;
-      const target =
-        selected.offsetTop - (list.clientHeight - selected.offsetHeight) / 2;
-      list.scrollTop = Math.max(
-        0,
-        Math.min(target, list.scrollHeight - list.clientHeight),
-      );
+      const target = selected.offsetTop - (list.clientHeight - selected.offsetHeight) / 2;
+      list.scrollTop = Math.max(0, Math.min(target, list.scrollHeight - list.clientHeight));
     }
   }
 
   protected onUnitInput(unit: TimeUnit, event: Event): void {
     const input = event.target as HTMLInputElement;
     const digits = normalizeDigits(input.value).replace(/\D/g, '');
-    if (!digits) return;
+    if (!digits) {
+      this.editText(unit).set('');
+      return;
+    }
 
     const clipped = digits.length > 2 ? digits.slice(-2) : digits;
+    this.editText(unit).set(clipped);
     const numeric = Number(clipped);
     if (!Number.isFinite(numeric)) return;
 
     const next = this.withUnit(unit, numeric);
-    input.value = this.unitText(unit, next);
     if (sameTime(next, this.value())) return;
     this.valueChange.emit(next);
   }
 
   protected onUnitBlur(unit: TimeUnit, event: Event): void {
     const input = event.target as HTMLInputElement;
+    this.editText(unit).set(null);
     input.value = this.unitText(unit, this.value());
   }
 
@@ -349,7 +385,8 @@ export class RiviniaTimeRowComponent {
   protected onUnitKeydown(unit: TimeUnit, event: KeyboardEvent): void {
     if (event.key === 'Enter') {
       event.preventDefault();
-      this.commit.emit();
+      this.editText(unit).set(null);
+      if (!this.disabled() && !this.commitDisabled()) this.commit.emit();
       return;
     }
 
@@ -379,6 +416,7 @@ export class RiviniaTimeRowComponent {
 
     event.preventDefault();
     if (next && !sameTime(next, this.value())) this.valueChange.emit(next);
+    if (next) this.editText(unit).set(null);
   }
 
   protected setMeridiem(period: 'am' | 'pm'): void {
@@ -441,17 +479,15 @@ export class RiviniaTimeRowComponent {
 
   private unitText(unit: TimeUnit, value: RiviniaTime): string {
     if (unit === 'hour') {
-      return formatTimeUnit(
-        this.locale(),
-        displayHour(value.hour, this.effectiveHour12()),
-        2,
-      );
+      return formatTimeUnit(this.locale(), displayHour(value.hour, this.effectiveHour12()), 2);
     }
-    return formatTimeUnit(
-      this.locale(),
-      unit === 'minute' ? value.minute : value.second,
-      2,
-    );
+    return formatTimeUnit(this.locale(), unit === 'minute' ? value.minute : value.second, 2);
+  }
+
+  private editText(unit: TimeUnit) {
+    if (unit === 'hour') return this.hourEdit;
+    if (unit === 'minute') return this.minuteEdit;
+    return this.secondEdit;
   }
 }
 

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Propose or apply a reviewed environment model",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit Angular application project to inspect."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["proposal", "apply"],
+      "description": "Proposal writes review artifacts only; apply requires explicit review inputs."
+    },
+    "planFile": { "type": "string", "minLength": 1 },
+    "inspectionPlanFile": { "type": "string", "minLength": 1 },
+    "previewFile": { "type": "string", "minLength": 1 },
+    "reviewedDigest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "reviewedPreviewSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "approveModelGeneration": {
+      "type": "boolean",
+      "const": true,
+      "description": "Explicitly approve creating the reviewed EnvironmentModel file."
+    }
+  },
+  "required": ["project", "mode", "planFile", "inspectionPlanFile", "previewFile"],
+  "allOf": [
+    {
+      "if": { "properties": { "mode": { "const": "proposal" } }, "required": ["mode"] },
+      "then": {
+        "not": {
+          "anyOf": [
+            { "required": ["reviewedDigest"] },
+            { "required": ["reviewedPreviewSha256"] },
+            { "required": ["approveModelGeneration"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "mode": { "const": "apply" } }, "required": ["mode"] },
+      "then": {
+        "required": ["reviewedDigest", "reviewedPreviewSha256", "approveModelGeneration"]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

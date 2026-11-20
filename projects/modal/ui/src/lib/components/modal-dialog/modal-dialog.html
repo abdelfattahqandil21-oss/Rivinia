@@ -8,7 +8,7 @@
   [attr.data-state]="state()"
   [attr.data-resizing]="resizing()"
   [attr.aria-label]="computedLabel()"
-  [attr.aria-labelledby]="title() && !ariaLabel() ? titleId : null"
+  [attr.aria-labelledby]="title() && !ariaLabel() && !hasCustomHeader() ? titleId : null"
   [attr.aria-describedby]="description() ? descriptionId : null"
   (cancel)="onCancel($event)"
   (click)="onBackdropClick($event)"
@@ -16,7 +16,21 @@
 >
   @if (hasCustomHeader()) {
     <div class="rv-modal-header rv-modal-header-custom">
-      <ng-content select="[rv-modal-header]"></ng-content>
+      @if (headerTemplate()) {
+        <ng-container [ngTemplateOutlet]="headerTemplate()"></ng-container>
+      } @else {
+        <ng-content select="[rv-modal-header]"></ng-content>
+      }
+      @if ((headerTemplate() || managed()) && showCloseButton()) {
+        <button
+          type="button"
+          class="rv-modal-close"
+          (click)="onCloseButton()"
+          [attr.aria-label]="closeLabel()"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      }
     </div>
   } @else if (title() || showCloseButton()) {
     <div class="rv-modal-header">
@@ -33,7 +47,7 @@
           type="button"
           class="rv-modal-close"
           (click)="onCloseButton()"
-          aria-label="Close dialog"
+          [attr.aria-label]="closeLabel()"
         >
           <span aria-hidden="true">&times;</span>
         </button>
@@ -45,7 +59,11 @@
   </div>
   @if (hasCustomFooter()) {
     <div class="rv-modal-footer">
-      <ng-content select="[rv-modal-footer]"></ng-content>
+      @if (footerTemplate()) {
+        <ng-container [ngTemplateOutlet]="footerTemplate()"></ng-container>
+      } @else {
+        <ng-content select="[rv-modal-footer]"></ng-content>
+      }
     </div>
   }
 </dialog>

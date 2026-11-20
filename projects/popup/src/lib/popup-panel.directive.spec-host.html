@@ -1,0 +1,9 @@
+<button #trigger type="button">Trigger</button>
+<div
+  rvPopupPanel
+  [rvPopupPanelOrigin]="trigger"
+  [rvPopupPanelOpen]="open()"
+  [rvPopupPanelPlacement]="placement()"
+  [rvPopupPanelOffset]="offset()"
+  (rvPopupDismissed)="lastDismissal.set($event)"
+></div>

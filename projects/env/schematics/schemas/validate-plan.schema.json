@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Validate a reviewed environment plan",
+  "type": "object",
+  "properties": {
+    "plan": {
+      "type": "string",
+      "description": "Workspace-relative path to the serialized plan."
+    },
+    "reviewedDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Digest recorded separately when this exact plan was reviewed."
+    }
+  },
+  "required": ["plan", "reviewedDigest"],
+  "additionalProperties": false
+}

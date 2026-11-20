@@ -3,7 +3,7 @@
  *
  * `check:theme-dark` proves the THEME's own cascade on static documents. This
  * one proves the other half: that the shipped select, menu and i18n toggle read
- * those tokens, that `--rv-accent` reaches the three places D87 names, that
+ * those tokens, that `--rv-color-primary` reaches the three places D87 names, that
  * `forced-colors` replaces them with system colours, and — the claim that is
  * easiest to break and hardest to notice — that with no theme imported the
  * components look exactly as they did before the wiring.
@@ -41,7 +41,7 @@
  *  - light          no theme imported; snapshot must equal the pre-change one.
  *  - dark           theme.css linked + data-rv-theme="dark"; all three libs.
  *  - dark-os        theme.css linked + prefers-color-scheme: dark; same values.
- *  - accent         theme.css + --rv-accent overridden; ring, indicator, toggle.
+ *  - accent         theme.css + --rv-color-primary and --rv-color-focus overrides.
  *  - rtl            document direction rtl; the same snapshot fields.
  *  - forced-colors  system colours; Chromium only (Playwright emulates the
  *                   media feature there, and nowhere else reliably).
@@ -82,13 +82,13 @@ const assertDark = (measured) => {
   const plain = measured.menu.menu.panel;
   const toggle = measured.i18n.button;
   return [
-    ['select panel is dark', measured.menu.premiumPanel.backgroundColor, 'rgb(22, 22, 22)'],
-    ['select panel text is light', measured.menu.premiumPanel.color, 'rgb(242, 242, 242)'],
-    ['menu panel is dark', plain.backgroundColor, 'rgb(22, 22, 22)'],
-    ['menu panel text is light', plain.color, 'rgb(242, 242, 242)'],
-    ['toggle is dark', toggle.backgroundColor, 'rgb(22, 22, 22)'],
-    ['toggle text is light', toggle.color, 'rgb(242, 242, 242)'],
-    ['premium trigger is dark', measured.menu.premiumTrigger.backgroundColor, 'rgb(22, 22, 22)'],
+    ['select panel is dark', measured.menu.premiumPanel.backgroundColor, 'rgb(24, 32, 40)'],
+    ['select panel text is light', measured.menu.premiumPanel.color, 'rgb(245, 247, 250)'],
+    ['menu panel is dark', plain.backgroundColor, 'rgb(24, 32, 40)'],
+    ['menu panel text is light', plain.color, 'rgb(245, 247, 250)'],
+    ['toggle is dark', toggle.backgroundColor, 'rgb(24, 32, 40)'],
+    ['toggle text is light', toggle.color, 'rgb(245, 247, 250)'],
+    ['premium trigger is dark', measured.menu.premiumTrigger.backgroundColor, 'rgb(24, 32, 40)'],
   ];
 };
 
@@ -101,8 +101,8 @@ export const CASES = Object.freeze([
      * The snapshot below is the identity proof: it was captured BEFORE the
      * accent wiring and was re-derived from that CSS afterwards (the procedure
      * is in the header). These assertions say WHY it must not drift: with no
-     * theme there is no `--rv-accent`, so every wired surface falls back to
-     * the ink it used before. A default such as `var(--rv-accent, #5b5bd6)`
+     * theme there is no `--rv-color-primary`, so every wired surface falls back to
+     * the ink it used before. A default such as `var(--rv-color-primary, #5b5bd6)`
      * would pass the snapshot's absence test on a fresh checkout but fail
      * here.
      */
@@ -150,23 +150,25 @@ export const CASES = Object.freeze([
   },
   {
     id: 'dark-os',
-    label: 'theme.css + prefers-color-scheme: dark',
+    label: 'theme.css + system mode + prefers-color-scheme: dark',
     scheme: 'dark',
     theme: true,
+    htmlAttrs: { 'data-rv-theme': 'system' },
     assert: assertDark,
   },
   {
     id: 'accent',
-    label: 'theme.css + --rv-accent override',
+    label: 'theme.css + primary/focus token overrides',
     scheme: 'light',
     theme: true,
     accent: 'rgb(1, 2, 3)',
+    focus: 'rgb(4, 5, 6)',
     assert: (measured) => {
       const simple = measured.menu.simple;
       const probes = measured.probes;
       return [
         ['select check mark', simple.check.color, 'rgb(1, 2, 3)'],
-        ['select row ring', simple.active.outlineColor, 'rgb(1, 2, 3)'],
+        ['select row ring uses focus token', simple.active.outlineColor, 'rgb(4, 5, 6)'],
         ['select active row', simple.active.backgroundColor, probes.rowActive],
         // Hover activates the row, and the hover wash used to win over the
         // accent. The probe evaluates the 8% accent mix independently, so a
@@ -176,8 +178,8 @@ export const CASES = Object.freeze([
           simple.activeHover.backgroundColor,
           probes.rowActiveHover,
         ],
-        ['select search ring', simple.search.outlineColor, 'rgb(1, 2, 3)'],
-        ['premium trigger ring', measured.menu.premiumTrigger.outlineColor, 'rgb(1, 2, 3)'],
+        ['select search ring uses focus token', simple.search.outlineColor, 'rgb(4, 5, 6)'],
+        ['premium trigger ring uses focus token', measured.menu.premiumTrigger.outlineColor, 'rgb(4, 5, 6)'],
         // Premium's active tint is the 7% mix, and its own hover rule is the
         // same specificity, so both readings must land on the accent.
         [
@@ -190,9 +192,9 @@ export const CASES = Object.freeze([
           measured.menu.premiumActiveHover.backgroundColor,
           probes.rowPremiumActive,
         ],
-        ['menu row ring', measured.menu.menu.active.outlineColor, 'rgb(1, 2, 3)'],
+        ['menu row ring uses focus token', measured.menu.menu.active.outlineColor, 'rgb(4, 5, 6)'],
         ['menu active row', measured.menu.menu.active.backgroundColor, probes.rowActive],
-        ['toggle ring', measured.i18n.focus.outlineColor, 'rgb(1, 2, 3)'],
+        ['toggle ring uses focus token', measured.i18n.focus.outlineColor, 'rgb(4, 5, 6)'],
         // The :active mix is 16% accent over the button's own fill. The expected
         // value comes from an independent declaration with the same formula: a
         // component that kept `currentColor` cannot produce this number.
@@ -574,7 +576,7 @@ async function measureToggle(page, testCase) {
  * declaration. Comparing against a hard-coded serialisation would pin the
  * engine's colour syntax (Chromium writes `color(srgb … / 0.1)` for a mix);
  * comparing against this probe pins the VALUE the component is supposed to
- * derive from `--rv-accent`, which is the claim under test.
+ * derive from `--rv-color-primary`, which is the claim under test.
  */
 function measureAccentProbes(page) {
   return page.evaluate(() => {
@@ -585,11 +587,11 @@ function measureAccentProbes(page) {
       return getComputedStyle(probe).backgroundColor;
     };
     const value = {
-      rowActive: read('color-mix(in srgb, var(--rv-accent, currentColor) 10%, transparent)'),
-      rowActiveHover: read('color-mix(in srgb, var(--rv-accent, currentColor) 8%, transparent)'),
-      rowPremiumActive: read('color-mix(in srgb, var(--rv-accent, currentColor) 7%, transparent)'),
+      rowActive: read('color-mix(in srgb, var(--rv-color-primary, currentColor) 10%, transparent)'),
+      rowActiveHover: read('color-mix(in srgb, var(--rv-color-primary, currentColor) 8%, transparent)'),
+      rowPremiumActive: read('color-mix(in srgb, var(--rv-color-primary, currentColor) 7%, transparent)'),
       toggleActive: read(
-        'color-mix(in srgb, var(--rv-accent, currentColor) 16%, var(--rv-i18n-toggle-bg, var(--rv-bg, transparent)))',
+        'color-mix(in srgb, var(--rv-color-primary, currentColor) 16%, var(--rv-i18n-toggle-bg, var(--rv-color-surface, transparent)))',
       ),
     };
     probe.remove();
@@ -713,11 +715,12 @@ export async function run({
             }, themeCss);
           }
           if (testCase.accent) {
-            await page.addInitScript((accent) => {
+            await page.addInitScript(({ accent, focus }) => {
               document.addEventListener('DOMContentLoaded', () => {
-                document.documentElement.style.setProperty('--rv-accent', accent);
+                document.documentElement.style.setProperty('--rv-color-primary', accent);
+                document.documentElement.style.setProperty('--rv-color-focus', focus);
               });
-            }, testCase.accent);
+            }, { accent: testCase.accent, focus: testCase.focus });
           }
 
           const measured = {

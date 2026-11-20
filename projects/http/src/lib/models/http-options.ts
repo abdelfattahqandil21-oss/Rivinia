@@ -1,4 +1,4 @@
-import type { HttpContext, HttpHeaders, HttpParams } from '@angular/common/http';
+import type { HttpContext, HttpHeaders, HttpParams, HttpClientCommonOptions } from '@angular/common/http';
 import type { Signal } from '@angular/core';
 import type { RiviniaEnvelopePolicy } from './http-envelope';
 
@@ -11,7 +11,7 @@ export type ReactiveInput<T> = T | Signal<T> | (() => T);
 
 /** Shorthand for building query strings; `null`/`undefined` values are dropped. */
 export type QueryParamsInput =
-  HttpParams | Record<string, string | number | boolean | undefined | null>;
+  HttpParams | Record<string, string | number | boolean | readonly (string | number | boolean)[] | undefined | null>;
 
 /**
  * Unwrap contract for a single request — a discriminated union on the literal
@@ -42,12 +42,16 @@ export interface RiviniaUnwrapOff {
  * Shared per-request fields (transport + envelope validation). Unwrap
  * behavior is added by the contract types below — never by a global.
  */
-export interface RiviniaRequestBase {
+/** Native transport controls; caching here means the browser HTTP cache. */
+export interface RiviniaTransportOptions extends Pick<HttpClientCommonOptions,
+  'withCredentials' | 'timeout' | 'transferCache' | 'keepalive' | 'cache' |
+  'credentials' | 'priority' | 'mode' | 'redirect' | 'referrer' | 'referrerPolicy' | 'integrity'> {}
+
+export interface RiviniaRequestBase extends RiviniaTransportOptions {
   params?: QueryParamsInput;
   headers?: HttpHeaders | Record<string, string | string[]>;
   /** Pass-through for app-owned interceptors (auth opt-out, error policy, ...). */
   context?: HttpContext;
-  withCredentials?: boolean;
   /**
    * Opt-in backend-envelope validation for this call (replaces any global
    * `envelope` policy wholesale). See `RiviniaEnvelopePolicy`.

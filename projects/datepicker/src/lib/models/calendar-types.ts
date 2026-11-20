@@ -8,6 +8,8 @@ import type {
 /** One rendered day. `null` in a grid means "belongs to another month". */
 export interface RiviniaCalendarCell {
   readonly date: RiviniaDate;
+  /** Belongs to the preceding/following month when outside days are enabled. */
+  readonly outside?: boolean;
   readonly today: boolean;
   readonly selected: boolean;
   /** The roving-tabindex target. */
@@ -104,6 +106,7 @@ export interface RiviniaBuildMonthInput {
   readonly selected?: RiviniaDate | null;
   readonly focused?: RiviniaDate | null;
   readonly isDisabled?: (date: RiviniaDate) => boolean;
+  readonly showOutsideDays?: boolean;
 }
 
 /** The reason `applyAction` was called; useful for logs and for tests. */

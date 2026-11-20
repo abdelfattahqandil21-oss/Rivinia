@@ -22,11 +22,13 @@ Find the public entry points, symbols, and exports.
 | `RiviniaRawOptions`           | type     | Options for methods that never unwrap.                                                                           |
 | `RiviniaDeleteOptions`        | type     | Delete options including an optional request body.                                                               |
 | `RiviniaDeleteRequestOptions` | type     | Delete options including the unwrap contract.                                                                    |
+| `RiviniaTransportOptions` | type | Native HttpClient transport controls, shared by requests and resources. |
+| `RiviniaResourceEndpoint` | type | Static URL, URL signal, or callback receiving native ResourceParamsContext. |
 | `RiviniaRequestBase`          | type     | Shared transport and envelope options.                                                                           |
 | `RiviniaResourceOptions`      | type     | Reactive resource options and unwrap contract.                                                                   |
 | `RiviniaResourceBase`         | type     | Shared resource-specific options.                                                                                |
 | `ReactiveInput`               | type     | Static value, signal, or reactive function input.                                                                |
-| `QueryParamsInput`            | type     | `HttpParams` or a primitive-valued query object.                                                                 |
+| `QueryParamsInput`            | type     | `HttpParams` or scalar/readonly-array query values; nullish entries are omitted.                                                                 |
 | `RiviniaUnwrapOn`             | type     | Required key form for `{ unwrap: true }`.                                                                        |
 | `RiviniaUnwrapOff`            | type     | Form where an unwrap key is disallowed.                                                                          |
 

@@ -95,6 +95,10 @@ export interface RiviniaDatepickerLabels {
   readonly meridiem: string;
   readonly now: string;
   readonly ok: string;
+  /** Optional panel action labels; older complete label objects remain valid. */
+  readonly today?: string;
+  readonly apply?: string;
+  readonly clear?: string;
   readonly timeZone: string;
   readonly invalidTime: string;
   readonly invalidTimeZone: string;
@@ -125,13 +129,14 @@ export const DATEPICKER_LABELS_EN: RiviniaDatepickerLabels = {
   meridiem: 'AM or PM',
   now: 'Now',
   ok: 'OK',
+  today: 'Today',
+  apply: 'Apply',
+  clear: 'Clear',
   timeZone: 'Time zone',
   invalidTime: 'Enter a valid time.',
   invalidTimeZone: 'Unknown time zone.',
-  dstGap:
-    'This time does not exist in the selected time zone because the clock jumps forward.',
-  dstOverlap:
-    'This time occurs twice in the selected time zone. Choose which one you mean.',
+  dstGap: 'This time does not exist in the selected time zone because the clock jumps forward.',
+  dstOverlap: 'This time occurs twice in the selected time zone. Choose which one you mean.',
   useSuggestedTime: 'Use',
   instructions:
     'Use the arrow keys to move by day, Home and End to reach the ends of the week, ' +
@@ -158,6 +163,9 @@ export const DATEPICKER_LABELS_AR: RiviniaDatepickerLabels = {
   meridiem: 'صباحًا أو مساءً',
   now: 'الآن',
   ok: 'موافق',
+  today: 'اليوم',
+  apply: 'تطبيق',
+  clear: 'مسح',
   timeZone: 'المنطقة الزمنية',
   invalidTime: 'أدخل وقتًا صحيحًا.',
   invalidTimeZone: 'منطقة زمنية غير معروفة.',

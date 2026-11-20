@@ -12,9 +12,9 @@ main {
 }
 
 #scope-a {
-  --rv-ok: rgb(18, 52, 86);
+  --rv-color-success: rgb(18, 52, 86);
 }
 
 #scope-b {
-  --rv-ok: rgb(68, 85, 102);
+  --rv-color-success: rgb(68, 85, 102);
 }

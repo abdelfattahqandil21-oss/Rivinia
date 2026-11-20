@@ -1,4 +1,6 @@
 .rv-modal {
+  display: flex;
+  flex-direction: column;
   color-scheme: light dark;
   /*
    * The PALETTE tokens are NOT declared here.
@@ -7,7 +9,7 @@
    * ancestor sets, so declaring them here would make the shared
    * semantic layer unreachable. They are read as
    * var(--rv-modal-*, var(--rv-<semantic>, <default>)) at each read
-   * site instead — so a consumer's --rv-bg reaches the dialog, and
+   * site instead — so a consumer's --rv-color-surface reaches the dialog, and
    * --rv-modal-bg still wins for the dialog alone.
    *
    * The LAYOUT tokens (widths, padding, durations) stay here: they are
@@ -15,6 +17,7 @@
    */
   --rv-modal-pad: 20px;
   --rv-modal-gap: 12px;
+  --rv-modal-section-divider: var(--rv-color-border-subtle, color-mix(in srgb, currentColor 12%, transparent));
   /*
    * Responsive widths.
    *
@@ -41,11 +44,11 @@
   --rv-modal-radius-sheet: 1.25rem;
   --rv-modal-width-panel: 24rem;
   padding: 0;
-  border: 1px solid var(--rv-modal-border, var(--rv-border, #e0e0e0));
-  border-radius: var(--rv-modal-radius, var(--rv-radius, 12px));
-  background: var(--rv-modal-bg, var(--rv-bg, #ffffff));
-  color: var(--rv-modal-fg, var(--rv-fg, #111111));
-  box-shadow: var(--rv-modal-shadow, var(--rv-shadow, 0 24px 64px rgba(0, 0, 0, 0.28)));
+  border: 1px solid var(--rv-modal-border, var(--rv-color-border, #e0e0e0));
+  border-radius: var(--rv-modal-radius, var(--rv-radius-md, 12px));
+  background: var(--rv-modal-bg, var(--rv-color-surface, #ffffff));
+  color: var(--rv-modal-fg, var(--rv-color-text, #111111));
+  box-shadow: var(--rv-modal-shadow, var(--rv-shadow-md, 0 24px 64px rgba(0, 0, 0, 0.28)));
   max-height: var(--rv-modal-max-height);
   width: var(--rv-modal-width-md);
   max-width: calc(100dvw - 2rem);
@@ -67,6 +70,10 @@
     inset var(--rv-modal-size-duration, 180ms) var(--rv-modal-easing, ease-out),
     margin var(--rv-modal-size-duration, 180ms) var(--rv-modal-easing, ease-out);
 }
+.rv-modal:not([open]) {
+  display: none;
+}
+
 /*
  * While the viewport is being resized, the transition is OFF.
  *
@@ -76,7 +83,7 @@
  * dialog snaps instead, which is what the eye expects from a resize.
  */
 .rv-modal[data-resizing='true'] {
-  transition: none !important;
+  transition: none;
 }
 /*
  * The loader shown while a dialog's data is still in flight.
@@ -91,7 +98,7 @@
   gap: var(--rv-modal-loading-gap, 0.625rem);
   padding: var(--rv-modal-loading-padding, 2rem);
   min-height: var(--rv-modal-loading-min-height, 6rem);
-  color: var(--rv-modal-muted, var(--rv-muted, #555555));
+  color: var(--rv-modal-muted, var(--rv-color-text-muted, #555555));
   font-size: var(--rv-modal-loading-size, 0.875rem);
 }
 /*
@@ -240,6 +247,9 @@
 .rv-modal[data-state='closing'] {
   animation: rv-modal-out var(--rv-modal-duration-out) var(--rv-modal-easing-out) forwards;
 }
+.rv-modal[data-state='closing']::backdrop {
+  animation: rv-modal-backdrop-out var(--rv-modal-duration-out) var(--rv-modal-easing-out) forwards;
+}
 @keyframes rv-modal-in {
   from {
     opacity: 0;
@@ -276,21 +286,39 @@
   }
 }
 @keyframes rv-modal-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(4px);
+  }
+}
+@keyframes rv-modal-backdrop-out {
+  from {
+    opacity: 1;
+  }
   to {
     opacity: 0;
-    transform: translateY(8px) scale(0.98);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .rv-modal[data-animation] {
+  .rv-modal[data-animation]:not([data-animation='none'])[data-state='open'] {
+    animation: none;
+  }
+  .rv-modal[data-state='closing'] {
+    animation: none;
+  }
+  .rv-modal[data-state='closing']::backdrop {
     animation: none;
   }
 }
 .rv-modal-header {
   display: flex;
+  flex: 0 0 auto;
   align-items: flex-start;
   gap: var(--rv-modal-gap);
-  padding: var(--rv-modal-pad) var(--rv-modal-pad) 0;
+  padding: var(--rv-modal-pad);
+  border-block-end: 1px solid var(--rv-modal-section-divider);
 }
 .rv-modal-header-custom > :first-child {
   flex: 1;
@@ -313,12 +341,12 @@
 .rv-modal-description {
   margin: 0;
   font-size: 0.875rem;
-  color: var(--rv-modal-muted, var(--rv-muted, #555555));
+  color: var(--rv-modal-muted, var(--rv-color-text-muted, #555555));
 }
 .rv-modal-close {
   margin-inline-start: auto;
   flex: none;
-  border: 1px solid var(--rv-modal-border, var(--rv-border, #e0e0e0));
+  border: 1px solid var(--rv-modal-border, var(--rv-color-border, #e0e0e0));
   border-radius: 0.5rem;
   background: transparent;
   color: inherit;
@@ -332,15 +360,18 @@
   outline-offset: 2px;
 }
 .rv-modal-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
   padding: var(--rv-modal-pad);
   overflow: auto;
-  max-height: inherit;
 }
 .rv-modal-footer {
   display: flex;
+  flex: 0 0 auto;
   gap: var(--rv-modal-gap);
   justify-content: flex-end;
-  padding: 0 var(--rv-modal-pad) var(--rv-modal-pad);
+  padding: var(--rv-modal-pad);
+  border-block-start: 1px solid var(--rv-modal-section-divider);
 }
 .rv-modal-footer:empty {
   display: none;

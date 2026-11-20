@@ -91,6 +91,9 @@ const ADAPTERS = [SELECT, MENU, PROJECTED_MENU];
 const PHONE = { width: 390, height: 664 } as const;
 
 const POPUP_GLOBALS = [
+  'document:keydown',
+  'document:close',
+  'document:scroll',
   'document:pointerdown',
   'document:pointermove',
   'document:pointerup',
@@ -110,6 +113,9 @@ const POPUP_GLOBALS = [
 const listenerLedger = () => {
   const balance = new Map<string, number>();
   for (const key of [
+    'document:keydown',
+    'document:close',
+    'document:scroll',
     'document:pointerdown',
     'document:pointermove',
     'document:pointerup',

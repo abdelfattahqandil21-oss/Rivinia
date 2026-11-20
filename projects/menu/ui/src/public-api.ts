@@ -9,3 +9,21 @@ export type {
   MenuTriggerRect,
   MenuViewport,
 } from './lib/utils/menu-position';
+
+export {
+  MenuItemDirective,
+  MenuPanelDirective,
+  MenuRootDirective,
+  MenuSeparatorDirective,
+  MenuTriggerDirective,
+} from './menu-ui';
+export {
+  MenuActionDirective,
+  MenuHeaderDirective,
+  MenuItemDefDirective,
+  MenuLoadingTemplateDirective,
+  MenuEmptyTemplateDirective,
+  MenuLabelDirective,
+  MenuRadioGroupDirective,
+} from './menu-ui';
+export { MENU_ITEM_NAVIGATION, type MenuItemNavigationAdapter } from './menu-ui';

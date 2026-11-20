@@ -6,6 +6,10 @@ Build the first working example from the package quick start.
 
 ## Quick start
 
+In the unreleased integration, choose a day then press **OK** in the panel.
+**Now** selects today's date in the draft. Escape/outside dismissal discards it.
+For the previous date-only behavior use `commitMode="immediate"`.
+
 ```ts
 // src/app/flight-date.component.ts
 import { Component, signal } from '@angular/core';

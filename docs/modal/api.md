@@ -30,6 +30,17 @@ The `@rivinia/modal/ui` entry point exports `RiviniaModalDialog`,
 `RiviniaModalBackdrop`, `RiviniaModalPosition`, `RiviniaModalSize`, and
 `RiviniaModalUiOptions` types.
 
+Optional backend action rendering is exported from `@rivinia/modal/actions`:
+`RiviniaActionBar`, `RiviniaActionTemplate`, and the
+`RiviniaActionAppearance`, `RiviniaActionLayout`, `RiviniaActionPlacement`,
+`RiviniaActionState`, `RiviniaActionTone`, and
+`RiviniaActionTemplateContext` contracts. The package declares `@rivinia/menu`
+as an optional peer. Plain Modal consumers do not install or import Menu;
+consumers of Actions provide it. The bar defaults to `id`, `name`, `color`,
+and `order` fields, with typed field-name inputs or accessors for other shapes.
+Activation emits the original object reference and never calls APIs or closes
+the modal.
+
 
 ## License
 

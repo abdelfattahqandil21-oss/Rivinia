@@ -30,6 +30,18 @@
     "**/*.css",
     "**/*.scss"
   ],
+  "schematics": "./schematics/collection.json",
+  "peerDependencies": {
+    "@angular/common": "^22.1.0",
+    "@angular/core": "^22.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@angular/common": { "optional": true },
+    "@angular/core": { "optional": true }
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
+  },
   "exports": {
     "./package.json": {
       "default": "./package.json"
@@ -41,6 +53,7 @@
     "./theme.css": "./styles/theme.css",
     "./tailwind.css": "./styles/tailwind.css",
     "./bootstrap.css": "./styles/bootstrap.css",
-    "./scss": "./styles/_index.scss"
+    "./scss": "./styles/_index.scss",
+    "./motion.css": "./motion.css"
   }
 }

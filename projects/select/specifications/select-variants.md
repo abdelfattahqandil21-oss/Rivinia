@@ -57,9 +57,9 @@ unchanged.
 | `--rv-select-radius`               | `0.625rem`                     | `0.75rem`                                                                |
 | `--rv-select-trigger-padding`      | `0.5rem 0.75rem`               | `0.5625rem 0.8125rem`                                                    |
 | `--rv-select-trigger-shadow`       | none                           | `0 1px 2px rgba(16, 24, 40, 0.06)`                                       |
-| `--rv-select-border`               | `--rv-border` (`#e0e0e0`)      | `color-mix(in srgb, fg 14%, transparent)`                                |
+| `--rv-select-border`               | `--rv-color-border` (`#e0e0e0`)      | `color-mix(in srgb, fg 14%, transparent)`                                |
 | `--rv-select-popup-radius`         | `0.75rem`                      | `0.875rem`                                                               |
-| `--rv-select-popup-border`         | `--rv-border`                  | `color-mix(in srgb, fg 10%, transparent)`                                |
+| `--rv-select-popup-border`         | `--rv-color-border`                  | `color-mix(in srgb, fg 10%, transparent)`                                |
 | `--rv-select-popup-shadow`         | `0 16px 48px rgba(0,0,0,0.22)` | `0 12px 32px -8px rgba(16,24,40,.18), 0 4px 8px -4px rgba(16,24,40,.10)` |
 | `--rv-select-popup-pad`            | `0.375rem`                     | `0.3125rem`                                                              |
 | `--rv-select-item-active-bg`       | `currentColor 10%`             | `fg 7%`                                                                  |
@@ -70,7 +70,7 @@ unchanged.
 Notes that matter:
 
 - Since D87 the simple fallbacks above are read as
-  `color-mix(in srgb, var(--rv-accent, <the value in this table>) …)`, so the
+  `color-mix(in srgb, var(--rv-color-primary, <the value in this table>) …)`, so the
   table states the unthemed render, which is what a page that never imports
   `@rivinia/theme` still gets.
 - `--rv-select-item-active-hover-bg` exists because hovering ACTIVATES a row: the

@@ -7,15 +7,15 @@ Back to [the README](../../projects/theme/README.md)
   in temp dirs (no build needed).
 - `pnpm check:theme` — asserts the packaged contract of `dist/theme` after a
   build: `exports["."].style` exists and resolves, every other export target
-  exists, the file list is exactly the expected nine, and `styles/theme.css`
-  declares `--rv-bg` inside `@layer rivinia-theme`. Pass a path to check
+  exists, the file list is exactly the expected 23, and `styles/theme.css`
+  declares `--rv-color-surface` inside `@layer rivinia-theme`. Pass a path to check
   something else — before a release, the tarball:
   `pnpm check:theme rivinia-theme-x.y.z.tgz`.
 - `pnpm check:contrast` — reads `styles/theme.css`, proves the two dark blocks
   agree and the light block carries the palette, then measures every documented
   pair in both schemes against WCAG AA.
 - `pnpm check:theme-dark` — renders eleven documents in Chromium and Firefox to
-  prove the cascade: OS preference, `data-rv-theme` opt-out and override, and
+  prove the cascade: system mode, explicit `data-rv-theme` scopes, and
   both Bootstrap directions. Needs the Playwright browsers installed.
 - `pnpm check:component-theme` — the browser snapshot gate behind
   [what the theme restyles](component-theme.md): it re-derives each engine's

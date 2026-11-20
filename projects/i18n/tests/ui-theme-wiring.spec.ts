@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
- * D87, the language toggle's share: `--rv-accent` paints the focus ring and the
- * `:active` fill, and forced colors gets system-colour defaults.
+ * D101, the language toggle reads `--rv-color-focus` for focus and
+ * `--rv-color-primary` for the `:active` fill; forced colors gets system-colour defaults.
  *
- * The accent is always `var(--rv-accent, currentColor)`: a page that never
- * imported the theme has no `--rv-accent`, and D87 requires it to render
+ * The accent is always `var(--rv-color-primary, currentColor)`: a page that never
+ * imported the theme has no `--rv-color-primary`, and D87 requires it to render
  * exactly as before. Assertions run on whitespace-collapsed source so
  * Prettier's wrapping is not part of what the test means.
  */
@@ -40,16 +40,16 @@ function block(css: string, opener: string): string {
 }
 
 describe('language toggle theme wiring', () => {
-  it('paints the focus ring with the accent and keeps today’s ring as the fallback', () => {
+  it('paints the focus ring with the dedicated focus token', () => {
     expect(flat(source)).toContain(
-      'outline: var(--rv-i18n-toggle-focus-ring, 2px solid var(--rv-accent, currentColor));',
+      'outline: var(--rv-i18n-toggle-focus-ring, 2px solid var(--rv-color-focus, currentColor));',
     );
-    expect(source).not.toMatch(/var\(--rv-accent\)/);
+    expect(source).toContain('var(--rv-color-primary, currentColor) 16%');
   });
 
   it('tints the held-down state with the accent over the toggle’s own fill', () => {
     expect(flat(block(source, '.rv-language-toggle__button:active {'))).toContain(
-      'color-mix(in srgb, var(--rv-accent, currentColor) 16%, var(--rv-i18n-toggle-bg, var(--rv-bg, transparent)))',
+      'color-mix(in srgb, var(--rv-color-primary, currentColor) 16%, var(--rv-i18n-toggle-bg, var(--rv-color-surface, transparent)))',
     );
   });
 

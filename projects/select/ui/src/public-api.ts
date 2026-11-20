@@ -16,3 +16,6 @@ export type {
 } from './lib/utils/select-popup-position';
 export type { SelectPopupUiPlacement as SelectPlacement } from './lib/models/select-popup.ui-types';
 export type { RiviniaSelectVariant } from './lib/models/select-popup.ui-types';
+
+export { RiviniaSelectComboboxComponent } from './lib/components/combobox/select.component';
+export { SelectPanelDirective } from './lib/components/combobox/select-panel.directive';

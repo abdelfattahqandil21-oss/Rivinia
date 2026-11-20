@@ -226,3 +226,29 @@ describe('buildMonth — disabled days', () => {
     ).toBe(true);
   });
 });
+
+describe('neighbouring days', () => {
+  it('fills leading and trailing cells and marks them without duplicating current dates', () => {
+    const grid = buildMonth({ year: 2026, month: 10, firstDay: 1, showOutsideDays: true });
+    const cells = flatten(grid);
+    expect(cells[0]?.date).toEqual(d(2026, 9, 28));
+    expect(cells[0]?.outside).toBe(true);
+    expect(cells[3]?.date).toEqual(d(2026, 10, 1));
+    expect(cells[3]?.outside).toBeUndefined();
+    expect(cells[41]?.date).toEqual(d(2026, 11, 8));
+    expect(cells[41]?.outside).toBe(true);
+    expect(new Set(cells.map((cell) => cell && toIso(cell.date))).size).toBe(42);
+  });
+  it('leaves unsupported years blank at both ends', () => {
+    for (const [year, month] of [
+      [1, 1],
+      [9999, 12],
+    ]) {
+      const cells = flatten(buildMonth({ year, month, firstDay: 7, showOutsideDays: true }));
+      expect(cells.some((cell) => cell === null)).toBe(true);
+      expect(cells.every((cell) => !cell || (cell.date.year >= 1 && cell.date.year <= 9999))).toBe(
+        true,
+      );
+    }
+  });
+});

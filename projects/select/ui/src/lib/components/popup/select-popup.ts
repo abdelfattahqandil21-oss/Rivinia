@@ -20,7 +20,7 @@ import type {
   SelectPopupUiPlacement,
 } from '../../models/select-popup.ui-types';
 import { SelectPopupControllerImpl } from '../../services/select-popup';
-import { bindPopupDismissal, computePopupPosition } from '@rivinia/popup';
+import { bindPopupDismissal, connectPopup, type PopupConnection, computePopupPosition } from '@rivinia/popup';
 
 /** Payload of {@link RiviniaSelectPopup.picked}. */
 export interface SelectPopupPick {
@@ -257,8 +257,9 @@ export class SelectPopupComponent {
   readonly reachEnd = output<void>();
 
   private readonly owned = new SelectPopupControllerImpl();
-  private readonly self = inject(ElementRef<HTMLElement>);
+  private readonly self = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
+  private connection?: PopupConnection;
   /** Item directives the consumer projected (not the ones we render). */
   private readonly projectedItems = contentChildren(SelectPopupItem, { descendants: true });
   /**
@@ -362,8 +363,9 @@ export class SelectPopupComponent {
           'children — pick one way to populate the panel.',
       );
     });
+    this.destroyRef.onDestroy(() => this.disconnectPopup());
     effect((onCleanup) => {
-      if (!this.controller().open()) return;
+      if (!this.controller().open() || this.topLayerSupported) return;
       const win = typeof window === 'undefined' ? null : window;
       const doc = typeof document === 'undefined' ? null : document;
       bindPopupDismissal({
@@ -394,6 +396,7 @@ export class SelectPopupComponent {
       if (this.controller().open() && !this.positioned()) this.showAndPosition();
       this.emitPanelReady();
       this.consumePendingFocus();
+      this.syncPopupConnection();
     });
   }
 
@@ -806,7 +809,34 @@ export class SelectPopupComponent {
     this.controller().activate(id);
   }
 
+  private disconnectPopup(): void {
+    this.connection?.destroy();
+    this.connection = undefined;
+  }
+
+  private syncPopupConnection(): void {
+    if (!this.controller().open()) {
+      this.disconnectPopup();
+      return;
+    }
+    if (!this.topLayerSupported || this.connection) return;
+    const origin = this.triggerEl();
+    const panel = this.self.nativeElement.querySelector<HTMLElement>('.rv-select-popup-panel');
+    if (!origin?.isConnected || !panel?.isConnected) return;
+    const connection = connectPopup({
+      origin, panel, parent: 'auto', closeOnWidthChange: true,
+      position: () => this.reposition(),
+      onDismiss: reason => {
+        this.connection = undefined;
+        this.doClose(reason === 'escape');
+      },
+    });
+    if (this.controller().open()) this.connection = connection;
+    else connection.destroy();
+  }
+
   private doClose(restoreFocus: boolean): void {
+    this.disconnectPopup();
     const was = this.controller().open();
     this.focusedEditable = null;
     // APG: the typeahead buffer is per-open. Keeping it across a close made

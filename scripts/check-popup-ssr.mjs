@@ -69,7 +69,7 @@ const [
   import('@rivinia/toast/ui'),
 ]);
 const { RiviniaMenu } = await import('@rivinia/menu');
-const { RiviniaSelectComponent } = await import('@rivinia/select/ui');
+const { RiviniaSelectComponent, RiviniaSelectComboboxComponent } = await import('@rivinia/select/ui');
 const { RiviniaMenuComponent, RiviniaMenuItem } = await import('@rivinia/menu/ui');
 
 /**
@@ -107,6 +107,7 @@ async function render(template, { unsafe = false, opened = false } = {}) {
     standalone: true,
     imports: [
       RiviniaSelectComponent,
+      RiviniaSelectComboboxComponent,
       RiviniaMenuComponent,
       RiviniaMenuItem,
       RiviniaModalDialog,
@@ -303,6 +304,14 @@ console.log(
       !/popover="manual"/.test(result.body),
     `region ${/role="region"[^>]*aria-label="Notifications"/.test(result.body)}, status ${/role="status"/.test(result.body)}, message ${/Server notification/.test(result.body)}, promoted ${/popover="manual"/.test(result.body)}`,
   );
+}
+
+{
+  const result = await render('<rv-select-combobox rvSelectRootId="ssr-city" labelText="City" [rvSelectOptions]="[{key:1,value:1,label:\'Cairo\'}]" />');
+  check('rv-select-combobox: renders without browser globals', result.threw === null, result.error);
+  check('rv-select-combobox: renders a closed combobox with a deterministic ID',
+    /role="combobox"/.test(result.body) && /id="ssr-city-combobox"/.test(result.body)
+      && /aria-expanded="false"/.test(result.body) && !/popover="manual"/.test(result.body));
 }
 
 if (failures.length) {

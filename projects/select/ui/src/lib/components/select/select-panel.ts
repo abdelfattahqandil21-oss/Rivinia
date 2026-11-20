@@ -374,7 +374,8 @@ export class RiviniaSelectComponent implements FormValueControl<SelectChange> {
       const c = this.controller();
       if (c.mode === 'single') {
         if (typeof v === 'string' && v !== c.value()) {
-          c.select(v);
+          if (c.setValue) c.setValue(v);
+          else c.select(v);
         } else if (v === null && c.value() !== null) {
           c.clear();
         }
@@ -383,8 +384,11 @@ export class RiviniaSelectComponent implements FormValueControl<SelectChange> {
         const current = c.values();
         const incoming = Array.isArray(v) ? v : [];
         if (incoming.length !== current.length || incoming.some((id, i) => id !== current[i])) {
-          c.clear();
-          for (const id of incoming) c.toggle(id);
+          if (c.setValues) c.setValues(incoming);
+          else {
+            c.clear();
+            for (const id of incoming) c.toggle(id);
+          }
         }
       }
     });

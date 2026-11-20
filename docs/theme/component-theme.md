@@ -5,14 +5,14 @@ Back to [the README](../../projects/theme/README.md) ·
 
 The import reaches the interactive layer of each component, not just surfaces:
 
-| Component | Reads `--rv-accent` for                                                       |
+| Component | Reads `--rv-color-primary` for                                                       |
 | --------- | ----------------------------------------------------------------------------- |
 | select    | trigger, search and row focus rings; the active row's tint; the selected tick |
 | menu      | the row focus ring and the active row's tint                                  |
 | i18n      | the language toggle's focus ring and its held-down fill                       |
 
-Every one of those reads is `var(--rv-accent, <its previous value>)`. A page
-that imports nothing has no `--rv-accent`, so it renders exactly as it did
+Every one of those reads is `var(--rv-color-primary, <its previous value>)`. A page
+that imports nothing has no `--rv-color-primary`, so it renders exactly as it did
 before the theme shipped — `pnpm check:component-theme` compares each engine's
 `light` snapshot against one re-derived from the pre-wiring CSS (the header of
 `scripts/check-component-theme.mjs` has the procedure) and fails on any

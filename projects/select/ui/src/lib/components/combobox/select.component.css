@@ -1,0 +1,57 @@
+:host {
+  display: inline-grid;
+  position: relative;
+  inline-size: 100%;
+  gap: 0.35rem;
+  min-inline-size: 12rem;
+}
+
+.rv-select-label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--rv-color-text, CanvasText);
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.rv-select-field {
+  display: block;
+  position: relative;
+  min-inline-size: 0;
+}
+
+.rv-select-chevron {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: 0.9rem;
+  inline-size: 0.45rem;
+  block-size: 0.45rem;
+  border-block-end: 2px solid var(--rv-select-muted, currentColor);
+  border-inline-end: 2px solid var(--rv-select-muted, currentColor);
+  pointer-events: none;
+  transform: translateY(-70%) rotate(45deg);
+  transition: transform var(--rv-select-motion-duration, 160ms)
+    var(--rv-select-motion-easing, cubic-bezier(0.2, 0, 0, 1));
+}
+
+.rv-select-chevron-open {
+  transform: translateY(-25%) rotate(225deg);
+}
+
+.rv-select-label[hidden] {
+  display: none;
+}
+
+.rv-select-virtual-spacer {
+  inline-size: 1px;
+  pointer-events: none;
+}
+
+.rv-select-list .rv-select-option {
+  box-sizing: border-box;
+  block-size: var(--rv-select-option-height, 2.5rem);
+  min-block-size: var(--rv-select-option-height, 2.5rem);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

@@ -2,7 +2,7 @@
   #panel
   class="rv-toasts"
   role="region"
-  aria-label="Notifications"
+  [attr.aria-label]="regionLabel()"
   [attr.popover]="topLayerSupported ? 'manual' : null"
   [attr.data-position]="position()"
   [attr.data-animation]="animation()"
@@ -32,7 +32,7 @@
           type="button"
           class="rv-toast-close"
           (click)="close(item.toast.id)"
-          aria-label="Dismiss notification"
+          [attr.aria-label]="dismissLabel()"
         >
           <span aria-hidden="true">&times;</span>
         </button>

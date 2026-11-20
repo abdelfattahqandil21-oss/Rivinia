@@ -2,9 +2,34 @@
   "$schema": "../../../node_modules/@angular-devkit/schematics/collection-schema.json",
   "schematics": {
     "ng-add": {
-      "description": "Scaffold typed environment files and wire dev/stage/prod configurations.",
-      "factory": "./ng-add/index.cjs#ngAdd",
-      "schema": "./ng-add/schema.json"
+      "description": "Scaffold selected environments or apply an explicitly reviewed environment plan.",
+      "factory": "./ng-add.cjs#default",
+      "schema": "./schemas/ng-add.schema.json"
+    },
+    "inspect": {
+      "description": "Inspect one Angular application and emit a read-only environment plan.",
+      "factory": "./inspect.cjs#default",
+      "schema": "./schemas/inspect.schema.json"
+    },
+    "propose": {
+      "description": "Create a mutation proposal from explicitly selected environment sources and targets.",
+      "factory": "./propose.cjs#default",
+      "schema": "./schemas/propose.schema.json"
+    },
+    "apply": {
+      "description": "Apply an explicitly reviewed mutation plan to the selected consumer workspace.",
+      "factory": "./apply.cjs#default",
+      "schema": "./schemas/apply.schema.json"
+    },
+    "validate-plan": {
+      "description": "Validate a reviewed environment plan without applying it.",
+      "factory": "./validate-plan.cjs#default",
+      "schema": "./schemas/validate-plan.schema.json"
+    },
+    "environment-model": {
+      "description": "Propose or explicitly apply a reviewed self-contained environment model.",
+      "factory": "./environment-model.cjs#default",
+      "schema": "./schemas/environment-model.schema.json"
     }
   }
 }

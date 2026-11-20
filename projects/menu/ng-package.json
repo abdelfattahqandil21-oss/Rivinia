@@ -10,6 +10,11 @@
   "assets": [
     "./CHANGELOG.md",
     "./LICENSE",
-    "./README.md"
+    "./README.md",
+    {
+      "glob": "menu.css",
+      "input": "./ui/src",
+      "output": "./ui"
+    }
   ]
 }

@@ -472,22 +472,22 @@ wants its own imagery supplies it with `[icon]` (or inside `rvLanguageTrigger`).
 
 The token chain is `var(--rv-i18n-toggle-<x>, var(--rv-<semantic>, <default>))`, with one
 type rule from D42: **a semantic token must be the same value kind as the package token.**
-`--rv-border` is a colour and `--rv-font` is a font family, so the border and font
+`--rv-color-border` is a colour and `--rv-font-family` is a font family, so the border and font
 declarations supply the shorthand themselves —
-`border: 1px solid var(--rv-i18n-toggle-border, var(--rv-border, currentColor))` and
-`font-family: var(--rv-i18n-toggle-font, var(--rv-font, inherit))` — instead of passing a
+`border: 1px solid var(--rv-i18n-toggle-border, var(--rv-color-border, currentColor))` and
+`font-family: var(--rv-i18n-toggle-font, var(--rv-font-family, inherit))` — instead of passing a
 colour where a shorthand is expected (which drops the border entirely) or a family stack
 where `font` is expected (which drops the declaration). All sizes in `rem`, logical
 properties only.
 
 | Token | Falls back to | Default |
 | --- | --- | --- |
-| `--rv-i18n-toggle-bg` | `--rv-bg` | `transparent` |
-| `--rv-i18n-toggle-fg` | `--rv-fg` | `currentColor` |
-| `--rv-i18n-toggle-border` | `--rv-border` | `currentColor` (with `1px solid` from the declaration) |
-| `--rv-i18n-toggle-radius` | `--rv-radius` | `0.5rem` |
-| `--rv-i18n-toggle-shadow` | `--rv-shadow` | `none` |
-| `--rv-i18n-toggle-font` | `--rv-font` | `inherit` |
+| `--rv-i18n-toggle-bg` | `--rv-color-surface` | `transparent` |
+| `--rv-i18n-toggle-fg` | `--rv-color-text` | `currentColor` |
+| `--rv-i18n-toggle-border` | `--rv-color-border` | `currentColor` (with `1px solid` from the declaration) |
+| `--rv-i18n-toggle-radius` | `--rv-radius-md` | `0.5rem` |
+| `--rv-i18n-toggle-shadow` | `--rv-shadow-md` | `none` |
+| `--rv-i18n-toggle-font` | `--rv-font-family` | `inherit` |
 | `--rv-i18n-toggle-padding` | — | `0.5rem 0.75rem` |
 | `--rv-i18n-toggle-gap` | — | `0.5rem` |
 | `--rv-i18n-toggle-size` | — | `0.875rem` |
@@ -515,15 +515,15 @@ Those percentages are mixed **over the button's own background**, not left as
 translucent ink and not applied with the `background` shorthand:
 
 ```css
-background-color: var(--rv-i18n-toggle-bg, var(--rv-bg, transparent));          /* base */
+background-color: var(--rv-i18n-toggle-bg, var(--rv-color-surface, transparent));          /* base */
 background-color: var(--rv-i18n-toggle-hover-bg,
-  color-mix(in srgb, currentColor 8%, var(--rv-i18n-toggle-bg, var(--rv-bg, transparent))));
+  color-mix(in srgb, currentColor 8%, var(--rv-i18n-toggle-bg, var(--rv-color-surface, transparent))));
 ```
 
 Ink alone is indistinguishable on a light page and wrong on a dark one, and the
 shorthand also reset the base fill, so a dark button became see-through on hover
 (alpha 0.08 measured in Chrome, 2026-10-29). The e2e suite asserts the hovered fill is
-fully opaque over a dark `--rv-bg`. A consumer value for `--rv-i18n-toggle-hover-bg`
+fully opaque over a dark `--rv-color-surface`. A consumer value for `--rv-i18n-toggle-hover-bg`
 or `-active-bg` still replaces the whole fill, as the token name promises.
 
 Stable override surface, documented in the README:
@@ -627,7 +627,7 @@ queue.
   size assertion reads the painted `getBoundingClientRect()`, not the wrapper — the
   WebKit defect was a wrapper of the right size around a 0×0 svg.
 - **Fill states.** Hovering and pressing change the composited fill by more than
-  10/255, and over a dark `--rv-bg` the hovered fill stays fully opaque (§8).
+  10/255, and over a dark `--rv-color-surface` the hovered fill stays fully opaque (§8).
 - No console errors after hydration.
 - Chromium and Firefox (`playwright.config.ts`); Chrome when the local binary
   exists. **No WebKit** — D39, and the config does not include it. WebKit 27.2 was

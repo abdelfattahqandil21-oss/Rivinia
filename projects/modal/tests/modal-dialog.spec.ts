@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -67,6 +67,20 @@ beforeEach(() => {
 class ManagedHarness {
   open = false;
   closing = false;
+  exited = 0;
+}
+
+@Component({
+  imports: [RiviniaModalDialog],
+  template: `<rv-modal-dialog
+    [open]="true"
+    [managed]="true"
+    [closing]="closing()"
+    (exitDone)="exited = exited + 1"
+  />`,
+})
+class ManagedAlwaysOpenHarness {
+  closing = signal(false);
   exited = 0;
 }
 
@@ -230,5 +244,108 @@ describe('RiviniaModalDialog', () => {
     expect(cmp.state()).toBe('closed');
     const dialog: HTMLDialogElement = fixture.nativeElement.querySelector('dialog');
     expect(dialog.hasAttribute('open')).toBe(false);
+  });
+
+  it('does not reopen a managed dialog after its exit animation completes', () => {
+    vi.useFakeTimers();
+    try {
+      const fixture = TestBed.createComponent(ManagedAlwaysOpenHarness);
+      fixture.detectChanges();
+      TestBed.flushEffects();
+      fixture.detectChanges();
+      const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+      expect(dialog.open).toBe(true);
+
+      fixture.componentInstance.closing.set(true);
+      fixture.detectChanges();
+      TestBed.flushEffects();
+      fixture.detectChanges();
+      expect(dialog.getAttribute('data-state')).toBe('closing');
+
+      const exitAnimationEnd = new Event('animationend');
+      Object.defineProperty(exitAnimationEnd, 'animationName', { value: 'rv-modal-out' });
+      dialog.dispatchEvent(exitAnimationEnd);
+      fixture.detectChanges();
+
+      expect(dialog.open).toBe(false);
+      expect(fixture.componentInstance.exited).toBe(1);
+    } finally {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps an animated dialog open until its own exit animation ends', () => {
+    vi.useFakeTimers();
+    try {
+      const fixture = TestBed.createComponent(DialogHarness);
+      fixture.detectChanges();
+      const cmp = fixture.debugElement.query(By.directive(RiviniaModalDialog))
+        .componentInstance as RiviniaModalDialog;
+      cmp.open.set(true);
+      TestBed.flushEffects();
+      fixture.detectChanges();
+
+      const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+      cmp.dismiss('test');
+      fixture.detectChanges();
+      expect(cmp.state()).toBe('closing');
+      expect(dialog.open).toBe(true);
+
+      const openAnimationEnd = new Event('animationend');
+      Object.defineProperty(openAnimationEnd, 'animationName', { value: 'rv-modal-in-scale' });
+      dialog.dispatchEvent(openAnimationEnd);
+      expect(dialog.open).toBe(true);
+
+      const exitAnimationEnd = new Event('animationend');
+      Object.defineProperty(exitAnimationEnd, 'animationName', { value: 'rv-modal-out' });
+      dialog.dispatchEvent(exitAnimationEnd);
+      expect(dialog.open).toBe(false);
+      expect(cmp.state()).toBe('closed');
+      expect((cmp as unknown as { exitTimer: ReturnType<typeof setTimeout> | null }).exitTimer)
+        .toBeNull();
+      expect((cmp as unknown as { exitAnimationCleanup: (() => void) | null }).exitAnimationCleanup)
+        .toBeNull();
+    } finally {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    }
+  });
+
+  it('uses the close duration token for its fallback timer', () => {
+    vi.useFakeTimers();
+    try {
+      const fixture = TestBed.createComponent(DialogHarness);
+      fixture.detectChanges();
+      const cmp = fixture.debugElement.query(By.directive(RiviniaModalDialog))
+        .componentInstance as RiviniaModalDialog;
+      cmp.open.set(true);
+      TestBed.flushEffects();
+      fixture.detectChanges();
+      const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+      dialog.style.setProperty('--rv-modal-duration-out', '120ms');
+
+      cmp.dismiss('test');
+      fixture.detectChanges();
+      vi.advanceTimersByTime(169);
+      expect(dialog.open).toBe(true);
+      vi.advanceTimersByTime(1);
+      expect(dialog.open).toBe(false);
+    } finally {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    }
+  });
+});
+
+
+describe('modal close localization', () => {
+  it('accepts a localized accessible close name', () => {
+    ensureDialogApi();
+    const fixture = TestBed.createComponent(RiviniaModalDialog);
+    fixture.componentRef.setInput('open', true);
+    fixture.componentRef.setInput('closeLabel', 'إغلاق الحوار');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[aria-label="إغلاق الحوار"]')).not.toBeNull();
   });
 });

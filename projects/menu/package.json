@@ -26,10 +26,27 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@angular/core": "^22.0.0"
+    "@angular/core": "^22.0.0",
+    "@angular/common": "^22.0.0",
+    "@angular/router": "^22.0.0"
   },
   "dependencies": {
     "@rivinia/popup": "^1.0.4"
   },
-  "sideEffects": false
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "peerDependenciesMeta": {
+    "@angular/common": {
+      "optional": true
+    },
+    "@angular/router": {
+      "optional": true
+    }
+  },
+  "exports": {
+    "./ui/menu.css": {
+      "default": "./ui/menu.css"
+    }
+  }
 }

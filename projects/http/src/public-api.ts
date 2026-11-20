@@ -6,11 +6,12 @@ export type {
   RiviniaDeleteRequestOptions,
   RiviniaRawOptions,
   RiviniaRequestBase,
+  RiviniaTransportOptions,
   RiviniaRequestOptions,
   RiviniaUnwrapOff,
   RiviniaUnwrapOn,
 } from './lib/models/http-options';
-export type { RiviniaResourceBase, RiviniaResourceOptions } from './lib/services/rivinia-http';
+export type { RiviniaResourceBase, RiviniaResourceOptions, RiviniaResourceEndpoint } from './lib/services/rivinia-http';
 export { extractKey, joinUrl, RiviniaHttpUnwrapError, unwrapAs } from './lib/utils/http-utils';
 export { RiviniaHttpEnvelopeError, type RiviniaEnvelopePolicy } from './lib/models/http-envelope';
 export { injectRiviniaHttp, provideRiviniaHttp } from './lib/providers/provide-http';

@@ -3,6 +3,13 @@
 
   <section class="fixture-scope booking-scope" data-testid="booking-scope" data-bs-theme="light">
     <h2>Booking scope</h2>
+    <button type="button" data-testid="open-modal" (click)="modalOpen.set(true)">Open Modal</button>
+    <rv-modal-dialog [(open)]="modalOpen" title="CSS stack modal" size="sm">
+      <p>Modal package styles remain isolated from consumer CSS stacks.</p>
+      <div rv-modal-footer rvModalFooter>
+        <button type="button" data-testid="close-modal" (click)="modalOpen.set(false)">Close</button>
+      </div>
+    </rv-modal-dialog>
     <rv-select
       id="booking-select"
       label="Booking status"
@@ -69,7 +76,7 @@
   </section>
 
   <section class="utility-examples" aria-label="Framework utility examples">
-    <div id="tailwind-utility-probe" class="bg-rv-bg text-rv-fg p-4">Tailwind utility</div>
-    <div id="tailwind-prefix-probe" class="tw:bg-rv-bg tw:text-rv-fg tw:p-4">Prefixed utility</div>
+    <div id="tailwind-utility-probe" class="bg-rv-surface text-rv-text p-rv-4">Tailwind utility</div>
+    <div id="tailwind-prefix-probe" class="tw:bg-rv-surface tw:text-rv-text tw:p-rv-4">Prefixed utility</div>
   </section>
 </main>

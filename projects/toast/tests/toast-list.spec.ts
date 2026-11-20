@@ -149,3 +149,21 @@ describe('RiviniaToastList (presentational)', () => {
     expect(fixture.componentInstance.got).toEqual([1]);
   });
 });
+
+
+describe('toast accessible localization', () => {
+  it('updates region and dismiss names without replacing the active notification', () => {
+    const fixture = TestBed.createComponent(RiviniaToastList);
+    fixture.componentRef.setInput('toasts', [toast(99)]);
+    fixture.componentRef.setInput('regionLabel', 'الإشعارات');
+    fixture.componentRef.setInput('dismissLabel', 'إغلاق الإشعار');
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[aria-label="الإشعارات"]')).not.toBeNull();
+    expect(el.querySelector('.rv-toast-close')?.getAttribute('aria-label')).toBe('إغلاق الإشعار');
+    fixture.componentRef.setInput('dismissLabel', 'Dismiss notification');
+    fixture.detectChanges();
+    expect(el.querySelector('.rv-toast-close')?.getAttribute('aria-label')).toBe('Dismiss notification');
+    expect(el.textContent).toContain('m99');
+  });
+});

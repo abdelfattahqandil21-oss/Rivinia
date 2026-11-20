@@ -1,4 +1,15 @@
-import { Component, Injector, computed, effect, input, output, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  Injector,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import type { DestroyableInjector } from '@angular/core';
 import type { Signal } from '@angular/core';
 import { NgComponentOutlet, NgTemplateOutlet } from '@angular/common';
 import { RIVINIA_MODAL_CONTEXT } from '@rivinia/modal';
@@ -9,6 +20,9 @@ import type {
   ModalTemplateContext,
 } from '@rivinia/modal';
 import { RiviniaModalDialog } from '../modal-dialog/modal-dialog';
+import { RvModalFooter, RvModalHeader } from '../modal-dialog/modal-dialog';
+import { createModalContentSlots, MODAL_CONTENT_SLOT_REGISTRY } from '../../models/modal-content-slots';
+import type { ModalContentSlots } from '../../models/modal-content-slots';
 import type { RiviniaModalSize } from '../../models/ui-types';
 import { covers } from '../../utils/modal-covers';
 
@@ -50,10 +64,21 @@ export interface RiviniaModalHostManager {
 
 @Component({
   selector: 'rv-modal-host',
-  imports: [RiviniaModalDialog, NgComponentOutlet, NgTemplateOutlet],
+  imports: [RiviniaModalDialog, RvModalHeader, RvModalFooter, NgComponentOutlet, NgTemplateOutlet],
   templateUrl: './modal-host.html',
 })
 export class RiviniaModalHost {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly parentInjector = inject(Injector);
+  private readonly contextInjectors = new Map<
+    string,
+    {
+      readonly injector: DestroyableInjector;
+      readonly state: { instance: ModalInstance<unknown>; manager: RiviniaModalHostManager };
+      readonly slots: ModalContentSlots;
+    }
+  >();
+
   /**
    * The headless manager to render. Typed as {@link RiviniaModalHostManager}
    * (structural) — pass `injectRiviniaModal()` from your app code.
@@ -63,6 +88,7 @@ export class RiviniaModalHost {
   /** Dialog size for every managed instance. @default 'md' */
   readonly size = input<RiviniaModalSize>('md');
   /** Render the header close button on every managed instance. @default true */
+  readonly closeLabel = input('Close dialog');
   readonly showCloseButton = input<boolean>(true);
   /** Resolve a title per instance. Default: `metadata.title` → `ref` → `''`. */
   readonly titleOf = input<(instance: ModalInstance<unknown>) => string | undefined>();
@@ -98,6 +124,20 @@ export class RiviniaModalHost {
    * flickering between them.
    */
   protected readonly visible = signal<readonly ModalInstance[]>([]);
+
+  /** Keep component content injectors stable while their modal remains rendered. */
+  private readonly contextInjectorCleanup = effect(() => {
+    const visibleIds = new Set(this.visible().map((instance) => instance.id));
+    for (const [id, entry] of this.contextInjectors) {
+      if (visibleIds.has(id)) continue;
+      entry.injector.destroy();
+      this.contextInjectors.delete(id);
+    }
+  });
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.destroyContextInjectors());
+  }
 
   /** Push the manager's current stack into the rendered one. */
   private readonly syncStack = effect(() => {
@@ -223,21 +263,47 @@ export class RiviniaModalHost {
   }
 
   protected contextInjector(instance: ModalInstance<unknown>): Injector {
-    const modal = this.modal();
-    return Injector.create({
+    const cached = this.contextInjectors.get(instance.id);
+    if (cached) {
+      cached.state.instance = instance;
+      cached.state.manager = this.modal();
+      return cached.injector;
+    }
+
+    const state = { instance, manager: this.modal() };
+    const context: ModalContext<unknown> = {
+      get id() {
+        return state.instance.id;
+      },
+      get data() {
+        return state.instance.data;
+      },
+      get parentId() {
+        return state.instance.parentId;
+      },
+      close: (result?: unknown) => state.manager.close(state.instance.id, result),
+      dismiss: (reason?: string) => state.manager.dismiss(state.instance.id, reason),
+    };
+    const slots = createModalContentSlots();
+    const injector = Injector.create({
+      parent: this.parentInjector,
       providers: [
-        {
-          provide: RIVINIA_MODAL_CONTEXT,
-          useValue: {
-            id: instance.id,
-            data: instance.data,
-            parentId: instance.parentId,
-            close: (result?: unknown) => modal.close(instance.id, result),
-            dismiss: (reason?: string) => modal.dismiss(instance.id, reason),
-          } satisfies ModalContext<unknown>,
-        },
+        { provide: RIVINIA_MODAL_CONTEXT, useValue: context },
+        { provide: MODAL_CONTENT_SLOT_REGISTRY, useValue: slots.registry },
       ],
     });
+    this.contextInjectors.set(instance.id, { injector, state, slots });
+    return injector;
+  }
+
+  protected contentSlots(instance: ModalInstance<unknown>): ModalContentSlots {
+    this.contextInjector(instance);
+    return this.contextInjectors.get(instance.id)!.slots;
+  }
+
+  private destroyContextInjectors(): void {
+    for (const { injector } of this.contextInjectors.values()) injector.destroy();
+    this.contextInjectors.clear();
   }
 
   protected async onIntent(id: string, origin: 'button' | 'escape' | 'backdrop'): Promise<void> {

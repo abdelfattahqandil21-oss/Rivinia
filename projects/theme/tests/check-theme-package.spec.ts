@@ -46,9 +46,22 @@ function manifest({
     './package.json': { default: './package.json' },
     '.': root,
     './theme.css': './styles/theme.css',
+    './motion.css': './motion.css',
     ...(tailwind === null ? {} : { './tailwind.css': tailwind }),
     './bootstrap.css': './styles/bootstrap.css',
     './scss': './styles/_index.scss',
+    './headless': {
+      types: './types/rivinia-theme-headless.d.ts',
+      default: './fesm2022/rivinia-theme-headless.mjs',
+    },
+    './motion': {
+      types: './types/rivinia-theme-motion.d.ts',
+      default: './fesm2022/rivinia-theme-motion.mjs',
+    },
+    './toggle': {
+      types: './types/rivinia-theme-toggle.d.ts',
+      default: './fesm2022/rivinia-theme-toggle.mjs',
+    },
   };
   if (extraExport !== null) exportsField['./missing.css'] = extraExport;
 
@@ -63,14 +76,14 @@ function manifest({
 
 const LAYERED_CSS = `@layer rivinia-theme {
   :root {
-    --rv-bg: #ffffff;
+    --rv-color-surface: #ffffff;
   }
 }
 `;
 
 function packageFiles(options: ManifestOptions = {}): Record<string, string> {
   const manifestJson = JSON.stringify(manifest(options), null, 2);
-  return {
+  const files: Record<string, string> = {
     'package.json': manifestJson,
     'LICENSE': 'MIT License\n',
     'README.md': '# @rivinia/theme\n',
@@ -82,6 +95,8 @@ function packageFiles(options: ManifestOptions = {}): Record<string, string> {
     'fesm2022/rivinia-theme.mjs': 'export {};\n',
     'types/rivinia-theme.d.ts': 'export {};\n',
   };
+  for (const file of EXPECTED_FILES) files[file] ??= '';
+  return files;
 }
 
 function makePackage(files: Record<string, string> = packageFiles()): string {
@@ -160,20 +175,20 @@ describe('check-theme-package', () => {
     expect(messages(report)).toContain('styles/leftover.css');
   });
 
-  it('fails when --rv-bg is not declared inside @layer rivinia-theme', () => {
+  it('fails when --rv-color-surface is not declared inside @layer rivinia-theme', () => {
     const files = packageFiles();
     files['styles/theme.css'] = `:root {
-  --rv-bg: #ffffff;
+  --rv-color-surface: #ffffff;
 }
 @layer rivinia-theme {
   :root {
-    --rv-fg: #111111;
+    --rv-color-text: #111111;
   }
 }
 `;
     const report = checkThemePackage(makePackage(files));
     expect(report.ok).toBe(false);
-    expect(messages(report)).toMatch(/--rv-bg[\s\S]*@layer rivinia-theme/);
+    expect(messages(report)).toMatch(/--rv-color-surface[\s\S]*@layer rivinia-theme/);
   });
 
   it('inspects a tarball, prefix and all', () => {

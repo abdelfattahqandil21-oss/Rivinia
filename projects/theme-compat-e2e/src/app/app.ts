@@ -2,14 +2,16 @@ import { Component, signal } from '@angular/core';
 import type { RiviniaDate, RiviniaDateTime } from '@rivinia/datepicker';
 import { RiviniaDatepickerComponent, RiviniaDatetimepickerComponent } from '@rivinia/datepicker/ui';
 import { RiviniaSelectComponent } from '@rivinia/select/ui';
+import { RiviniaModalDialog, RvModalFooter } from '@rivinia/modal/ui';
 
 @Component({
   selector: 'theme-compat-root',
-  imports: [RiviniaSelectComponent, RiviniaDatepickerComponent, RiviniaDatetimepickerComponent],
+  imports: [RiviniaSelectComponent, RiviniaDatepickerComponent, RiviniaDatetimepickerComponent, RiviniaModalDialog, RvModalFooter],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App {
+  readonly modalOpen = signal(false);
   readonly options = [
     { id: 'draft', label: 'Draft' },
     { id: 'confirmed', label: 'Confirmed' },

@@ -4,17 +4,13 @@ import type {
   RiviniaCalendarMonth,
   RiviniaCalendarWeek,
 } from '../models/calendar-types';
-import { daysInMonth, isSameDay, weekdayOf } from './date-math';
+import { addDays, daysInMonth, isSameDay, isValidDate, weekdayOf } from './date-math';
 
 /**
  * Build the six-by-seven grid for one month.
  *
- * Two deliberate rules, both visible in the tests:
- *  - the grid is ALWAYS 6 × 7, so paging between months never changes the
- *    panel's height mid-interaction;
- *  - a day that belongs to the neighbouring month is `null`, not a greyed-out
- *    number that looks clickable. It is a day picker: showing the 30th of the
- *    previous month invites a click that silently changes the month.
+ * Always six rows. Headless callers keep null padding by default; ready UI
+ * may opt into neighbouring days, marked `outside` for muted styling.
  */
 export function buildMonth(input: RiviniaBuildMonthInput): RiviniaCalendarMonth {
   const { year, month, firstDay, isDisabled } = input;
@@ -26,25 +22,26 @@ export function buildMonth(input: RiviniaBuildMonthInput): RiviniaCalendarMonth 
   const lead = (weekdayOf({ year, month, day: 1 }) - firstDay + 7) % 7;
 
   const weeks: RiviniaCalendarWeek[] = [];
-  let day = 1;
 
   for (let row = 0; row < 6; row++) {
     const cells: (RiviniaCalendarCell | null)[] = [];
     for (let column = 0; column < 7; column++) {
       const index = row * 7 + column;
-      if (index < lead || day > total) {
+      const offset = index - lead;
+      const outside = offset < 0 || offset >= total;
+      const date = addDays({ year, month, day: 1 }, offset);
+      if ((outside && !input.showOutsideDays) || !isValidDate(date)) {
         cells.push(null);
         continue;
       }
-      const date = { year, month, day };
       cells.push({
         date,
+        ...(outside ? { outside: true } : {}),
         today: isSameDay(date, today),
         selected: isSameDay(date, selected),
         focused: isSameDay(date, focused),
         disabled: isDisabled ? isDisabled(date) === true : false,
       });
-      day++;
     }
     weeks.push({ cells });
   }

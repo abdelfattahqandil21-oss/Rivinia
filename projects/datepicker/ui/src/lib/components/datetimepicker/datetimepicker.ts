@@ -14,23 +14,25 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { connectPopup } from '@rivinia/popup';
 import type { FormValueControl } from '@angular/forms/signals';
 import {
   DATE_PICKER_CONFIG,
   DEFAULT_DATE_FORMAT,
   DEFAULT_TIME_FORMAT,
   RiviniaCalendar,
+  RiviniaDateTimeDraft,
+  RIVINIA_TIME_ZONE_RESOLVER,
+  resolveDateTimeZone,
   formatDateTime,
   formatTime,
   formatTimeZoneName,
   isSameDateTime,
-  isValidDateTime,
   isValidTimeZone,
   nowDateTime,
   nowInTimeZone,
   parseDate,
   parseDateTime,
-  resolveWallTime,
   todayDate,
   todayInTimeZone,
 } from '@rivinia/datepicker';
@@ -47,9 +49,11 @@ import type {
   RiviniaTimeFormat,
   RiviniaTimeZoneAlternative,
   RiviniaTimeZoneResolution,
+  RiviniaZoneCommitPolicy,
   RiviniaWeekday,
 } from '@rivinia/datepicker';
 import { RiviniaCalendarComponent } from '../calendar/calendar';
+import { RiviniaDateSegmentsComponent } from '../date-segments/date-segments';
 import { RiviniaTimeRowComponent } from '../time-row/time-row';
 import { DatepickerPanelRegistry } from '../../services/datepicker-panel-registry';
 import {
@@ -76,7 +80,7 @@ let nextId = 0;
  */
 @Component({
   selector: 'rv-datetimepicker',
-  imports: [RiviniaCalendarComponent, RiviniaTimeRowComponent],
+  imports: [RiviniaCalendarComponent, RiviniaDateSegmentsComponent, RiviniaTimeRowComponent],
   templateUrl: './datetimepicker.html',
   styleUrls: ['../datepicker/datepicker.css', './datetimepicker.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -90,6 +94,7 @@ let nextId = 0;
   },
 })
 export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaDateTime | null> {
+  private readonly zoneResolver = inject(RIVINIA_TIME_ZONE_RESOLVER);
   private readonly config = inject<RiviniaDatepickerConfig>(DATE_PICKER_CONFIG);
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly panels = inject(DatepickerPanelRegistry);
@@ -105,11 +110,14 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   readonly minuteStep = input<number | undefined>(undefined);
   readonly hour12 = input<RiviniaHour12 | undefined>(undefined);
   readonly timeZone = input<string | undefined>(undefined);
+  readonly zoneCommitPolicy = input<RiviniaZoneCommitPolicy>('compatible');
   readonly firstDay = input<RiviniaWeekday | undefined>(undefined);
-  /** Lower bound of the value. The time half is kept for type parity; the grid uses its date. */
+  /** Inclusive civil lower bound; confirmation checks both date and time. */
   readonly min = input<RiviniaDateTime | undefined>(undefined);
-  /** Upper bound of the value. The time half is kept for type parity; the grid uses its date. */
+  /** Inclusive civil upper bound; confirmation checks both date and time. */
   readonly max = input<RiviniaDateTime | undefined>(undefined);
+  readonly disabledDate = input<((date: RiviniaDate) => boolean) | undefined>();
+  readonly disabledTime = input<((value: RiviniaDateTime) => boolean) | undefined>();
   readonly labels = input<Partial<RiviniaDatepickerLabels>>({});
   readonly disabled = input(false);
   readonly placeholder = input<string | undefined>(undefined);
@@ -129,9 +137,35 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   protected readonly isDisabled = computed(() => this.disabled());
 
   private closeTimer: ReturnType<typeof setTimeout> | null = null;
-  protected readonly draft = signal<RiviniaDateTime>(
+  private readonly transaction = new RiviniaDateTimeDraft(
     parseDateTime(this.value()) ?? nowDateTime(),
+    () => ({
+      min:
+        this.min() ??
+        (this.calendar.min()
+          ? { date: this.calendar.min()!, time: { hour: 0, minute: 0, second: 0 } }
+          : undefined),
+      max:
+        this.max() ??
+        (this.calendar.max()
+          ? { date: this.calendar.max()!, time: { hour: 23, minute: 59, second: 59 } }
+          : undefined),
+      disabledDate: this.disabledDate(),
+      disabledTime: this.disabledTime(),
+    }),
   );
+  protected readonly draft = this.transaction.value;
+  protected readonly canCommit = computed(() => {
+    if (this.isDisabled() || !this.transaction.valid()) return false;
+    const result = this.zoneResult();
+    if (result?.kind === 'unsupported') return false;
+    if (this.zoneCommitPolicy() !== 'explicit' || !result) return true;
+    return (
+      result.kind === 'unique' ||
+      (result.kind === 'ambiguous' &&
+        result.alternatives.some((value) => value.offsetMinutes === this.selectedOffset()))
+    );
+  });
   protected readonly selectedOffset = signal<number | null>(null);
 
   private readonly uid = ++nextId;
@@ -139,6 +173,7 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   protected readonly headingId = `rv-datetimepicker-heading-${this.uid}`;
 
   private readonly triggerRef = viewChild<ElementRef<HTMLButtonElement>>('trigger');
+  private readonly fieldRef = viewChild<ElementRef<HTMLElement>>('field');
   private readonly panelRef = viewChild<ElementRef<HTMLElement>>('panel');
 
   protected readonly normalized = computed(() => parseDateTime(this.value()));
@@ -180,13 +215,20 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   });
   protected readonly invalidTimeZone = computed<string | null>(() => {
     const zone = this.rawTimeZone();
-    return zone && !isValidTimeZone(zone) ? zone : null;
+    return zone && (!isValidTimeZone(zone) || this.zoneResult()?.kind === 'unsupported')
+      ? zone
+      : null;
+  });
+
+  private readonly zoneResult = computed(() => {
+    const zone = this.rawTimeZone();
+    return zone ? resolveDateTimeZone(this.draft(), zone, this.zoneResolver) : null;
   });
 
   /** The rule the picker shows: compatible (overlap earlier, gap later). */
   protected readonly zoneResolution = computed<RiviniaTimeZoneResolution | null>(() => {
-    const zone = this.effectiveTimeZone();
-    return zone ? resolveWallTime(this.draft(), zone, 'compatible') : null;
+    const result = this.zoneResult();
+    return result?.kind === 'unsupported' ? null : result;
   });
 
   /** The user's chosen offset wins for an overlap; everything else is the base. */
@@ -218,12 +260,7 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
     const zone = this.effectiveTimeZone();
     const resolution = this.effectiveResolution();
     if (!zone || !resolution) return '';
-    const name = formatTimeZoneName(
-      this.effectiveLocale(),
-      zone,
-      resolution.instant,
-      'short',
-    );
+    const name = formatTimeZoneName(this.effectiveLocale(), zone, resolution.instant, 'short');
     const offset = formatTimeZoneName(
       this.effectiveLocale(),
       zone,
@@ -236,7 +273,7 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   protected readonly canClear = computed(
     () =>
       (this.clearable() ?? this.config.clearable ?? false) &&
-      this.normalized() !== null &&
+      (this.normalized() !== null || (this.open() && this.calendar.selected() !== null)) &&
       !this.isDisabled(),
   );
 
@@ -252,11 +289,20 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
     );
     const zone = this.effectiveTimeZone();
     if (!zone) return text;
-    const resolution = resolveWallTime(value, zone);
+    const result = resolveDateTimeZone(value, zone, this.zoneResolver);
+    const resolution = result.kind === 'unsupported' ? null : result;
     const offset = resolution
       ? formatTimeZoneName(this.effectiveLocale(), zone, resolution.instant, 'shortOffset')
       : '';
     return offset ? `${text} · ${offset}` : text;
+  });
+
+  protected readonly triggerTimeText = computed(() => {
+    const value = this.normalized();
+    if (!value) return '';
+    return formatTime(this.effectiveLocale(), value.time, this.effectiveTimeFormat(), {
+      hour12: this.hour12Option(),
+    });
   });
 
   protected readonly triggerLabel = computed(() => {
@@ -288,12 +334,9 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   protected readonly suggestedLabel = computed(() => {
     const gap = this.gapResolution();
     if (!gap) return '';
-    const time = formatTime(
-      this.effectiveLocale(),
-      gap.dateTime.time,
-      this.effectiveTimeFormat(),
-      { hour12: this.hour12Option() },
-    );
+    const time = formatTime(this.effectiveLocale(), gap.dateTime.time, this.effectiveTimeFormat(), {
+      hour12: this.hour12Option(),
+    });
     return `${this.calendar.labels().useSuggestedTime} ${time}`;
   });
 
@@ -316,11 +359,16 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
     effect(() => {
       const min = this.min();
       const max = this.max();
-      if (min === undefined && max === undefined) return;
-      this.calendar.setBounds(min?.date ?? null, max?.date ?? null);
+      untracked(() =>
+        this.calendar.setBounds(
+          min?.date ?? this.config.min ?? null,
+          max?.date ?? this.config.max ?? null,
+        ),
+      );
     });
 
     effect(() => this.calendar.setLabels(this.labels()));
+    effect(() => this.calendar.setDisabledDate(this.disabledDate()));
 
     // The wall date's "today" follows the configured zone, unless the
     // application pinned a today for SSR determinism.
@@ -337,11 +385,15 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
       const value = this.normalized();
       if (!value) {
         this.calendar.setSelected(null);
+        untracked(() => {
+          const zone = this.effectiveTimeZone();
+          this.transaction.reset(zone ? nowInTimeZone(zone) : nowDateTime());
+        });
         return;
       }
       this.calendar.setSelected(value.date);
       untracked(() => {
-        if (!isSameDateTime(value, this.draft())) this.draft.set(value);
+        if (!isSameDateTime(value, this.draft())) this.transaction.reset(value);
       });
     });
 
@@ -365,30 +417,35 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
     // warning, a wrapped action row).
     afterRenderEffect((onCleanup) => {
       const panel = this.panelRef()?.nativeElement;
-      this.open();
-      if (!this.open() || !panel) {
+      const origin = this.fieldRef()?.nativeElement;
+      if (!this.open() || !panel || !origin) {
         this.panelShift.set(0);
         return;
       }
-      const update = (): void => {
-        this.panelShift.set(
-          panelViewportShift(panel, this.triggerRef()?.nativeElement),
-        );
-      };
-      update();
-      if (typeof ResizeObserver === 'undefined') return;
-      const observer = new ResizeObserver(update);
-      observer.observe(panel);
-      const onResize = (): void => update();
-      window.addEventListener('resize', onResize);
-      onCleanup(() => {
-        observer.disconnect();
-        window.removeEventListener('resize', onResize);
+      if (typeof panel.showPopover !== 'function') return;
+      const anchored =
+        panel.ownerDocument.defaultView?.CSS?.supports('anchor-name', '--rv-datepicker-anchor') ??
+        false;
+      const connection = connectPopup({
+        origin,
+        panel,
+        parent: 'auto',
+        closeOnWidthChange: true,
+        ...(anchored
+          ? {
+              position: () => {
+                this.panelShift.set(panelViewportShift(panel, origin));
+              },
+            }
+          : {}),
+        onDismiss: (reason) => this.closePanel(reason === 'escape'),
       });
+      onCleanup(() => connection.destroy());
     });
 
     effect((onCleanup) => {
       if (!this.open() || typeof document === 'undefined') return;
+      if (typeof this.panelRef()?.nativeElement.showPopover === 'function') return;
       const onPointerDown = (event: Event): void => {
         const target = event.target as Node | null;
         if (target && this.hostRef.nativeElement.contains(target)) return;
@@ -414,24 +471,24 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   protected onPicked(date: RiviniaDate): void {
     // A day updates the DRAFT only. The calendar stays mounted; the time row
     // keeps its value; nothing is committed until OK.
-    this.draft.update((value) => ({ date: { ...date }, time: { ...value.time } }));
+    this.transaction.setDate(date);
   }
 
   protected onTimeChanged(time: RiviniaTime): void {
-    this.draft.update((value) => ({ date: { ...value.date }, time: { ...time } }));
+    this.transaction.setTime(time);
   }
 
   protected onNow(): void {
     const zone = this.effectiveTimeZone();
     const now = zone ? nowInTimeZone(zone) : nowDateTime();
-    this.draft.set(now);
+    this.transaction.reset(now);
     this.calendar.setSelected(now.date);
   }
 
   protected useSuggested(): void {
     const gap = this.gapResolution();
     if (!gap) return;
-    this.draft.set({
+    this.transaction.reset({
       date: { ...gap.dateTime.date },
       time: { ...gap.dateTime.time },
     });
@@ -443,6 +500,7 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   }
 
   protected isChosenOffset(alternative: RiviniaTimeZoneAlternative): boolean {
+    if (this.zoneCommitPolicy() === 'explicit' && this.selectedOffset() === null) return false;
     return this.effectiveResolution()?.instant === alternative.instant;
   }
 
@@ -456,30 +514,42 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   }
 
   protected commit(): void {
-    if (this.isDisabled()) return;
-    const draft = this.draft();
-    if (!isValidDateTime(draft)) return;
-    const value: RiviniaDateTime = {
-      date: { ...draft.date },
-      time: { ...draft.time },
-    };
+    if (!this.canCommit()) return;
+    const value = this.transaction.requestCommit();
+    if (!value) return;
     this.value.set(value);
-
-    const zone = this.effectiveTimeZone();
-    const resolution = this.effectiveResolution();
-    if (zone && resolution) {
-      this.resolved.emit({ value, timeZone: zone, resolution });
-    }
+    this.emitResolved(value);
+    this.transaction.reset(value);
     this.closePanel(true);
   }
 
-  protected clearDateTime(): void {
+  protected onTypedDate(date: RiviniaDate): void {
+    if (this.isDisabled() || !this.calendar.canSelect(date)) return;
+    this.transaction.setDate(date);
+    this.calendar.setSelected(date);
+    if (this.open()) return;
+    if (!this.canCommit()) {
+      this.openPanel(true);
+      return;
+    }
+    const value = this.transaction.requestCommit();
+    if (!value) return;
+    this.value.set(value);
+    this.emitResolved(value);
+    this.transaction.reset(value);
+  }
+
+  private emitResolved(value: RiviniaDateTime): void {
+    const zone = this.effectiveTimeZone();
+    const resolution = this.effectiveResolution();
+    if (zone && resolution) this.resolved.emit({ value, timeZone: zone, resolution });
+  }
+
+  protected clearValue(): void {
     if (!this.canClear()) return;
-    const wasOpen = this.open();
     this.value.set(null);
-    if (wasOpen) this.closePanel(false);
-    else this.touch.emit();
-    this.triggerRef()?.nativeElement.focus();
+    this.calendar.setSelected(null);
+    this.closePanel(true);
   }
 
   protected dismiss(): void {
@@ -496,7 +566,7 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   }
 
   protected onPanelKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'Escape') return;
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
     event.preventDefault();
     this.dismiss();
   }
@@ -509,20 +579,20 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
     }
   }
 
-  private openPanel(): void {
+  private openPanel(preserveDraft = false): void {
     // Reopening during the exit animation cancels the exit and reuses the
     // panel that is still in the DOM.
     this.finishClose();
     const value = this.normalized();
     const zone = this.effectiveTimeZone();
     const fallback = zone ? nowInTimeZone(zone) : nowDateTime();
-    this.draft.set(value ?? fallback);
+    if (!preserveDraft) this.transaction.reset(value ?? fallback);
     const configuredToday = parseDate(this.config.today);
-    this.calendar.setToday(
-      configuredToday ?? (zone ? todayInTimeZone(zone) : todayDate()),
-    );
+    this.calendar.setToday(configuredToday ?? (zone ? todayInTimeZone(zone) : todayDate()));
 
-    if (value) {
+    if (preserveDraft) {
+      this.calendar.setSelected(this.draft().date);
+    } else if (value) {
       this.calendar.setSelected(value.date);
     } else {
       this.calendar.setSelected(null);
@@ -552,10 +622,7 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
       return;
     }
     this.closing.set(true);
-    this.closeTimer = setTimeout(
-      () => this.finishClose(),
-      PANEL_EXIT_FALLBACK_MS,
-    );
+    this.closeTimer = setTimeout(() => this.finishClose(), PANEL_EXIT_FALLBACK_MS);
   }
 
   /** The panel's exit animation ended; remove the panel now. */

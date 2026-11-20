@@ -1,7 +1,7 @@
 /**
  * pnpm check:theme — plain node, zero dependencies.
  *
- * `@rivinia/theme` is a CSS package: the manifest's `exports["."].style`
+ * `@rivinia/theme` has a CSS-first contract: the manifest's `exports["."].style`
  * condition is the ONLY thing that makes `@import '@rivinia/theme'` resolve to
  * a stylesheet. Remove it and every build still succeeds — Angular emits a
  * 188-byte empty stylesheet and prints no warning (measured, 2026-10-29).
@@ -11,7 +11,7 @@
  *  1. `exports["."].style` exists and points at a file in the package;
  *  2. every other `exports` target exists in the package;
  *  3. the file list equals EXPECTED_FILES exactly;
- *  4. `styles/theme.css` declares `--rv-bg` inside `@layer rivinia-theme`.
+ *  4. `styles/theme.css` declares `--rv-color-surface` inside `@layer rivinia-theme`.
  *
  * Usage: node scripts/check-theme-package.mjs [dist/theme | *.tgz]
  * With no argument it inspects `dist/theme` (run `pnpm build:theme` first).
@@ -29,12 +29,25 @@ export const EXPECTED_FILES = Object.freeze([
   'CHANGELOG.md',
   'LICENSE',
   'README.md',
+  'fesm2022/rivinia-theme-headless.mjs',
+  'fesm2022/rivinia-theme-headless.mjs.map',
+  'fesm2022/rivinia-theme-motion.mjs',
+  'fesm2022/rivinia-theme-motion.mjs.map',
+  'fesm2022/rivinia-theme-toggle.mjs',
+  'fesm2022/rivinia-theme-toggle.mjs.map',
   'fesm2022/rivinia-theme.mjs',
+  'motion.css',
   'package.json',
+  'schematics/collection.json',
+  'schematics/ng-add/index.cjs',
+  'schematics/ng-add/schema.json',
   'styles/_index.scss',
   'styles/bootstrap.css',
   'styles/tailwind.css',
   'styles/theme.css',
+  'types/rivinia-theme-headless.d.ts',
+  'types/rivinia-theme-motion.d.ts',
+  'types/rivinia-theme-toggle.d.ts',
   'types/rivinia-theme.d.ts',
 ]);
 
@@ -101,8 +114,8 @@ export function checkThemePackage(target = DEFAULT_TARGET) {
   }
 
   const themeCss = read('styles/theme.css');
-  if (themeCss !== undefined && !layerDeclares(themeCss, 'rivinia-theme', '--rv-bg')) {
-    problems.push('styles/theme.css does not declare --rv-bg inside @layer rivinia-theme');
+  if (themeCss !== undefined && !layerDeclares(themeCss, 'rivinia-theme', '--rv-color-surface')) {
+    problems.push('styles/theme.css does not declare --rv-color-surface inside @layer rivinia-theme');
   }
 
   return { ok: problems.length === 0, problems, files: names };
@@ -131,8 +144,15 @@ function load(target) {
 function walk(dir, prefix, files) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
-    if (entry.isDirectory()) walk(join(dir, entry.name), rel, files);
-    else if (entry.isFile()) files.set(rel, readFileSync(join(dir, entry.name)));
+    if (entry.isDirectory() && entry.name !== 'node_modules') walk(join(dir, entry.name), rel, files);
+    else if (
+      entry.isFile() &&
+      entry.name !== '.npmignore' &&
+      !['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock'].includes(entry.name) &&
+      !(entry.name === 'package.json' && /^(headless|motion|toggle)$/.test(prefix))
+    ) {
+      files.set(rel, readFileSync(join(dir, entry.name)));
+    }
   }
 }
 

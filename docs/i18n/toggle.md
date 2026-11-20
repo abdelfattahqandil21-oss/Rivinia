@@ -243,35 +243,35 @@ declaration:
 
 | Token                               | Falls back to | Default                                                                                                       |
 | ----------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------- |
-| `--rv-i18n-toggle-bg`               | `--rv-bg`     | `transparent`                                                                                                 |
-| `--rv-i18n-toggle-fg`               | `--rv-fg`     | `currentColor`                                                                                                |
-| `--rv-i18n-toggle-border`           | `--rv-border` | `currentColor`                                                                                                |
-| `--rv-i18n-toggle-radius`           | `--rv-radius` | `0.5rem`                                                                                                      |
-| `--rv-i18n-toggle-shadow`           | `--rv-shadow` | `none`                                                                                                        |
-| `--rv-i18n-toggle-font`             | `--rv-font`   | `inherit`                                                                                                     |
+| `--rv-i18n-toggle-bg`               | `--rv-color-surface`     | `transparent`                                                                                                 |
+| `--rv-i18n-toggle-fg`               | `--rv-color-text`     | `currentColor`                                                                                                |
+| `--rv-i18n-toggle-border`           | `--rv-color-border` | `currentColor`                                                                                                |
+| `--rv-i18n-toggle-radius`           | `--rv-radius-md` | `0.5rem`                                                                                                      |
+| `--rv-i18n-toggle-shadow`           | `--rv-shadow-md` | `none`                                                                                                        |
+| `--rv-i18n-toggle-font`             | `--rv-font-family`   | `inherit`                                                                                                     |
 | `--rv-i18n-toggle-padding`          | —             | `0.5rem 0.75rem`                                                                                              |
 | `--rv-i18n-toggle-gap`              | —             | `0.5rem`                                                                                                      |
 | `--rv-i18n-toggle-size`             | —             | `0.875rem`                                                                                                    |
 | `--rv-i18n-toggle-icon-size`        | —             | `1.5em`                                                                                                       |
-| `--rv-i18n-toggle-hover-bg`         | —             | `color-mix(in srgb, currentColor 8%, var(--rv-i18n-toggle-bg, var(--rv-bg, transparent)))`                    |
-| `--rv-i18n-toggle-active-bg`        | —             | `color-mix(in srgb, var(--rv-accent, currentColor) 16%, var(--rv-i18n-toggle-bg, var(--rv-bg, transparent)))` |
-| `--rv-i18n-toggle-focus-ring`       | —             | `2px solid var(--rv-accent, currentColor)`                                                                    |
+| `--rv-i18n-toggle-hover-bg`         | —             | `color-mix(in srgb, currentColor 8%, var(--rv-i18n-toggle-bg, var(--rv-color-surface, transparent)))`                    |
+| `--rv-i18n-toggle-active-bg`        | —             | `color-mix(in srgb, var(--rv-color-primary, currentColor) 16%, var(--rv-i18n-toggle-bg, var(--rv-color-surface, transparent)))` |
+| `--rv-i18n-toggle-focus-ring`       | —             | `2px solid var(--rv-color-primary, currentColor)`                                                                    |
 | `--rv-i18n-toggle-focus-offset`     | —             | `0.125rem`                                                                                                    |
 | `--rv-i18n-toggle-disabled-opacity` | —             | `0.45`                                                                                                        |
 
 The border and font tokens are a **colour** and a **font family**, not shorthands:
-the declaration supplies `1px solid` and `font-family`, so `--rv-border` and
-`--rv-font` from `@rivinia/theme` flow through unchanged instead of producing an
+the declaration supplies `1px solid` and `font-family`, so `--rv-color-border` and
+`--rv-font-family` from `@rivinia/theme` flow through unchanged instead of producing an
 invalid shorthand.
 
 Hover defaults to 8% of `currentColor` and active to 16% of the accent, each mixed
-**over** the button's own background, so a dark `--rv-bg` keeps its fill instead of
+**over** the button's own background, so a dark `--rv-color-surface` keeps its fill instead of
 turning see-through. A value you set for `--rv-i18n-toggle-hover-bg` or
 `--rv-i18n-toggle-active-bg` replaces the whole fill, not just the tint. The hover
 and active rules set `background-color`, never the `background` shorthand, so
 changing the tint cannot reset the rest of the button.
 
-The active tint and the focus ring read `--rv-accent` when the theme is present and
+The active tint and the focus ring read `--rv-color-primary` when the theme is present and
 fall back to `currentColor` when it is not, so a page without `@rivinia/theme` looks
 exactly as it did before (snapshot-proved in the theme browser matrix). In
 forced-colours mode (`@media (forced-colors: active)`) the button switches to system

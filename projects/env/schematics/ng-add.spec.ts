@@ -2,7 +2,7 @@ import { EmptyTree } from '@angular-devkit/schematics';
 import { SchematicTestRunner, UnitTestTree } from '@angular-devkit/schematics/testing';
 import { describe, expect, it } from 'vitest';
 
-const COLLECTION = new URL('../collection.json', import.meta.url).pathname;
+const COLLECTION = new URL('./collection.json', import.meta.url).pathname;
 
 function appTree(overrides?: {
   angularJson?: object;

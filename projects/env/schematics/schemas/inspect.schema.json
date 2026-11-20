@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Inspect environment configuration",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "Name of the Angular application to inspect. Required when more than one application exists."
+    }
+  },
+  "additionalProperties": false
+}

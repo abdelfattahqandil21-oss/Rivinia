@@ -1,31 +1,62 @@
-# @rivinia/theme — the tokens
+# @rivinia/theme — token contract
 
-Back to [the README](../../projects/theme/README.md) ·
-[how the tokens cascade](README.md)
+Back to [the package README](../../projects/theme/README.md) ·
+[how tokens cascade](README.md)
 
-Every colour ships in two schemes.
+Theme exposes one semantic token contract. The same names are consumed by every
+Rivinia UI package and are the names consumers override. A theme scope can be
+placed on the root or on a nested element with `data-rv-theme="light|dark|system"`.
 
-| Token          | Paints             | Light                         | Dark                         |
-| -------------- | ------------------ | ----------------------------- | ---------------------------- |
-| `--rv-bg`      | surface background | `#ffffff`                     | `#161616`                    |
-| `--rv-fg`      | text               | `#111111`                     | `#f2f2f2`                    |
-| `--rv-muted`   | secondary text     | `#555555`                     | `#a1a1aa`                    |
-| `--rv-border`  | borders            | `#e0e0e0`                     | `#3f3f46`                    |
-| `--rv-radius`  | corner radius      | `0.625rem`                    | same                         |
-| `--rv-shadow`  | elevation          | `0 16px 48px rgba(0,0,0,.22)` | `0 16px 48px rgba(0,0,0,.6)` |
-| `--rv-font`    | font stack         | system stack                  | same                         |
-| `--rv-accent`  | brand / primary    | `#5b5bd6`                     | `#8b8bf0`                    |
-| `--rv-danger`  | destructive        | `#dc2626`                     | `#f87171`                    |
-| `--rv-ok`      | success            | `#16a34a`                     | `#4ade80`                    |
-| `--rv-info`    | informational      | `#2563eb`                     | `#60a5fa`                    |
-| `--rv-warning` | caution            | `#d97706`                     | `#fbbf24`                    |
+## Colors
 
-These twelve names are the public contract: they are what every Rivinia
-component reads, and what you are meant to set. Renaming one is a breaking
-change; adding one is not.
+| Token | Purpose | Light | Dark |
+| --- | --- | --- | --- |
+| `--rv-color-primary` | Brand and selected state | `#005fcc` | `#8ab4ff` |
+| `--rv-color-surface` | Main surface | `#ffffff` | `#182028` |
+| `--rv-color-surface-raised` | Raised surface | `#f5f7fa` | `#202d38` |
+| `--rv-color-text` | Main text | `#101820` | `#f5f7fa` |
+| `--rv-color-text-muted` | Secondary text | `#454f58` | `#c4ced8` |
+| `--rv-color-border` | Borders | `#767676` | `#8292a1` |
+| `--rv-color-focus` | Keyboard focus indicator | `#005fcc` | `#8ab4ff` |
+| `--rv-color-danger` | Destructive/error state | `#dc2626` | `#f87171` |
+| `--rv-color-success` | Success state | `#16a34a` | `#4ade80` |
+| `--rv-color-info` | Informational state | `#2563eb` | `#60a5fa` |
+| `--rv-color-warning` | Warning state | `#d97706` | `#fbbf24` |
 
-Each package also owns tokens of its own, and they resolve through this layer.
-The four surface tokens named in the cascade above — `--rv-select-bg`,
-`--rv-menu-bg`, `--rv-modal-bg`, `--rv-toast-bg` — each fall back to `--rv-bg`.
-The full table for a component's own names lives in that package's docs —
-[select](../select/theming.md), [menu](../menu/theming.md).
+## Shape, spacing, type, and elevation
+
+| Token | Default |
+| --- | --- |
+| `--rv-radius-sm` | `0.25rem` |
+| `--rv-radius-md` | `0.5rem` |
+| `--rv-radius-lg` | `0.75rem` |
+| `--rv-space-1` | `0.25rem` |
+| `--rv-space-2` | `0.5rem` |
+| `--rv-space-3` | `0.75rem` |
+| `--rv-space-4` | `1rem` |
+| `--rv-shadow-md` | `0 16px 48px rgba(0, 0, 0, 0.22)` light; stronger in dark mode |
+| `--rv-font-family` | System UI font stack |
+
+## V1 migration
+
+V1 semantic names and Tailwind utility aliases are removed. Update consumer
+overrides to the canonical names below; the package does not emit compatibility
+aliases.
+
+| V1 token | V2 token |
+| --- | --- |
+| `--rv-bg` | `--rv-color-surface` |
+| `--rv-fg` | `--rv-color-text` |
+| `--rv-muted` | `--rv-color-text-muted` |
+| `--rv-border` | `--rv-color-border` |
+| `--rv-accent` | `--rv-color-primary` for brand/selected; `--rv-color-focus` for focus rings |
+| `--rv-danger` | `--rv-color-danger` |
+| `--rv-ok` | `--rv-color-success` |
+| `--rv-info` | `--rv-color-info` |
+| `--rv-warning` | `--rv-color-warning` |
+| `--rv-radius` | `--rv-radius-md` |
+| `--rv-shadow` | `--rv-shadow-md` |
+| `--rv-font` | `--rv-font-family` |
+
+Component-specific tokens such as `--rv-select-bg` remain owned by their
+respective UI packages and fall back to these shared semantic tokens.

@@ -41,6 +41,7 @@ npm install @rivinia/modal
 | Ready-made UI | Headless manager |
 | --- | --- |
 | `@rivinia/modal/ui` | `@rivinia/modal` |
+| `@rivinia/modal/actions` (optional; requires `@rivinia/menu`) | `@rivinia/modal` |
 
 The UI and controller are independent; use either or combine them.
 
@@ -60,3 +61,7 @@ The UI and controller are independent; use either or combine them.
 | Theming | [Theming](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v1.0.4/docs/modal/theming.md) |
 | Sizing and stacking | [Sizing and stacking](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v1.0.4/docs/modal/sizing-and-stacking.md) |
 | API reference | [API reference](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v1.0.4/docs/modal/api.md) |
+
+## Local integration
+
+Unreleased UI: pass `[closeLabel]` to `rv-modal-host` or `rv-modal-dialog` to localize the close button.

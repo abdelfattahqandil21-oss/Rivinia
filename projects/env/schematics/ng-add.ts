@@ -1,8 +1,159 @@
-import { Rule, SchematicContext, SchematicsException, Tree } from '@angular-devkit/schematics';
+import { SchematicContext, SchematicsException, Tree } from '@angular-devkit/schematics';
+import type { Rule } from '@angular-devkit/schematics';
+import ts from 'typescript';
+import { applyReviewedPlan } from './reviewed-apply.js';
+import { applyEnvironmentPlanToTree } from './analysis/environment-plan-apply.js';
+import type { MutationEnvironmentPlan } from './analysis/environment-plan-model.js';
+import type { ReviewedApplyOptions } from './reviewed-apply.js';
+import { createMutationProposalPlan } from './mutation-proposal.js';
+import { isSafeConsumerPath, isSafeConsumerReadPath } from './reviewed-apply.js';
+import { inspectWorkspaceTree } from './inspect-workspace.js';
 
-export interface NgAddOptions {
-  environments?: Array<'dev' | 'stage' | 'prod'> | string;
-  project?: string;
+type NgAddOptions = Omit<Partial<ReviewedApplyOptions>, 'project'> & {
+  readonly project?: string;
+  readonly environments?: Array<'dev' | 'stage' | 'prod'> | string;
+  readonly proposalFile?: string;
+  readonly apply?: boolean;
+};
+
+export default function ngAdd(options: NgAddOptions): Rule {
+  if (!hasReviewedWorkflowOptions(options)) return scaffoldEnvironments(options);
+
+  return async (tree, context) => {
+    if (options.proposalFile) {
+      if (
+        !options.apply ||
+        options.planFile ||
+        options.reviewedDigest ||
+        options.acceptConfigurationMapping ||
+        options.acceptEnvironmentSemantics ||
+        options.force
+      ) {
+        throw new SchematicsException(
+          'ENV_ADD_OPTIONS_CONFLICT: proposalFile requires explicit --apply consent and cannot be combined with reviewed-plan options.',
+        );
+      }
+      const plan = await createMutationProposalPlan(tree, options.project, options.proposalFile);
+      if (plan.status !== 'ready' || plan.conflicts.length > 0) {
+        throw new SchematicsException(
+          `ENV_ADD_SETUP_BLOCKED: no files were changed. ${plan.conflicts.map(({ code }) => code).join(', ') || 'Resolve the inspection diagnostics and revise proposalFile.'}`,
+        );
+      }
+      const acceptedDecisionIds = plan.proposedDecisions
+        .filter(({ authority }) => authority === 'explicit-proposal')
+        .map(({ id }) => id)
+        .sort();
+      const result = await applyEnvironmentPlanToTree({
+        tree,
+        plan,
+        approval: { reviewedDigest: plan.integrity.digest, acceptedDecisionIds },
+        consumerRoot: '/',
+        isPathSafe: (_root, relativePath) => isSafeConsumerPath(process.cwd(), relativePath),
+        isReadPathSafe: (_root, relativePath) =>
+          isSafeConsumerReadPath(process.cwd(), relativePath),
+      });
+      if (!result.ok) {
+        throw new SchematicsException(
+          `${result.code}: automatic setup was refused without consumer file changes.`,
+        );
+      }
+      const created = plan.operations.filter(
+        ({ kind }) => kind === 'create-environment-file',
+      ).length;
+      const replacements = plan.operations.filter(
+        ({ kind }) => kind === 'add-file-replacement',
+      ).length;
+      context.logger.info(`ENV_FILE_CREATION_${created ? 'SUCCESS' : 'NOOP'}: ${created} file(s).`);
+      context.logger.info(
+        `ENV_CONFIGURATION_WIRING_${replacements ? 'SUCCESS' : 'NOOP'}: ${replacements} replacement(s).`,
+      );
+      context.logger.warn(
+        'ENVIRONMENT_VALUES_CONSUMER_APPROVED_UNVERIFIED: proposalFile explicitly selected these source files; values were preserved verbatim, and runtime semantic correctness is not verified.',
+      );
+      return result.tree;
+    }
+
+    if (!options.planFile || !options.reviewedDigest) {
+      if (options.apply) {
+        throw new SchematicsException(
+          'ENV_ADD_CHOICES_REQUIRED: --apply does not select environment sources or build configurations. Provide proposalFile with explicit choices, or a reviewed plan and digest.',
+        );
+      }
+      const inspected = await inspectWorkspaceTree(tree, options.project);
+      const unsupportedRenderDiagnostic = inspected.diagnostics.find((diagnostic) =>
+        diagnostic.startsWith('ENV_RENDER_MODE_UNSUPPORTED:'),
+      );
+      if (unsupportedRenderDiagnostic) {
+        throw new SchematicsException(
+          `${unsupportedRenderDiagnostic} ng add did not mutate the workspace; use read-only Inspect for this rendering mode.`,
+        );
+      }
+      const configuredEnvironments = inspected.plan?.operations.filter(
+        ({ environment }) => environment !== 'base',
+      );
+      const baseEnvironmentPath = inspected.plan?.operations.find(
+        ({ environment }) => environment === 'base',
+      )?.sourcePath;
+      if (
+        inspected.plan &&
+        !inspected.plan.inputHashes.every(({ path }) => isSafeConsumerReadPath(process.cwd(), path))
+      ) {
+        throw new SchematicsException(
+          'ENV_PLAN_PATH_INVALID: fresh Inspect found an input path that crosses a symlink or leaves the consumer workspace; no files were changed.',
+        );
+      }
+      if (
+        inspected.plan?.status === 'reviewable' &&
+        configuredEnvironments?.length &&
+        baseEnvironmentPath &&
+        configuredEnvironments.every(
+          ({ environment, sourcePath }) =>
+            isSafeConsumerPath(process.cwd(), sourcePath) &&
+            inspected.plan!.project.build?.fileReplacements.some(
+              ({ configuration, replace, with: replacement }) =>
+                replace === baseEnvironmentPath &&
+                isSafeConsumerPath(process.cwd(), replace) &&
+                replacement.endsWith(`environment.${environment}.generated.ts`) &&
+                inspected.plan!.project.build!.configurations.includes(configuration ?? '') &&
+                isSafeConsumerPath(process.cwd(), replacement) &&
+                tree.exists(`/${replace}`) &&
+                tree.exists(`/${replacement}`) &&
+                hasValidTypeScriptSyntax(tree.readText(`/${replacement}`), replacement),
+            ),
+        )
+      ) {
+        context.logger.info(
+          'ENV_ADD_SETUP_CONFIGURED_VALUES_UNVERIFIED: fresh Inspect found matching build replacements and existing source/target files; no files changed. This no-op confirms setup structure only; it does not run a consumer build or verify environment semantics.',
+        );
+        return tree;
+      }
+      throw new SchematicsException(
+        `ENV_ADD_CHOICES_REQUIRED: provide proposalFile with explicit source and configuration choices plus --apply consent, or provide planFile and reviewedDigest for reviewed Apply.${inspected.diagnostics.length ? ` ${inspected.diagnostics.join(' ')}` : ''}`,
+      );
+    }
+    return applyReviewedPlan(tree, context, options as ReviewedApplyOptions);
+  };
+}
+
+function hasReviewedWorkflowOptions(options: NgAddOptions): boolean {
+  return Boolean(
+    options.proposalFile ||
+      options.planFile ||
+      options.reviewedDigest ||
+      options.apply ||
+      options.acceptConfigurationMapping ||
+      options.acceptEnvironmentSemantics ||
+      options.force,
+  );
+}
+
+function hasValidTypeScriptSyntax(sourceText: string, fileName: string): boolean {
+  const result = ts.transpileModule(sourceText, {
+    fileName,
+    reportDiagnostics: true,
+    compilerOptions: { target: ts.ScriptTarget.Latest },
+  });
+  return !result.diagnostics?.some(({ category }) => category === ts.DiagnosticCategory.Error);
 }
 
 interface FileDef {
@@ -113,7 +264,7 @@ const fileDefs = (sourceRoot: string, selected: readonly EnvironmentName[]): Fil
  *   wired for compatibility.
  * - App version is snapshotted from the app's `package.json` (`0.0.0` fallback).
  */
-export function ngAdd(options: NgAddOptions): Rule {
+function scaffoldEnvironments(options: NgAddOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
     const workspace = readWorkspace(tree, context, options.project);
     if (!workspace) return tree;

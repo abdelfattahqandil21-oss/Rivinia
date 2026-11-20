@@ -1,60 +1,39 @@
-/*
- * Bootstrap 5.3 adapter.
- *
- *   @import 'bootstrap/dist/css/bootstrap.css';
- *   @import '@rivinia/theme/bootstrap.css';
- *
- * Bootstrap themes itself with `--bs-*` variables and a `data-bs-theme`
- * attribute. This maps the Rivinia semantic layer onto Bootstrap's palette,
- * so a Bootstrap theme switch re-themes the Rivinia components with no extra
- * wiring — and the components inherit Bootstrap's contrast and rhythm rather
- * than imposing their own.
- *
- * The direction matters: Rivinia's tokens point AT Bootstrap's, never the
- * other way round. If they pointed the other way, a theme switch would have to
- * update two sets of variables and they could drift.
- *
- * These rules are UNLAYERED on purpose. theme.css keeps its defaults — light
- * and dark — inside `@layer rivinia-theme`, and unlayered declarations beat
- * layered ones regardless of specificity or media query. That is what makes
- * Bootstrap authoritative here: with `data-bs-theme="light"` and a dark OS
- * preference, this file still wins and the components stay Bootstrap-light.
- * Moving these rules into a layer would hand control back to the theme's dark
- * block, so do not.
- */
-
+/* Bootstrap 5.3 adapter for Rivinia's semantic token contract. */
 @import './theme.css';
 
 :root,
 [data-bs-theme='light'] {
   color-scheme: light;
-  --rv-bg: var(--bs-body-bg, #ffffff);
-  --rv-fg: var(--bs-body-color, #111111);
-  --rv-muted: var(--bs-secondary-color, #555555);
-  --rv-border: var(--bs-border-color, #e0e0e0);
-  --rv-accent: var(--bs-primary, #5b5bd6);
-  --rv-danger: var(--bs-danger, #dc2626);
-  --rv-ok: var(--bs-success, #16a34a);
-  --rv-info: var(--bs-info, #2563eb);
-  --rv-warning: var(--bs-warning, #d97706);
-  /* Bootstrap has no single elevation token to read, so the theme's value
-     stands — repeated here because the dark block changes it. */
-  --rv-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+  --rv-color-primary: var(--bs-primary, #005fcc);
+  --rv-color-surface: var(--bs-body-bg, #ffffff);
+  --rv-color-surface-raised: var(--bs-tertiary-bg, #f5f7fa);
+  --rv-color-text: var(--bs-body-color, #101820);
+  --rv-color-text-muted: var(--bs-secondary-color, #454f58);
+  --rv-color-border: var(--bs-border-color, #767676);
+  --rv-color-focus: var(--bs-primary, #005fcc);
+  --rv-color-danger: var(--bs-danger, #dc2626);
+  --rv-color-success: var(--bs-success, #16a34a);
+  --rv-color-info: var(--bs-info, #2563eb);
+  --rv-color-warning: var(--bs-warning, #d97706);
+  --rv-radius-sm: var(--bs-border-radius-sm, 0.25rem);
+  --rv-radius-md: var(--bs-border-radius, 0.5rem);
+  --rv-radius-lg: var(--bs-border-radius-lg, 0.75rem);
+  --rv-font-family: var(--bs-body-font-family, system-ui, sans-serif);
+  --rv-shadow-md: 0 16px 48px rgba(0, 0, 0, 0.22);
 }
 
 [data-bs-theme='dark'] {
   color-scheme: dark;
-  --rv-bg: var(--bs-body-bg, #161616);
-  --rv-fg: var(--bs-body-color, #f2f2f2);
-  --rv-muted: var(--bs-secondary-color, #a1a1aa);
-  --rv-border: var(--bs-border-color, #3f3f46);
-  /* Bootstrap keeps these the same in both themes, so the variable reads the
-     same value either way; the fallback matters when Bootstrap is absent. */
-  --rv-accent: var(--bs-primary, #8b8bf0);
-  --rv-danger: var(--bs-danger, #f87171);
-  --rv-ok: var(--bs-success, #4ade80);
-  --rv-info: var(--bs-info, #60a5fa);
-  --rv-warning: var(--bs-warning, #fbbf24);
-  /* Elevation: the light alpha of black vanishes on a dark surface. */
-  --rv-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --rv-color-primary: var(--bs-primary, #8ab4ff);
+  --rv-color-surface: var(--bs-body-bg, #182028);
+  --rv-color-surface-raised: var(--bs-tertiary-bg, #202d38);
+  --rv-color-text: var(--bs-body-color, #f5f7fa);
+  --rv-color-text-muted: var(--bs-secondary-color, #c4ced8);
+  --rv-color-border: var(--bs-border-color, #8292a1);
+  --rv-color-focus: var(--bs-primary, #8ab4ff);
+  --rv-color-danger: var(--bs-danger, #f87171);
+  --rv-color-success: var(--bs-success, #4ade80);
+  --rv-color-info: var(--bs-info, #60a5fa);
+  --rv-color-warning: var(--bs-warning, #fbbf24);
+  --rv-shadow-md: 0 16px 48px rgba(0, 0, 0, 0.6);
 }

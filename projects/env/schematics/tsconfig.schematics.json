@@ -7,10 +7,11 @@
     "declaration": false,
     "sourceMap": false,
     "composite": false,
-    "outDir": "./",
     "rootDir": "./",
-    "types": ["node"]
+    "outDir": "./",
+    "types": ["node"],
+    "esModuleInterop": true
   },
-  "include": ["./**/*.ts"],
-  "exclude": ["./**/*.spec.ts"]
+  "include": ["./analysis/**/*.ts", "./*.ts"],
+  "exclude": ["./*.spec.ts"]
 }

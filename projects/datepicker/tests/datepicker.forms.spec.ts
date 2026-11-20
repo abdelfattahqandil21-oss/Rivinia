@@ -22,7 +22,11 @@ const TODAY = d(2026, 10, 25);
 @Component({
   selector: 'rv-forms-host',
   imports: [ReactiveFormsModule, RiviniaDatepickerComponent],
-  template: `<rv-datepicker [formControl]="control" [clearable]="true" (valueChange)="changes.push($event)" />`,
+  template: `<rv-datepicker
+    [formControl]="control"
+    [clearable]="true"
+    (valueChange)="changes.push($event)"
+  />`,
 })
 class FormsHost {
   readonly control = new FormControl<RiviniaDate | null>(null);
@@ -38,7 +42,11 @@ class NgModelHost {
   value: RiviniaDate | null = d(2026, 3, 15);
 }
 
-function mountReactive(): { fixture: ComponentFixture<FormsHost>; host: FormsHost; el: HTMLElement } {
+function mountReactive(): {
+  fixture: ComponentFixture<FormsHost>;
+  host: FormsHost;
+  el: HTMLElement;
+} {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [FormsHost],
@@ -52,6 +60,11 @@ function mountReactive(): { fixture: ComponentFixture<FormsHost>; host: FormsHos
 const triggerText = (el: HTMLElement): string =>
   el.querySelector('.rv-datepicker-trigger')?.textContent?.trim() ?? '';
 
+const openPanel = (fixture: ComponentFixture<unknown>, el: HTMLElement): void => {
+  (el.querySelector('.rv-datepicker-trigger') as HTMLButtonElement).click();
+  fixture.detectChanges();
+};
+
 const openAndPick = (fixture: ComponentFixture<unknown>, el: HTMLElement, iso: string): void => {
   (el.querySelector('.rv-datepicker-trigger') as HTMLButtonElement).click();
   fixture.detectChanges();
@@ -59,6 +72,8 @@ const openAndPick = (fixture: ComponentFixture<unknown>, el: HTMLElement, iso: s
     (candidate) => candidate.dataset['date'] === iso,
   );
   (cell as HTMLElement).click();
+  fixture.detectChanges();
+  (el.querySelector('.rv-datepicker-ok') as HTMLButtonElement).click();
   fixture.detectChanges();
 };
 
@@ -96,7 +111,7 @@ describe('rv-datepicker — reactive forms', () => {
     expect(host.changes).toHaveLength(0);
   });
 
-  it('picking a day updates the control and marks it dirty and touched', () => {
+  it('confirming a picked day updates the control and marks it dirty and touched', () => {
     fixture.detectChanges();
     openAndPick(fixture, el, '2026-10-12');
     expect(host.control.value).toEqual(d(2026, 10, 12));
@@ -125,13 +140,13 @@ describe('rv-datepicker — reactive forms', () => {
     expect(triggerText(el)).toBe('Choose date');
   });
 
-  it('the clear button empties the control, publishes null and marks it touched', () => {
+  it('Clear empties the control immediately and marks it touched', () => {
     host.control.setValue(d(2026, 3, 15));
     fixture.detectChanges();
 
-    (el.querySelector('.rv-datepicker-clear') as HTMLButtonElement).click();
+    openPanel(fixture, el);
+    (el.querySelector('.rv-datepicker-clear-action') as HTMLButtonElement).click();
     fixture.detectChanges();
-
     expect(host.control.value).toBeNull();
     expect(host.control.touched).toBe(true);
     expect(host.changes.at(-1)).toBeNull();

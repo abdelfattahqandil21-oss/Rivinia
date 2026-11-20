@@ -1,4 +1,27 @@
-<span class="rv-datepicker-field">
+<span #field class="rv-datepicker-field">
+  <svg class="rv-datepicker-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+    <circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.25" />
+    <path
+      d="M8 4.75V8l2.25 1.5"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.25"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+  <rv-date-segments
+    [value]="normalized()?.date ?? null"
+    [locale]="effectiveLocale()"
+    [format]="effectiveDateFormat()"
+    [labels]="calendar.labels()"
+    [label]="label() ?? calendar.labels().chooseDateTime"
+    [disabled]="isDisabled()"
+    (valueChange)="onTypedDate($event)"
+  />
+  @if (normalized()) {
+    <span class="rv-datetimepicker-trigger-time" aria-hidden="true">{{ triggerTimeText() }}</span>
+  }
   <button
     #trigger
     type="button"
@@ -11,44 +34,17 @@
     (click)="toggle()"
   >
     <span class="rv-datepicker-value">{{ triggerText() }}</span>
-    <svg class="rv-datepicker-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <circle
-        cx="8"
-        cy="8"
-        r="5.5"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.25"
-      />
+    <svg class="rv-datepicker-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <path
-        d="M8 4.75V8l2.25 1.5"
+        d="m3.5 6 4.5 4.5L12.5 6"
         fill="none"
         stroke="currentColor"
-        stroke-width="1.25"
+        stroke-width="1.5"
         stroke-linecap="round"
         stroke-linejoin="round"
       />
     </svg>
   </button>
-
-  @if (canClear()) {
-    <button
-      type="button"
-      class="rv-datepicker-clear"
-      [attr.aria-label]="clearLabel()"
-      (click)="clearDateTime()"
-    >
-      <svg class="rv-datepicker-clear-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-        <path
-          d="m4.5 4.5 7 7m0-7-7 7"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-        />
-      </svg>
-    </button>
-  }
 </span>
 
 @if (open() || closing()) {
@@ -82,9 +78,10 @@
       [showSeconds]="effectiveShowSeconds()"
       [minuteStep]="effectiveMinuteStep()"
       [disabled]="isDisabled()"
+      [commitDisabled]="!canCommit()"
+      [showActions]="false"
       (valueChange)="onTimeChanged($event)"
       (commit)="commit()"
-      (now)="onNow()"
     />
 
     @if (effectiveTimeZone(); as zone) {
@@ -95,7 +92,8 @@
           <bdi>{{ zoneName() }}</bdi>
         }
       </div>
-    } @else if (invalidTimeZone()) {
+    }
+    @if (invalidTimeZone()) {
       <p class="rv-datetimepicker-warning" role="status">
         {{ calendar.labels().invalidTimeZone }}
         <bdi dir="ltr">{{ invalidTimeZone() }}</bdi>
@@ -141,5 +139,36 @@
         </div>
       </div>
     }
+
+    <div class="rv-datetimepicker-actions">
+      <div class="rv-datetimepicker-actions-start">
+        <button
+          type="button"
+          class="rv-datetimepicker-action rv-datetimepicker-now"
+          [disabled]="isDisabled()"
+          (click)="onNow()"
+        >
+          {{ calendar.labels().now }}
+        </button>
+        @if (canClear()) {
+          <button
+            type="button"
+            class="rv-datetimepicker-action rv-datetimepicker-clear"
+            [attr.aria-label]="clearLabel()"
+            (click)="clearValue()"
+          >
+            {{ calendar.labels().clear ?? calendar.labels().clearDateTime }}
+          </button>
+        }
+      </div>
+      <button
+        type="button"
+        class="rv-datetimepicker-action rv-datetimepicker-apply"
+        [disabled]="!canCommit()"
+        (click)="commit()"
+      >
+        {{ calendar.labels().apply ?? calendar.labels().ok }}
+      </button>
+    </div>
   </div>
 }

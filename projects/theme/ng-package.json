@@ -1,14 +1,17 @@
 {
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/theme",
+  "allowedNonPeerDependencies": ["jsonc-parser"],
   "assets": [
     "./styles/theme.css",
+    { "input": "./src", "glob": "motion.css", "output": "." },
     "./styles/tailwind.css",
     "./styles/bootstrap.css",
     "./styles/_index.scss",
     "./README.md",
     "./CHANGELOG.md",
-    "./LICENSE"
+    "./LICENSE",
+    { "input": "./schematics", "glob": "**/*", "output": "schematics" }
   ],
   "lib": {
     "entryFile": "src/public-api.ts"

@@ -1,0 +1,57 @@
+:root[data-rv-theme-transition='expand']::view-transition-old(root) {
+  animation: none;
+}
+
+:root[data-rv-theme-transition='expand']::view-transition-new(root) {
+  animation:
+    rv-theme-transition-expand
+    var(--rv-theme-transition-duration, 420ms)
+    var(--rv-theme-transition-easing, ease-out)
+    both;
+}
+
+:root[data-rv-theme-transition='collapse']::view-transition-old(root) {
+  z-index: 1;
+  animation:
+    rv-theme-transition-collapse
+    var(--rv-theme-transition-duration, 420ms)
+    var(--rv-theme-transition-easing, ease-out)
+    both;
+}
+
+:root[data-rv-theme-transition='collapse']::view-transition-new(root) {
+  animation: none;
+}
+
+@keyframes rv-theme-transition-expand {
+  from {
+    clip-path: circle(0 at var(--rv-theme-transition-x, 50vw) var(--rv-theme-transition-y, 50vh));
+  }
+  to {
+    clip-path: circle(
+      var(--rv-theme-transition-radius, 150vmax)
+        at var(--rv-theme-transition-x, 50vw)
+        var(--rv-theme-transition-y, 50vh)
+    );
+  }
+}
+
+@keyframes rv-theme-transition-collapse {
+  from {
+    clip-path: circle(
+      var(--rv-theme-transition-radius, 150vmax)
+        at var(--rv-theme-transition-x, 50vw)
+        var(--rv-theme-transition-y, 50vh)
+    );
+  }
+  to {
+    clip-path: circle(0 at var(--rv-theme-transition-x, 50vw) var(--rv-theme-transition-y, 50vh));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-rv-theme-transition]::view-transition-old(root),
+  :root[data-rv-theme-transition]::view-transition-new(root) {
+    animation: none;
+  }
+}

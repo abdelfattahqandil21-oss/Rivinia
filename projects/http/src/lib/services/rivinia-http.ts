@@ -5,9 +5,10 @@ import {
   httpResource,
   type HttpHeaders,
   type HttpResourceRef,
+  type HttpResourceOptions,
   type HttpResponse,
 } from '@angular/common/http';
-import { Service, computed, inject, isSignal, type Signal } from '@angular/core';
+import { Service, inject, isSignal, type Signal, type ResourceParamsContext } from '@angular/core';
 import { map, type Observable } from 'rxjs';
 import { RIVINIA_HTTP_CONFIG, type RiviniaHttpConfig } from '../models/http-config';
 import type {
@@ -17,6 +18,7 @@ import type {
   RiviniaRawOptions,
   RiviniaRequestBase,
   RiviniaRequestOptions,
+  RiviniaTransportOptions,
   RiviniaUnwrapOff,
   RiviniaUnwrapOn,
 } from '../models/http-options';
@@ -27,7 +29,11 @@ import { assertEnvelope, type RiviniaEnvelopePolicy } from '../models/http-envel
  * Reactive per-request fields for `getResource` (re-evaluated on every
  * request; everything else is read once per call site).
  */
-export interface RiviniaResourceBase<T> {
+export type RiviniaResourceEndpoint = string | Signal<string | undefined> |
+  ((context: ResourceParamsContext) => string | undefined);
+
+export interface RiviniaResourceBase<T> extends RiviniaTransportOptions,
+  Pick<HttpResourceOptions<T, unknown>, 'injector' | 'equal' | 'debugName'> {
   /**
    * Query params re-evaluated on every request: value, signal, or reactive
    * function. Anything else in these options is read once per call site —
@@ -36,7 +42,6 @@ export interface RiviniaResourceBase<T> {
   params?: ReactiveInput<QueryParamsInput>;
   headers?: ReactiveInput<HttpHeaders | Record<string, string | string[]>>;
   context?: ReactiveInput<HttpContext>;
-  withCredentials?: boolean;
   /** Value while idle/loading. Defaults to `undefined`. */
   defaultValue?: T;
   /**
@@ -182,28 +187,35 @@ export class RiviniaHttp {
    * composed before a user `parse` if given.
    */
   getResource<T>(
-    endpoint: string | Signal<string | undefined> | (() => string | undefined),
+    endpoint: RiviniaResourceEndpoint,
+    options: RiviniaResourceOptions<T> & { defaultValue: T },
+  ): HttpResourceRef<T>;
+  getResource<T>(
+    endpoint: RiviniaResourceEndpoint,
+    options?: RiviniaResourceOptions<T>,
+  ): HttpResourceRef<T | undefined>;
+  getResource<T>(
+    endpoint: RiviniaResourceEndpoint,
     options?: RiviniaResourceOptions<T>,
   ): HttpResourceRef<T | undefined> {
-    const { defaultValue, parse, reportProgress, ...requestOptions } = options ?? {};
-    const source: string | Signal<string | undefined> =
-      typeof endpoint === 'function' && !isSignal(endpoint)
-        ? computed(endpoint)
-        : (endpoint as string | Signal<string | undefined>);
-    const request = () => {
-      const ep = typeof source === 'string' ? source : source();
+    const { defaultValue, parse, reportProgress, injector, equal, debugName, ...requestOptions } = options ?? {};
+    const request = (context: ResourceParamsContext) => {
+      // Evaluate in Angular's request callback so chain() status propagation stays native.
+      const ep = typeof endpoint === 'string' ? endpoint : endpoint(context);
       if (ep === undefined) return undefined;
       return {
         url: this.url(ep),
-        params: this.toParams(resolveInput(requestOptions.params)),
-        headers: resolveInput(requestOptions.headers),
-        context: resolveInput(requestOptions.context),
-        withCredentials: requestOptions.withCredentials,
+        ...this.httpOptions({
+          ...requestOptions,
+          params: resolveInput(requestOptions.params),
+          headers: resolveInput(requestOptions.headers),
+          context: resolveInput(requestOptions.context),
+        }),
         ...(reportProgress !== undefined ? { reportProgress } : {}),
       };
     };
     const envelope = this.resolveEnvelope(requestOptions);
-    const base = { defaultValue: defaultValue as T | undefined };
+    const base = { defaultValue: defaultValue as T | undefined, injector, equal, debugName };
     // Pipeline order: envelope validation (raw) -> unwrap -> user parse.
     // A throwing envelope or a failed extraction surfaces as resource.error().
     const applyParse = (raw: unknown): T => {
@@ -246,6 +258,17 @@ export class RiviniaHttp {
       headers: options?.headers,
       context: options?.context ?? new HttpContext(),
       withCredentials: options?.withCredentials,
+      timeout: options?.timeout,
+      transferCache: options?.transferCache,
+      keepalive: options?.keepalive,
+      cache: options?.cache,
+      credentials: options?.credentials,
+      priority: options?.priority,
+      mode: options?.mode,
+      redirect: options?.redirect,
+      referrer: options?.referrer,
+      referrerPolicy: options?.referrerPolicy,
+      integrity: options?.integrity,
     };
   }
 
@@ -255,7 +278,9 @@ export class RiviniaHttp {
     let params = new HttpParams();
     for (const [key, value] of Object.entries(input)) {
       if (value !== undefined && value !== null) {
-        params = params.set(key, String(value));
+        if (Array.isArray(value)) {
+          for (const item of value) params = params.append(key, String(item));
+        } else params = params.set(key, String(value));
       }
     }
     return params;

@@ -8,5 +8,8 @@
     "./LICENSE",
     "./README.md",
     "./CHANGELOG.md"
+  ],
+  "allowedNonPeerDependencies": [
+    "@rivinia/popup"
   ]
 }

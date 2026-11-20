@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Create an environment mutation proposal",
+  "type": "object",
+  "properties": {
+    "project": { "type": "string" },
+    "proposalFile": {
+      "type": "string",
+      "description": "Workspace-relative JSON file containing explicit source, destination, and build-configuration proposals."
+    },
+    "planFile": {
+      "type": "string",
+      "description": "Workspace-relative path where the reviewed mutation plan will be written."
+    }
+  },
+  "required": ["proposalFile", "planFile"],
+  "additionalProperties": false
+}

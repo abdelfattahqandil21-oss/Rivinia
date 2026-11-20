@@ -1,6 +1,6 @@
 :host {
   display: block;
-  color: var(--rv-fg, CanvasText);
+  color: var(--rv-color-text, CanvasText);
   font: 1rem/1.45 system-ui, sans-serif;
 }
 
@@ -18,7 +18,7 @@ main {
   gap: 1rem;
   margin-block: 1rem;
   padding: 1rem;
-  border: 1px solid var(--rv-border, #ccc);
+  border: 1px solid var(--rv-color-border, #ccc);
   border-radius: 0.75rem;
 }
 

@@ -1,0 +1,26 @@
+<div class="rv-date-segments" role="group" [attr.aria-label]="label()" dir="ltr">
+  @for (part of parts(); track part.key) {
+    @if (part.field === null) {
+      <span class="rv-date-literal" aria-hidden="true">{{ part.text }}</span>
+    } @else {
+      <input
+        class="rv-date-segment"
+        type="text"
+        [attr.data-date-segment]="part.field"
+        [attr.aria-label]="segmentLabel(part)"
+        [attr.aria-invalid]="invalid() ? 'true' : null"
+        [attr.inputmode]="part.numeric ? 'numeric' : 'text'"
+        [attr.maxlength]="part.maxLength"
+        [attr.size]="part.size"
+        [placeholder]="part.placeholder"
+        [value]="text(part)"
+        [disabled]="disabled()"
+        autocomplete="off"
+        spellcheck="false"
+        (input)="onInput(part, $event)"
+        (blur)="onBlur(part)"
+        (keydown)="onKeydown($event)"
+      />
+    }
+  }
+</div>
