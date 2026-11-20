@@ -69,6 +69,56 @@ beforeEach(() => {
   TestBed.resetTestingModule();
 });
 
+describe('disabling an open Reactive Forms Select', () => {
+  it.each(['single', 'multi'])('closes and rejects stale picks in %s mode', async (mode) => {
+    const fixture = mode === 'single'
+      ? TestBed.createComponent(ReactiveHost)
+      : TestBed.createComponent(MultiHost);
+    const host = fixture.componentInstance;
+    const control = host instanceof ReactiveHost ? host.fg.controls.val : host.fg.controls.vals;
+    const before = control.value;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const trigger = q(fixture.nativeElement, '.rv-select-trigger');
+    trigger.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const option = q(fixture.nativeElement, '[data-rv-id="b"]');
+    const panel = q(fixture.nativeElement, '.rv-select-popup-panel');
+    const select = fixture.debugElement.query(
+      (el) => el.componentInstance instanceof RiviniaSelectComponent,
+    )!.componentInstance as RiviniaSelectComponent;
+    const changes: unknown[] = [];
+    let closed = 0;
+    select.selectionChange.subscribe((value) => changes.push(value));
+    select.closed.subscribe(() => closed++);
+
+    control.disable({ emitEvent: false });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    option.click();
+    panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(control.value).toEqual(before);
+    expect(changes).toEqual([]);
+    expect(closed).toBe(1);
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+
+    control.enable({ emitEvent: false });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    trigger.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    q(fixture.nativeElement, '[data-rv-id="b"]').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(control.value).toEqual(mode === 'single' ? 'b' : ['a', 'b']);
+    expect(changes).toHaveLength(1);
+  });
+});
+
 describe('RiviniaSelectComponent — Reactive Forms (formControlName)', () => {
   it('initializes from FormControl value', async () => {
     const fixture = TestBed.createComponent(ReactiveHost);

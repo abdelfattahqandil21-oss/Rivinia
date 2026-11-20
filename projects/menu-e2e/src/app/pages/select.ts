@@ -63,6 +63,8 @@ import { RiviniaMenuComponent, RiviniaMenuItem } from '@rivinia/menu/ui';
     <h1>Select</h1>
 
     <h2>Single</h2>
+    <button type="button" data-testid="toggle-single-disabled"
+      (click)="singleDisabled.set(!singleDisabled())">Toggle Select disabled</button>
     <div class="isolation-scope">
       <rv-menu menuLabel="Actions menu">
         <button rv-menu-trigger>Menu</button>
@@ -77,6 +79,7 @@ import { RiviniaMenuComponent, RiviniaMenuItem } from '@rivinia/menu/ui';
         label="Invoice status"
         popupLabel="Invoice status options"
         [options]="singleOptions"
+        [disabled]="singleDisabled()"
         [searchable]="true"
         (selectionChange)="singleValue.set($any($event))"
       />
@@ -191,6 +194,7 @@ export class SelectPage {
     { id: 'a', label: 'Alpha' },
     { id: 'b', label: 'Beta' },
   ];
+  readonly singleDisabled = signal(false);
   readonly singleValue = signal<string | null>(null);
   readonly multiValue = signal<readonly string[] | null>(null);
   readonly multiClosed = signal(0);
