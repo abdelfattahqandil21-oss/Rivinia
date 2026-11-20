@@ -229,6 +229,11 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
 
     effect(() => this.calendar.setLabels(this.labels()));
     effect(() => this.calendar.setDisabledDate(this.disabledDate()));
+    effect(() => {
+      if (this.isDisabled() && this.open()) {
+        untracked(() => this.closePanel(false, true));
+      }
+    });
 
     // Value → calendar (a form write brings the grid to that month).
     effect(() => {
@@ -322,6 +327,7 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
   }
 
   protected onPicked(date: RiviniaDate): void {
+    if (this.isDisabled()) return;
     this.calendar.setSelected(date);
     if (this.commitMode() === 'immediate') this.commit();
   }

@@ -50,6 +50,7 @@ const TODAY = d(2026, 10, 25);
       [label]="label()"
       [min]="min()"
       [max]="max()"
+      [disabled]="disabled()"
       [disabledDate]="disabledDate()"
       [disabledTime]="disabledTime()"
       [zoneCommitPolicy]="zoneCommitPolicy()"
@@ -75,6 +76,7 @@ class Host {
   readonly clearable = signal<boolean | undefined>(undefined);
   readonly min = signal<RiviniaDateTime | undefined>(undefined);
   readonly max = signal<RiviniaDateTime | undefined>(undefined);
+  readonly disabled = signal(false);
   readonly disabledDate = signal<((date: RiviniaDate) => boolean) | undefined>(undefined);
   readonly disabledTime = signal<((value: RiviniaDateTime) => boolean) | undefined>(undefined);
   readonly zoneCommitPolicy = signal<RiviniaZoneCommitPolicy>('compatible');
@@ -187,6 +189,39 @@ function typeInto(target: HTMLInputElement, value: string): void {
   target.value = value;
   target.dispatchEvent(new Event('input', { bubbles: true }));
 }
+
+it('discards the open draft on disable and starts from the committed datetime on reopen', () => {
+  const initial = dt(2026, 10, 25, 19, 30);
+  const view = mount({ value: initial, hour12: false, timeZone: 'UTC' });
+  view.open();
+  const nextDay = view.day('2026-10-26')!;
+  const hour = view.hour()!;
+  typeInto(hour, '20');
+  view.fixture.detectChanges();
+
+  view.host.disabled.set(true);
+  view.fixture.detectChanges();
+  nextDay.click();
+  keydown(hour, 'Enter');
+  view.fixture.detectChanges();
+  expect(view.trigger.getAttribute('aria-expanded')).toBe('false');
+  expect(view.panel()).toBeNull();
+  expect(view.host.value()).toEqual(initial);
+  expect(view.host.resolved).toEqual([]);
+
+  view.host.disabled.set(false);
+  view.fixture.detectChanges();
+  expect(view.trigger.getAttribute('aria-expanded')).toBe('false');
+  view.open();
+  expect(view.day('2026-10-25')?.getAttribute('aria-selected')).toBe('true');
+  expect(view.hour()?.value).toBe('19');
+  view.day('2026-10-26')!.click();
+  view.fixture.detectChanges();
+  keydown(view.hour()!, 'Enter');
+  view.fixture.detectChanges();
+  expect(view.host.value()).toEqual(dt(2026, 10, 26, 19, 30));
+  expect(view.host.resolved).toHaveLength(1);
+});
 
 describe('rv-datetimepicker — the time row is inside the date panel', () => {
   it('keeps the 12-hour input editable while typing two digits', () => {

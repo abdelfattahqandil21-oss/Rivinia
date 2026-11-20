@@ -86,6 +86,8 @@ The browser suites build first:
 `npx ng build i18n && npx ng build i18n-e2e --configuration csr`, then
 `npx playwright test --config projects/i18n/testing/playwright.config.ts`.
 
+See [Contributors](./CONTRIBUTORS.md) for acknowledgments.
+
 ## Release safety
 
 Building a workspace package is not the same as publishing it. Do not publish

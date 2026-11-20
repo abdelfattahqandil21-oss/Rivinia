@@ -3,6 +3,8 @@
 
   <section class="fixture-scope booking-scope" data-testid="booking-scope" data-bs-theme="light">
     <h2>Booking scope</h2>
+    <button type="button" data-testid="toggle-pickers-disabled"
+      (click)="pickersDisabled.set(!pickersDisabled())">Toggle pickers disabled</button>
     <button type="button" data-testid="open-modal" (click)="modalOpen.set(true)">Open Modal</button>
     <rv-modal-dialog [(open)]="modalOpen" title="CSS stack modal" size="sm">
       <p>Modal package styles remain isolated from consumer CSS stacks.</p>
@@ -19,12 +21,14 @@
     />
     <rv-datepicker
       id="booking-date"
+      [disabled]="pickersDisabled()"
       label="Booking date"
       [value]="dateValue()"
       (valueChange)="dateValue.set($event)"
     />
     <rv-datetimepicker
       id="appointment-12-hour"
+      [disabled]="pickersDisabled()"
       label="Appointment"
       [value]="dateTime12()"
       (valueChange)="dateTime12.set($event)"

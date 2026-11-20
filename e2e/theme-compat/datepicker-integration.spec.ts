@@ -4,6 +4,45 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
+for (const { id, confirm } of [
+  { id: 'booking-date', confirm: '.rv-datepicker-ok' },
+  { id: 'appointment-12-hour', confirm: '.rv-datetimepicker-apply' },
+]) {
+  test(`${id} closes on disable and reopens with the committed date`, async ({ page }) => {
+    const picker = page.locator(`#${id}`);
+    const trigger = picker.locator('.rv-datepicker-trigger');
+    const panel = picker.locator('.rv-datepicker-panel');
+    const nextDay = panel.locator('[data-date="2026-11-10"]');
+    const toggle = page.getByTestId('toggle-pickers-disabled');
+    const before = await trigger.innerText();
+
+    await trigger.click();
+    await nextDay.click();
+    await expect(nextDay).toHaveAttribute('aria-selected', 'true');
+    await expect(trigger).toHaveText(before);
+
+    // Disable through the input binding while focus is still inside the popup.
+    await toggle.evaluate((button: HTMLButtonElement) => button.click());
+    await expect(trigger).toBeDisabled();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    await expect(panel).toHaveCount(0);
+    await expect(trigger).not.toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(trigger).toHaveText(before);
+
+    await toggle.click();
+    await expect(trigger).toBeEnabled();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    await trigger.click();
+    await expect(panel.locator('[data-date="2026-11-09"]')).toHaveAttribute('aria-selected', 'true');
+    await nextDay.click();
+    await panel.locator(confirm).click();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    await expect(trigger).not.toHaveText(before);
+    await expect(trigger).toBeFocused();
+  });
+}
+
 test('owns one native panel and restores focus after Escape', async ({ page }) => {
   const first = page.locator('#booking-date .rv-datepicker-trigger');
   const second = page.locator('#default-datetime .rv-datepicker-trigger');
