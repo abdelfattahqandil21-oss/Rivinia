@@ -487,6 +487,7 @@ export class RiviniaSelectComponent implements FormValueControl<SelectChange> {
   }
 
   protected onPick(id: string): void {
+    if (this.disabled()) return;
     const c = this.controller();
     if (c.mode === 'single') {
       if (!c.select(id)) return;

@@ -25,6 +25,41 @@ test.describe('select: single mode', () => {
     await expect(page.locator('#single-select .rv-select-value')).toContainText('Paid');
   });
 
+  test('disabling while open removes the focused popup and preserves the value', async ({ page }) => {
+    await page.goto('/select');
+    const select = page.locator('#single-select');
+    const trigger = select.locator('.rv-select-trigger');
+    const panel = select.locator('.rv-select-popup-panel');
+    const toggle = page.getByTestId('toggle-single-disabled');
+    const value = page.getByTestId('single-value');
+
+    await trigger.click();
+    await select.getByRole('menuitemradio', { name: 'Outstanding invoices' }).click();
+    await expect(value).toHaveText('value=outstanding');
+    await trigger.click();
+    const search = select.locator('.rv-select-search');
+    await expect(search).toBeFocused();
+    await search.fill('paid');
+    await expect(select.getByRole('menuitemradio', { name: 'Paid' })).toBeVisible();
+
+    // A pointer press on the toggle would dismiss the popup before disabling it.
+    await toggle.evaluate((button: HTMLButtonElement) => button.click());
+    await expect(trigger).toBeDisabled();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    await expect(panel).toHaveCount(0);
+    await expect(trigger).not.toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(value).toHaveText('value=outstanding');
+
+    await toggle.click();
+    await expect(trigger).toBeEnabled();
+    await trigger.click();
+    await expect(search).toHaveValue('');
+    await select.getByRole('menuitemradio', { name: 'Paid' }).click();
+    await expect(value).toHaveText('value=paid');
+    await expect(trigger).toBeFocused();
+  });
+
   test('disabled option is never picked', async ({ page }) => {
     await page.goto('/select');
     await page.locator('#single-select .rv-select-trigger').click();

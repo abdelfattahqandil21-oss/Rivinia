@@ -226,6 +226,7 @@ export class SelectPopupComponent {
   readonly picked = output<SelectPopupPick>();
   readonly opened = output<void>();
   readonly closed = output<void>();
+  readonly interactionDisabled = input(false);
 
   /**
    * The panel element, once it exists.
@@ -362,6 +363,11 @@ export class SelectPopupComponent {
         'rv-select-popup: `[items]` cannot be combined with projected `rvSelectPopupItem` ' +
           'children — pick one way to populate the panel.',
       );
+    });
+    effect(() => {
+      if (this.interactionDisabled() && this.controller().open()) {
+        untracked(() => this.doClose(false));
+      }
     });
     this.destroyRef.onDestroy(() => this.disconnectPopup());
     effect((onCleanup) => {
@@ -614,6 +620,7 @@ export class SelectPopupComponent {
   }
 
   protected onTriggerClick(): void {
+    if (this.interactionDisabled()) return;
     const c = this.controller();
     c.toggle();
     if (c.open()) {
@@ -626,6 +633,7 @@ export class SelectPopupComponent {
   }
 
   protected onTriggerKey(event: KeyboardEvent): void {
+    if (this.interactionDisabled()) return;
     const c = this.controller();
     switch (event.key) {
       case 'Enter':
@@ -654,6 +662,7 @@ export class SelectPopupComponent {
   }
 
   protected onPanelKey(event: KeyboardEvent): void {
+    if (this.interactionDisabled()) return;
     // A projected child popup may already own and handle Escape. Respect its
     // cancellation so the same key press cannot dismiss this parent panel too.
     if (event.key === 'Escape' && event.defaultPrevented) return;
@@ -792,6 +801,7 @@ export class SelectPopupComponent {
    * Disabled/unknown ids are ignored via `activate` (returns false).
    */
   pickItem(id: string): void {
+    if (this.interactionDisabled()) return;
     const controller = this.controller();
     const item = controller.items().find((candidate) => candidate.id === id);
     if (!item || item.disabled) return;
