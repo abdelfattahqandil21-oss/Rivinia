@@ -100,12 +100,20 @@ export type TableColumnAccessor<T, V = any> =
 /** How a cell's text behaves when it does not fit. See the text section. */
 export type TextOverflow = 'nowrap' | 'wrap' | 'clamp';
 
+export interface TableHeaderGroup {
+  readonly id: string;
+  readonly label: string;
+}
+
 export interface TableColumn<T, V = any> {
+  /** Ancestor groups, ordered outermost first. */
+  readonly headerPath?: readonly TableHeaderGroup[];
   readonly id: string;
   readonly header?: string;
   readonly accessor?: TableColumnAccessor<T, V>;
   readonly sortable?: boolean;
   readonly width?: string;
+  readonly resizable?: boolean;
   /** 0 = fixed; > 0 absorbs free space. */
   readonly flex?: number;
   readonly pinned?: 'start' | 'end';

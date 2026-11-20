@@ -26,6 +26,8 @@ import type {
 } from '@rivinia/table';
 
 import type {
+  TableRowAction,
+  TableRowActionEvent,
   TableUiCellContext,
   TableUiColumn,
   TableUiDensity,
@@ -35,6 +37,7 @@ import type {
 } from '../../models/ui.types';
 import { tableUiLabels } from '../../models/ui.types';
 import { RvTableCell } from './rv-table-cell';
+import { RvTableRowDetail } from './rv-table-row-detail';
 
 /** Per-instance counter: unique ids for the `aria-describedby` targets. */
 let nextTableId = 0;
@@ -48,6 +51,8 @@ const DEFAULT_COLUMN_WIDTH = '10rem';
 /** One cell as the template sees it — everything resolved, nothing computed there. */
 interface RenderCell {
   readonly column: TableUiColumn;
+  readonly inlineActions: readonly TableRowAction[];
+  readonly overflowActions: readonly TableRowAction[];
   readonly columnIndex: number;
   readonly rowSpan: number;
   readonly colSpan: number;
@@ -61,7 +66,6 @@ interface RenderCell {
   readonly template: TemplateRef<TableUiCellContext> | null;
   readonly context: TableUiCellContext;
   /** Explicit placement, so covered positions leave no auto-flow hole. */
-  readonly gridRow: string;
   readonly gridColumn: string;
 }
 
@@ -219,6 +223,15 @@ export class RiviniaTableComponent {
 
   /** Enter on a focused cell, or a double-click on a row. */
   readonly rowActivate = output<TableUiRow>();
+  readonly rowAction = output<TableRowActionEvent>();
+  readonly moreActionsLabel = input('More actions');
+  readonly columnWidths = model<ReadonlyMap<string, number>>(new Map());
+  readonly resizeLabel = input('Resize column');
+  private resizeDrag: { id: string; pointerId: number; x: number; width: number; direction: number } | null = null;
+  readonly expandedRows = model<ReadonlySet<TableRowId>>(new Set());
+  readonly expandLabel = input('Show details');
+  readonly collapseLabel = input('Hide details');
+  protected readonly rowDetail = contentChildren(RvTableRowDetail);
   /**
    * A row was selected/deselected by the user. The model already carries the
    * new set (`selectedChange`); this output also names the row that moved.
@@ -233,6 +246,28 @@ export class RiviniaTableComponent {
   protected readonly visibleColumns = computed(() =>
     this.columns().filter((column) => column.hidden !== true),
   );
+
+  protected readonly groupHeaders = computed(() => {
+    const columns = this.visibleColumns();
+    const depth = Math.max(0, ...columns.map((column) => column.headerPath?.length ?? 0));
+    return Array.from({ length: depth }, (_, level) => {
+      const cells: { key: string; label: string; start: number; span: number }[] = [];
+      columns.forEach((column, index) => {
+        const group = column.headerPath?.[level];
+        if (!group) return;
+        const key = JSON.stringify(column.headerPath!.slice(0, level + 1).map(({ id }) => id));
+        const previous = cells.at(-1);
+        if (previous?.key === key && previous.start + previous.span === index + 1) {
+          previous.span++;
+        } else {
+          cells.push({ key, label: group.label, start: index + 1, span: 1 });
+        }
+      });
+      return cells;
+    });
+  });
+
+  protected readonly headerRowCount = computed(() => this.groupHeaders().length + 1);
 
   protected readonly columnCount = computed(() => this.visibleColumns().length);
 
@@ -274,10 +309,37 @@ export class RiviniaTableComponent {
    * container would collapse the column to zero and its content would vanish
    * instead of scrolling. Fixed columns are their width, untouched.
    */
+  protected readonly pinnedColumns = computed(() => {
+    const columns = this.visibleColumns();
+    const offsets = new Map<number, { side: 'start' | 'end'; offset: string }>();
+    for (const side of ['start', 'end'] as const) {
+      const widths: string[] = [];
+      for (let step = 0; step < columns.length; step++) {
+        const index = side === 'start' ? step : columns.length - 1 - step;
+        const column = columns[index];
+        if (column.pinned !== side) break;
+        offsets.set(index, {
+          side,
+          offset: widths.length ? `calc(${widths.join(' + ')})` : '0px',
+        });
+        widths.push(this.widthFor(column));
+      }
+    }
+    return offsets;
+  });
+
+  protected pinForSpan(start: number, span: number) {
+    const pinned = this.pinnedColumns();
+    const first = pinned.get(start);
+    const last = pinned.get(start + span - 1);
+    if (!first || !last || first.side !== last.side) return undefined;
+    return first.side === 'start' ? first : last;
+  }
+
   protected readonly columnTemplate = computed(() => {
-    const tracks = this.visibleColumns().map((column) => {
-      const width = column.width ?? DEFAULT_COLUMN_WIDTH;
-      const flex = column.flex ?? 0;
+    const tracks = this.visibleColumns().map((column, index) => {
+      const width = this.widthFor(column);
+      const flex = this.pinnedColumns().has(index) || this.resizedWidth(column) !== undefined ? 0 : column.flex ?? 0;
       return flex > 0 ? `minmax(${width}, ${flex}fr)` : width;
     });
     return tracks.length > 0 ? tracks.join(' ') : '1fr';
@@ -290,7 +352,7 @@ export class RiviniaTableComponent {
    */
   protected readonly minWidth = computed(() => {
     const widths = this.visibleColumns().map(
-      (column) => `(${column.width ?? DEFAULT_COLUMN_WIDTH})`,
+      (column) => `(${this.widthFor(column)})`,
     );
     return `calc(${widths.length > 0 ? widths.join(' + ') : '0px'})`;
   });
@@ -365,12 +427,12 @@ export class RiviniaTableComponent {
         row,
         rowIndex,
         ariaRowIndex: this.currentPageOnly()
-          ? rowIndex + 2
+          ? rowIndex + this.headerRowCount() + 1
           : row.absoluteIndex === null
             ? null
             : (Number.isFinite(row.absoluteIndex ?? row.index)
               ? (row.absoluteIndex ?? row.index)
-              : rowIndex) + 2,
+              : rowIndex) + this.headerRowCount() + 1,
         selected: row.identityValid !== false && validId && selected.has(id),
         cells: this.buildCells(row, rowIndex, templates),
       };
@@ -384,6 +446,37 @@ export class RiviniaTableComponent {
     }
     return rendered;
   });
+
+  // A full-width detail track cannot intersect a vertical cell span.
+  protected readonly detailLayout = computed(() => {
+    const items = this.bodyRows();
+    const requested = this.expandedRows();
+    const canShowDetails = this.rowDetail().length > 0 && !this.loading();
+    let lastCoveredRow = -1;
+    let inserted = 0;
+    const rows = items.map((item, index) => {
+      for (const cell of item.cells) {
+        lastCoveredRow = Math.max(lastCoveredRow, index + cell.rowSpan - 1);
+      }
+      const expandable = canShowDetails && item.identityValid
+        && item.cells.length > 0 && lastCoveredRow <= index;
+      const expanded = expandable && requested.has(item.id);
+      const track = index + inserted + 1;
+      if (expanded) inserted++;
+      return { track, expandable, expanded };
+    });
+    return { rows, inserted };
+  });
+
+  protected toggleDetails(item: RenderRow, event: MouseEvent): void {
+    event.stopPropagation();
+    const layout = this.detailLayout().rows[item.rowIndex];
+    if (!layout?.expandable) return;
+    const next = new Set(this.expandedRows());
+    if (layout.expanded) next.delete(item.id);
+    else next.add(item.id);
+    this.expandedRows.set(next);
+  }
 
   protected readonly skeletonList = computed(() => {
     const requested = this.loading() ? this.skeletonRows() : 0;
@@ -423,9 +516,11 @@ export class RiviniaTableComponent {
    * the consumer pages on the server.
    */
   protected readonly rowCount = computed(() => {
-    if (this.currentPageOnly()) return this.rows().length + 1;
+    const details = this.detailLayout().inserted;
+    if (details) return this.rows().length + this.headerRowCount() + details;
+    if (this.currentPageOnly()) return this.rows().length + this.headerRowCount();
     const total = this.totalRows();
-    if (total !== undefined) return total < 0 ? -1 : Math.floor(total) + 1;
+    if (total !== undefined) return total < 0 ? -1 : Math.floor(total) + this.headerRowCount();
     const rows = this.rows();
     if (rows.some((row) => row.absoluteIndex !== undefined)) return -1;
     let highest = rows.length;
@@ -434,7 +529,7 @@ export class RiviniaTableComponent {
         highest = row.index + 1;
       }
     }
-    return highest + 1;
+    return highest + this.headerRowCount();
   });
 
   // ── Active cell (roving tabindex) ─────────────────────────────────────────
@@ -518,6 +613,65 @@ export class RiviniaTableComponent {
     return entry.direction === 'asc' ? 'ascending' : 'descending';
   }
 
+  private resizedWidth(column: TableUiColumn): number | undefined {
+    const width = this.columnWidths().get(column.id);
+    return width !== undefined && Number.isFinite(width) && width >= 48 ? width : undefined;
+  }
+
+  private widthFor(column: TableUiColumn): string {
+    const resized = this.resizedWidth(column);
+    return resized === undefined ? column.width ?? DEFAULT_COLUMN_WIDTH : `${resized}px`;
+  }
+
+  protected startResize(column: TableUiColumn, event: PointerEvent): void {
+    if (event.button !== 0 || this.resizeDrag) return;
+    const handle = event.currentTarget as HTMLElement;
+    const header = handle.parentElement;
+    if (!header) return;
+    event.preventDefault();
+    handle.focus({ preventScroll: true });
+    handle.setPointerCapture(event.pointerId);
+    this.resizeDrag = {
+      id: column.id,
+      pointerId: event.pointerId,
+      x: event.clientX,
+      width: header.getBoundingClientRect().width,
+      direction: this.isRtl(handle) ? -1 : 1,
+    };
+  }
+
+  protected moveResize(event: PointerEvent): void {
+    const drag = this.resizeDrag;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    this.writeColumnWidth(drag.id, drag.width + (event.clientX - drag.x) * drag.direction);
+  }
+
+  protected endResize(event: PointerEvent): void {
+    if (this.resizeDrag?.pointerId === event.pointerId) this.resizeDrag = null;
+  }
+
+  protected resizeWithKey(column: TableUiColumn, event: KeyboardEvent): void {
+    const handle = event.currentTarget as HTMLElement;
+    if (event.key === 'Home') {
+      event.preventDefault();
+      const widths = new Map(this.columnWidths());
+      if (widths.delete(column.id)) this.columnWidths.set(widths);
+      return;
+    }
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    const width = handle.parentElement?.getBoundingClientRect().width ?? 0;
+    const direction = (event.key === 'ArrowRight' ? 1 : -1) * (this.isRtl(handle) ? -1 : 1);
+    this.writeColumnWidth(column.id, width + direction * (event.shiftKey ? 32 : 8));
+  }
+
+  private writeColumnWidth(id: string, value: number): void {
+    const width = Math.max(48, Math.round(value));
+    if (this.columnWidths().get(id) !== width) {
+      this.columnWidths.set(new Map(this.columnWidths()).set(id, width));
+    }
+  }
+
   protected onHeaderClick(
     column: TableUiColumn,
     columnIndex: number,
@@ -553,7 +707,7 @@ export class RiviniaTableComponent {
     const target = event.target as HTMLElement | null;
     if (
       target?.closest(
-        'button, a, input, select, textarea, label, [contenteditable="true"]',
+        'button, a, input, select, textarea, label, summary, [data-rv-actions], [contenteditable="true"]',
       )
     ) {
       return;
@@ -571,7 +725,7 @@ export class RiviniaTableComponent {
     // the row would fight the action the user actually asked for.
     if (
       target?.closest(
-        'button, a, input, select, textarea, label, [contenteditable="true"]',
+        'button, a, input, select, textarea, label, summary, [data-rv-actions], [contenteditable="true"]',
       )
     ) {
       return;
@@ -584,6 +738,23 @@ export class RiviniaTableComponent {
     this.pendingFocus = false;
     this.focusCell(item.rowIndex, cell.columnIndex);
     if (this.selectable()) this.toggleRow(item);
+  }
+
+  protected runRowAction(item: RenderRow, cell: RenderCell, action: TableRowAction, event: MouseEvent): void {
+    event.stopPropagation();
+    if (!item.identityValid || action.disabled || action.pending || this.loading() || this.error()) return;
+    const disclosure = (event.currentTarget as HTMLElement).closest('details');
+    if (disclosure?.open) {
+      disclosure.open = false;
+      disclosure.querySelector('summary')?.focus();
+    }
+    this.rowAction.emit({
+      rowId: item.id,
+      row: item.row,
+      data: item.row.data,
+      actionId: action.id,
+      columnId: cell.column.id,
+    });
   }
 
   protected onCellFocus(row: number, column: number): void {
@@ -883,8 +1054,11 @@ export class RiviniaTableComponent {
           ? `rv-table-${this.uid}-full-${rowIndex}-${columnIndex}`
           : null;
 
+      const actions = column.actions?.(row.data).filter((action) => action.visible !== false) ?? [];
       cells.push({
         column,
+        inlineActions: actions.filter((action) => action.placement !== 'overflow'),
+        overflowActions: actions.filter((action) => action.placement === 'overflow'),
         columnIndex,
         rowSpan,
         colSpan,
@@ -897,7 +1071,6 @@ export class RiviniaTableComponent {
         // CSS grid line numbers are 1-based, and every anchor sits exactly at
         // its matrix position, so placement is deterministic even when a span
         // above or beside it removed cells from the flow.
-        gridRow: `${rowIndex + 1} / span ${rowSpan}`,
         gridColumn: `${columnIndex + 1} / span ${colSpan}`,
         context: {
           $implicit: row,

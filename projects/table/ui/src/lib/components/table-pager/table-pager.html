@@ -1,0 +1,28 @@
+<nav [attr.aria-label]="text().navigation">
+  <div class="pages">
+    <button type="button" [attr.aria-label]="text().first" [attr.title]="text().first" [disabled]="page() <= 0 || pageCount() === 0" (click)="go(0)">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3v10m8-9-4 4 4 4"/></svg>
+    </button>
+    <button type="button" [attr.aria-label]="text().previous" [attr.title]="text().previous" [disabled]="page() <= 0 || pageCount() === 0" (click)="go(page() - 1)">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10 4-4 4 4 4"/></svg>
+    </button>
+    @for (item of items(); track item.kind === 'page' ? item.index : -item.after - 1) {
+      @if (item.kind === 'page') {
+        <button type="button" [attr.aria-label]="text().page + ' ' + (item.index + 1)" [attr.aria-current]="item.index === page() ? 'page' : null" (click)="go(item.index)">{{ item.index + 1 }}</button>
+      } @else {
+        <span aria-hidden="true">…</span>
+      }
+    }
+    <button type="button" [attr.aria-label]="text().next" [attr.title]="text().next" [disabled]="!canNext()" (click)="go(page() + 1)">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg>
+    </button>
+    <button type="button" [attr.aria-label]="text().last" [attr.title]="text().last" [disabled]="pageCount() <= 0 || !canNext()" (click)="go(pageCount() - 1)">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M12 3v10M4 4l4 4-4 4"/></svg>
+    </button>
+  </div>
+  <label>{{ text().size }}
+    <select (change)="changeSize($event)">
+      @for (size of sizes(); track size) { <option [value]="size" [selected]="size === pageSize()">{{ size }}</option> }
+    </select>
+  </label>
+</nav>

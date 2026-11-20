@@ -1,3 +1,4 @@
+import { RvTableRowDetail } from '../ui/src/lib/components/rv-table/rv-table-row-detail';
 import { Component, signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
@@ -103,7 +104,7 @@ function spanColumns(): TableColumn<Person>[] {
 
 @Component({
   selector: 'rv-table-test-host',
-  imports: [RiviniaTableComponent, RvTableCell],
+  imports: [RiviniaTableComponent, RvTableCell, RvTableRowDetail],
   template: `
     <rv-table
       [columns]="columns()"
@@ -125,6 +126,9 @@ function spanColumns(): TableColumn<Person>[] {
       (rowActivate)="activated.push($event)"
       (selectionChange)="selectionEvents.push($event)"
     >
+      @if (withDetails()) {
+        <ng-template rvTableRowDetail let-row>Details for {{ row.id }}</ng-template>
+      }
       <ng-template rvTableCell="actions" let-row let-data="data" let-value="value">
         <button type="button" class="edit" (click)="edits.push(row.id)">
           Edit {{ data.name }}
@@ -135,6 +139,7 @@ function spanColumns(): TableColumn<Person>[] {
   `,
 })
 class TableHost {
+  readonly withDetails = signal(false);
   readonly columns = signal<TableUiColumn[]>(baseColumns());
   readonly rows = signal<readonly TableRow<Person>[]>(tableRows());
   readonly spans = signal<SpanModel | null>(null);
@@ -1254,5 +1259,127 @@ describe('rv-table — host hooks and inputs', () => {
     expect(m.headers().length).toBe(1);
     expect(m.headers()[0].textContent).toContain('Full name');
     expect(m.grid().getAttribute('aria-colcount')).toBe('1');
+  });
+});
+
+describe('rv-table — nested column groups', () => {
+  it('groups adjacent visible columns and updates ARIA row positions', () => {
+    const details = { id: 'details', label: 'Details' };
+    const contact = { id: 'contact', label: 'Contact' };
+    const mounted = mount((host) => host.columns.set([
+      { id: 'name', header: 'Name', headerPath: [details, contact] },
+      { id: 'city', header: 'City', headerPath: [details, contact] },
+      { id: 'note', header: 'Note' },
+    ]));
+    const groups = () => Array.from(mounted.grid().querySelectorAll('.rv-table-group-header'));
+    expect(groups().map((cell) => [cell.textContent?.trim(), cell.getAttribute('aria-colspan')]))
+      .toEqual([['Details', '2'], ['Contact', '2']]);
+    expect(mounted.rows()[0].getAttribute('aria-rowindex')).toBe('4');
+    expect(mounted.grid().getAttribute('aria-rowcount')).toBe('7');
+    expect(mounted.tabStops()).toHaveLength(1);
+
+    mounted.host.columns.update(([name, city, note]) => [name, note, city]);
+    mounted.settle();
+    expect(groups().map((cell) => cell.getAttribute('aria-colspan'))).toEqual(['1', '1', '1', '1']);
+
+    mounted.host.columns.update((columns) => columns.map((column) =>
+      column.id === 'city' ? { ...column, hidden: true } : column,
+    ));
+    mounted.settle();
+    expect(groups()).toHaveLength(2);
+  });
+});
+
+describe('rv-table — row actions', () => {
+  it('emits the effective row identity without toggling selection', () => {
+    const mounted = mount((host) => {
+      host.selectable.set(true);
+      host.columns.set([{
+        id: 'operations',
+        actions: () => [
+          { id: 'view', label: 'View' },
+          { id: 'retry', label: 'Retry', pending: true },
+          { id: 'hidden', label: 'Hidden', visible: false },
+        ],
+      }]);
+    });
+    const component = mounted.fixture.debugElement.children[0].componentInstance as RiviniaTableComponent;
+    const events: unknown[] = [];
+    component.rowAction.subscribe((event) => events.push(event));
+    const row = mounted.rows()[0];
+    const buttons = Array.from(row.querySelectorAll('button'));
+    expect(buttons.map((button) => button.textContent?.trim())).toEqual(['View', 'Retry']);
+    expect(buttons[1].disabled).toBe(true);
+    buttons[0].click();
+    expect(events).toEqual([expect.objectContaining({
+      rowId: PEOPLE[0].id, actionId: 'view', columnId: 'operations', data: PEOPLE[0],
+    })]);
+    expect(component.selected().size).toBe(0);
+  });
+});
+
+describe('rv-table — expanded details', () => {
+  it('adds a full-width row after the clicked record without changing selection', () => {
+    const mounted = mount((host) => {
+      host.withDetails.set(true);
+      host.selectable.set(true);
+    });
+    mounted.rows()[0].querySelector<HTMLButtonElement>('.rv-table-detail-toggle')!.click();
+    mounted.settle();
+    const detail = mounted.grid().querySelector<HTMLElement>('.rv-table-detail');
+    expect(detail?.textContent?.trim()).toBe('Details for 1');
+    expect(detail?.parentElement?.getAttribute('aria-rowindex')).toBe('3');
+    expect(mounted.grid().getAttribute('aria-rowcount')).toBe('6');
+    expect(mounted.host.selected().size).toBe(0);
+    expect(mounted.cell(1, 0)?.style.gridRow).toBe('3 / span 1');
+  });
+
+  it('does not insert a detail through a vertical span', () => {
+    const mounted = mount((host) => {
+      host.withDetails.set(true);
+      host.columns.set(mergeColumns());
+      host.spans.set(buildSpanModel(tableRows(), mergeColumns()));
+    });
+    expect(mounted.rows()[0].querySelector('.rv-table-detail-toggle')).toBeNull();
+    expect(mounted.rows()[1].querySelector('.rv-table-detail-toggle')).not.toBeNull();
+  });
+});
+
+describe('rv-table — pinned columns', () => {
+  it('pins contiguous edge columns and ignores a pin flag on an interior column', () => {
+    const mounted = mount((host) => host.columns.set([
+      { id: 'name', header: 'Name', width: '8rem', flex: 1, pinned: 'start' },
+      { id: 'city', header: 'City', width: '10rem', pinned: 'start' },
+      { id: 'note', header: 'Note' },
+      { id: 'interior', header: 'Interior', pinned: 'end' },
+      { id: 'spacer', header: 'Spacer' },
+      { id: 'tail', header: 'Tail', pinned: 'end' },
+    ]));
+    expect(mounted.headers().map((header) => header.getAttribute('data-pinned')))
+      .toEqual(['start', 'start', null, null, null, 'end']);
+    expect(mounted.cell(0, 1)?.style.getPropertyValue('--rv-table-pin-offset')).toBe('calc(8rem)');
+    expect(mounted.grid().style.getPropertyValue('--rv-table-columns')).toMatch(/^8rem 10rem /);
+    expect(mounted.cell(0, 5)?.getAttribute('data-pinned')).toBe('end');
+  });
+});
+
+describe('rv-table — resizing', () => {
+  it('resizes with arrows, updates pinned offsets, and resets via Home', () => {
+    const mounted = mount((host) => host.columns.set([
+      { id: 'name', header: 'Name', width: '8rem', resizable: true, pinned: 'start' },
+      { id: 'city', header: 'City', width: '10rem', pinned: 'start' },
+      { id: 'note', header: 'Note' },
+    ]));
+    const header = mounted.headers()[0];
+    header.getBoundingClientRect = () => ({ width: 128 }) as DOMRect;
+    const handle = header.querySelector<HTMLButtonElement>('.rv-table-resize-handle')!;
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
+    mounted.settle();
+    expect(mounted.grid().style.getPropertyValue('--rv-table-columns')).toMatch(/^136px 10rem /);
+    expect(mounted.cell(0, 1)?.style.getPropertyValue('--rv-table-pin-offset')).toBe('calc(136px)');
+    expect(mounted.host.sort()).toEqual([]);
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true, cancelable: true }));
+    mounted.settle();
+    expect(mounted.grid().style.getPropertyValue('--rv-table-columns')).toMatch(/^8rem 10rem /);
   });
 });

@@ -17,6 +17,7 @@ export type {
   SpanModel,
   TableColumn,
   TableColumnAccessor,
+  TableHeaderGroup,
   TableRequest,
   TableRow,
   TableRowId,
@@ -49,3 +50,14 @@ export type {
   TableSelectionScope,
 } from './lib/services/rivinia-table';
 export { RiviniaTable, createTable } from './lib/services/rivinia-table';
+
+export { createTableCellEditing } from './lib/services/table-cell-editing';
+export type {
+  TableCellAddress,
+  TableCellChange,
+  TableCellEditor,
+  TableEditResult,
+} from './lib/services/table-cell-editing';
+export { tablePageItems } from './lib/utils/table-page-items';
+export type { TablePageItem } from './lib/utils/table-page-items';
+export { exportTableCsv, type TableCsvColumn } from './lib/utils/table-csv';

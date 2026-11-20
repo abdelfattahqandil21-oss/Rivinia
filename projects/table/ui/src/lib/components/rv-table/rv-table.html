@@ -33,11 +33,28 @@
       header cell is a direct grid item at its column.
     -->
     <div class="rv-table-head" role="rowgroup">
-      <div class="rv-table-row" role="row" aria-rowindex="1">
+      @for (level of groupHeaders(); track $index; let levelIndex = $index) {
+        <div class="rv-table-row rv-table-group-row" role="row" [attr.aria-rowindex]="levelIndex + 1">
+          @for (group of level; track group.start) {
+            @let pin = pinForSpan(group.start - 1, group.span);
+            <div class="rv-table-cell rv-table-group-header" role="columnheader"
+              [attr.data-pinned]="pin?.side"
+              [style.--rv-table-pin-offset]="pin?.offset"
+              [attr.aria-colindex]="group.start" [attr.aria-colspan]="group.span"
+              [style.grid-column]="group.start + ' / span ' + group.span">
+              <span dir="auto">{{ group.label }}</span>
+            </div>
+          }
+        </div>
+      }
+      <div class="rv-table-row" role="row" [attr.aria-rowindex]="headerRowCount()">
         @for (column of visibleColumns(); track column.id; let index = $index) {
+          @let pin = pinnedColumns().get(index);
           <div
             class="rv-table-cell rv-table-head-cell"
             role="columnheader"
+            [attr.data-pinned]="pin?.side"
+            [style.--rv-table-pin-offset]="pin?.offset"
             [attr.aria-colindex]="index + 1"
             [attr.aria-sort]="ariaSort(column)"
             [attr.tabindex]="isActive(-1, index) ? 0 : -1"
@@ -79,6 +96,19 @@
                 }
               }
             </button>
+            @if (column.resizable) {
+              <button type="button" class="rv-table-resize-handle"
+                [attr.aria-label]="resizeLabel() + ': ' + (column.header || column.id)"
+                (click)="$event.stopPropagation()"
+                (pointerdown)="startResize(column, $event)"
+                (pointermove)="moveResize($event)"
+                (pointerup)="endResize($event)"
+                (pointercancel)="endResize($event)"
+                (lostpointercapture)="endResize($event)"
+                (keydown)="resizeWithKey(column, $event)">
+                <span aria-hidden="true">⋮</span>
+              </button>
+            }
           </div>
         }
       </div>
@@ -108,19 +138,23 @@
         }
       } @else {
         @for (item of bodyRows(); track item.row) {
+          @let detail = detailLayout().rows[item.rowIndex];
           <div
             class="rv-table-row"
             role="row"
-            [attr.aria-rowindex]="item.ariaRowIndex"
+            [attr.aria-rowindex]="detailLayout().inserted ? detail.track + headerRowCount() : item.ariaRowIndex"
             [attr.aria-selected]="selectable() && item.identityValid ? (item.selected ? 'true' : 'false') : null"
             [attr.data-selected]="item.selected ? 'true' : null"
             [attr.data-row]="item.rowIndex"
             (dblclick)="onRowDoubleClick(item, $event)"
           >
             @for (cell of item.cells; track cell.columnIndex; let isFirst = $first) {
+              @let pin = pinForSpan(cell.columnIndex, cell.colSpan);
               <div
                 class="rv-table-cell"
                 role="gridcell"
+                [attr.data-pinned]="pin?.side"
+                [style.--rv-table-pin-offset]="pin?.offset"
                 [attr.aria-colindex]="cell.columnIndex + 1"
                 [attr.aria-rowspan]="cell.rowSpan > 1 ? cell.rowSpan : null"
                 [attr.aria-colspan]="cell.colSpan > 1 ? cell.colSpan : null"
@@ -132,7 +166,7 @@
                 [attr.data-span]="cell.spanned ? 'true' : null"
                 [attr.data-align]="cell.column.align ?? 'start'"
                 [attr.data-overflow]="cell.overflow"
-                [style.grid-row]="cell.gridRow"
+                [style.grid-row]="detail.track + ' / span ' + cell.rowSpan"
                 [style.grid-column]="cell.gridColumn"
                 (click)="onCellClick(item, cell, $event)"
                 (focus)="onCellFocus(item.rowIndex, cell.columnIndex)"
@@ -150,11 +184,41 @@
                     [attr.data-checked]="item.selected ? 'true' : null"
                   ></span>
                 }
+                @if (isFirst && detail.expandable) {
+                  <button class="rv-table-detail-toggle" type="button"
+                    [attr.aria-expanded]="detail.expanded"
+                    [attr.aria-label]="detail.expanded ? collapseLabel() : expandLabel()"
+                    (click)="toggleDetails(item, $event)">
+                    <span aria-hidden="true">{{ detail.expanded ? '−' : '+' }}</span>
+                  </button>
+                }
                 @if (cell.template; as template) {
                   <ng-container
                     [ngTemplateOutlet]="template"
                     [ngTemplateOutletContext]="cell.context"
                   />
+                } @else if (cell.column.actions) {
+                  <div class="rv-table-actions" data-rv-actions>
+                    @for (action of cell.inlineActions; track action.id) {
+                      <button type="button" [disabled]="action.disabled || action.pending || !item.identityValid"
+                        [attr.aria-busy]="action.pending || null" [attr.data-tone]="action.tone"
+                        [attr.title]="action.tooltip ?? null" (click)="runRowAction(item, cell, action, $event)">
+                        {{ action.label }}
+                      </button>
+                    }
+                    @if (cell.overflowActions.length) {
+                      <details>
+                        <summary>{{ moreActionsLabel() }}</summary>
+                        @for (action of cell.overflowActions; track action.id) {
+                          <button type="button" [disabled]="action.disabled || action.pending || !item.identityValid"
+                            [attr.aria-busy]="action.pending || null" [attr.data-tone]="action.tone"
+                            [attr.title]="action.tooltip ?? null" (click)="runRowAction(item, cell, action, $event)">
+                            {{ action.label }}
+                          </button>
+                        }
+                      </details>
+                    }
+                  </div>
                 } @else {
                   <!--
                     `dir="auto"`: the grid's direction is the page's, but the
@@ -184,6 +248,15 @@
               </div>
             }
           </div>
+          @if (detail.expanded) {
+            <div class="rv-table-row" role="row" [attr.aria-rowindex]="detail.track + headerRowCount() + 1">
+              <div class="rv-table-detail" role="gridcell" [attr.aria-colspan]="columnCount()"
+                [style.grid-row]="detail.track + 1" style="grid-column: 1 / -1">
+                <ng-container [ngTemplateOutlet]="rowDetail()[0].template"
+                  [ngTemplateOutletContext]="{ $implicit: item.row, data: item.row.data }" />
+              </div>
+            </div>
+          }
         }
       }
     </div>

@@ -1,0 +1,16 @@
+:host { display: block; min-inline-size: 0; }
+.rv-table-records {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--rv-table-record-min-width, 19rem)), 1fr));
+  gap: var(--rv-table-record-gap, 0.75rem);
+  padding: var(--rv-table-records-padding, 1rem);
+}
+.rv-table-records--stack { grid-template-columns: minmax(0, 1fr); }
+.rv-table-record {
+  min-inline-size: 0;
+  padding: var(--rv-table-record-padding, 1rem);
+  background: var(--rv-table-bg, var(--rv-color-surface, Canvas));
+  color: var(--rv-table-fg, var(--rv-color-text, CanvasText));
+  border: 1px solid var(--rv-table-border, var(--rv-color-border, GrayText));
+  border-radius: var(--rv-table-radius, var(--rv-radius-md, 0.5rem));
+}

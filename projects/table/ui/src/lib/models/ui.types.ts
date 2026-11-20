@@ -11,6 +11,7 @@
 import type {
   CellSpan,
   TableRow,
+  TableHeaderGroup,
   TableRowId,
   TextOverflow,
 } from '@rivinia/table';
@@ -35,14 +36,36 @@ import type {
  * declared so a column literal typed as `TableUiColumn[]` can carry the full
  * core vocabulary without an excess-property error: spans are rendered from
  * `[spans]` (not from the column), `comparator` belongs to the core's sorting,
- * and pinning is not implemented by this entry point.
+ * and pinning is applied to contiguous columns at either inline edge.
  */
+export interface TableRowAction {
+  readonly id: string;
+  readonly label: string;
+  readonly disabled?: boolean;
+  readonly pending?: boolean;
+  readonly visible?: boolean;
+  readonly tooltip?: string;
+  readonly tone?: 'default' | 'danger';
+  readonly placement?: 'inline' | 'overflow';
+}
+
+export interface TableRowActionEvent<T = unknown> {
+  readonly rowId: TableRowId;
+  readonly row: TableRow<T>;
+  readonly data: T;
+  readonly actionId: string;
+  readonly columnId: string;
+}
+
 export interface TableUiColumn {
+  readonly actions?: (data: any) => readonly TableRowAction[];
+  readonly headerPath?: readonly TableHeaderGroup[];
   readonly id: string;
   readonly header?: string;
   readonly accessor?: string | ((row: any) => unknown);
   readonly sortable?: boolean;
   readonly width?: string;
+  readonly resizable?: boolean;
   /** 0 = fixed; > 0 absorbs free space. */
   readonly flex?: number;
   readonly pinned?: 'start' | 'end';

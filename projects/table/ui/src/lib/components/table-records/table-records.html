@@ -1,0 +1,15 @@
+<section class="rv-table-records" [class.rv-table-records--stack]="mode() === 'stack'"
+  [attr.aria-label]="label()" [attr.aria-busy]="loading()">
+  @if (loading()) {
+    <p role="status">{{ loadingMessage() }}</p>
+  } @else {
+    @for (entry of entries(); track entry.key) {
+      <article class="rv-table-record">
+        <ng-container [ngTemplateOutlet]="recordTemplate()"
+          [ngTemplateOutletContext]="{ $implicit: entry.row }" />
+      </article>
+    } @empty {
+      <p role="status">{{ emptyMessage() }}</p>
+    }
+  }
+</section>
