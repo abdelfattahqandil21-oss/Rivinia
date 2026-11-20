@@ -1,3 +1,4 @@
+import { confirmPickerValue, type RiviniaPickerApplied } from '../../utils/picker-confirmation';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -33,6 +34,7 @@ import type {
 } from '@rivinia/datepicker';
 import { DATE_PICKER_CONFIG } from '@rivinia/datepicker';
 import { RiviniaCalendarComponent } from '../calendar/calendar';
+import { dateFormatHint } from '../../utils/date-format-hint';
 import { RiviniaDateSegmentsComponent } from '../date-segments/date-segments';
 import { DatepickerPanelRegistry } from '../../services/datepicker-panel-registry';
 import {
@@ -131,6 +133,11 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
    * outside click) and when focus leaves the whole host.
    */
   readonly touch = output<void>();
+  readonly applied = output<RiviniaPickerApplied<RiviniaDate>>();
+  private readonly clearSnapshot = signal<RiviniaDate | null | undefined>(undefined);
+  protected readonly pendingClear = computed(
+    () => this.clearSnapshot() === this.normalized() && this.clearSnapshot() !== undefined,
+  );
 
   protected readonly open = signal(false);
   /** The panel stays in the DOM for the short exit animation, then leaves. */
@@ -144,6 +151,7 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
   private readonly uid = ++nextId;
   protected readonly panelId = `rv-datepicker-panel-${this.uid}`;
   protected readonly headingId = `rv-datepicker-heading-${this.uid}`;
+  protected readonly formatHintId = `rv-datepicker-format-hint-${this.uid}`;
 
   private readonly triggerRef = viewChild<ElementRef<HTMLButtonElement>>('trigger');
   private readonly fieldRef = viewChild<ElementRef<HTMLElement>>('field');
@@ -163,6 +171,9 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
   );
   protected readonly effectiveFormat = computed(
     () => this.format() ?? this.config.format ?? DEFAULT_DATE_FORMAT,
+  );
+  protected readonly formatHint = computed(() =>
+    dateFormatHint(this.effectiveLocale(), this.effectiveFormat()),
   );
   protected readonly effectiveTheme = computed<RiviniaDatepickerTheme>(
     () => this.theme() ?? this.config.theme ?? 'auto',
@@ -328,38 +339,46 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
 
   protected onPicked(date: RiviniaDate): void {
     if (this.isDisabled()) return;
+    this.clearSnapshot.set(undefined);
     this.calendar.setSelected(date);
     if (this.commitMode() === 'immediate') this.commit();
   }
 
   protected readonly canCommit = computed(() => {
     const selected = this.calendar.selected();
-    return !this.isDisabled() && !!selected && this.calendar.canSelect(selected);
+    return !this.isDisabled() && (this.pendingClear() || (!!selected && this.calendar.canSelect(selected)));
   });
 
-  protected onNow(): void {
-    if (this.isDisabled()) return;
-    const today = this.calendar.today();
-    if (this.calendar.canSelect(today)) this.onPicked(today);
-  }
-
   protected clearValue(): void {
-    if (!this.canClear()) return;
-    this.value.set(null);
+    if (!this.open() || !this.canClear()) return;
+    this.clearSnapshot.set(this.normalized());
     this.calendar.setSelected(null);
-    this.closePanel(true);
   }
 
   protected commit(): void {
+    if (!this.open() || !this.canCommit()) return;
+    if (this.pendingClear()) {
+      const changed = this.value() !== null;
+      confirmPickerValue(this.value, this.applied, null, changed);
+      this.closePanel(true);
+      return;
+    }
     const selected = this.calendar.selected();
     if (this.isDisabled()) return;
     if (!selected || !this.calendar.canSelect(selected)) return;
-    this.value.set({ ...selected });
+    const changed = !isSameDay(this.normalized(), selected);
+    const value = { ...selected };
+    confirmPickerValue(this.value, this.applied, value, changed);
     this.closePanel(true);
   }
 
   protected onTypedDate(date: RiviniaDate): void {
     if (this.isDisabled() || !this.calendar.canSelect(date)) return;
+    this.clearSnapshot.set(undefined);
+    if (this.open()) {
+      this.onPicked(date);
+      return;
+    }
     this.value.set({ ...date });
     this.calendar.setSelected(date);
   }
@@ -421,6 +440,7 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
   }
 
   private openPanel(): void {
+    this.clearSnapshot.set(undefined);
     // Reopening during the exit animation cancels the exit and reuses the
     // panel that is still in the DOM.
     this.finishClose();

@@ -58,6 +58,8 @@
     </button>
   </div>
 
+  <ng-content select="[calendarEditor]" />
+
   <p class="rv-sr-only" [id]="instructionsId">{{ labels().instructions }}</p>
 
   @switch (view()) {
@@ -78,7 +80,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (week of grid().weeks; track $index) {
+          @for (week of visibleWeeks(); track $index) {
             <tr>
               @for (cell of week.cells; track trackCell($index, cell)) {
                 @if (cell) {

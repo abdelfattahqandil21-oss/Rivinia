@@ -17,6 +17,7 @@
     [labels]="calendar.labels()"
     [label]="label() ?? calendar.labels().chooseDateTime"
     [disabled]="isDisabled()"
+    [attr.aria-describedby]="formatHintId"
     (valueChange)="onTypedDate($event)"
   />
   @if (normalized()) {
@@ -46,6 +47,7 @@
     </svg>
   </button>
 </span>
+<small [id]="formatHintId" class="rv-datepicker-format-hint">{{ formatHint() }}</small>
 
 @if (open() || closing()) {
   <div
@@ -68,9 +70,47 @@
       [autofocus]="true"
       (picked)="onPicked($event)"
       (dismissed)="dismiss()"
-    />
+    >
+      <div calendarEditor class="rv-datepicker-panel-editor">
+        <rv-date-segments
+          [value]="pendingClear() ? null : calendar.selected()"
+          [locale]="effectiveLocale()"
+          [format]="effectiveDateFormat()"
+          [labels]="calendar.labels()"
+          [label]="label() ?? calendar.labels().chooseDate"
+          [disabled]="isDisabled()"
+          (valueChange)="onTypedDate($event)"
+        />
+        <button
+          type="button"
+          class="rv-datepicker-action"
+          [disabled]="!calendar.canSelect(calendar.today())"
+          (click)="onTypedDate(calendar.today())"
+        >{{ calendar.labels().today ?? 'Today' }}</button>
+        @if (canClear()) {
+          <button
+            type="button"
+            class="rv-datepicker-action rv-datepicker-clear-action rv-datetimepicker-clear"
+            [attr.aria-label]="clearLabel()"
+            [attr.data-tooltip]="calendar.labels().clearDateTime"
+            (click)="clearValue()"
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path
+                d="M2.75 4.25h10.5M6 4.25v-1.5h4v1.5m2.25 0-.6 9H4.35l-.6-9m3 2.25v4.5m3.5-4.5v4.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.25"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        }
+      </div>
+    </rv-calendar>
 
-    <rv-time-row
+    <rv-time-row class="rv-picker-time-section"
       [value]="draft().time"
       [locale]="effectiveLocale()"
       [labels]="calendar.labels()"
@@ -140,35 +180,24 @@
       </div>
     }
 
-    <div class="rv-datetimepicker-actions">
-      <div class="rv-datetimepicker-actions-start">
+    <div class="rv-datepicker-actions rv-datetimepicker-actions">
+      <div class="rv-datepicker-actions-end rv-datetimepicker-actions-end">
         <button
           type="button"
-          class="rv-datetimepicker-action rv-datetimepicker-now"
-          [disabled]="isDisabled()"
-          (click)="onNow()"
+          class="rv-datepicker-action rv-datetimepicker-cancel"
+          (click)="dismiss()"
         >
-          {{ calendar.labels().now }}
+          {{ calendar.labels().cancel ?? 'Cancel' }}
         </button>
-        @if (canClear()) {
-          <button
-            type="button"
-            class="rv-datetimepicker-action rv-datetimepicker-clear"
-            [attr.aria-label]="clearLabel()"
-            (click)="clearValue()"
-          >
-            {{ calendar.labels().clear ?? calendar.labels().clearDateTime }}
-          </button>
-        }
+        <button
+          type="button"
+          class="rv-datepicker-action rv-datepicker-ok rv-datetimepicker-ok rv-datetimepicker-apply"
+          [disabled]="!canCommit()"
+          (click)="commit()"
+        >
+          {{ calendar.labels().ok }}
+        </button>
       </div>
-      <button
-        type="button"
-        class="rv-datetimepicker-action rv-datetimepicker-apply"
-        [disabled]="!canCommit()"
-        (click)="commit()"
-      >
-        {{ calendar.labels().apply ?? calendar.labels().ok }}
-      </button>
     </div>
   </div>
 }

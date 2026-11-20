@@ -9,3 +9,5 @@ export { RiviniaCalendarComponent } from './lib/components/calendar/calendar';
 export { RiviniaDatepickerComponent } from './lib/components/datepicker/datepicker';
 export { RiviniaDatetimepickerComponent } from './lib/components/datetimepicker/datetimepicker';
 export { RiviniaTimeRowComponent } from './lib/components/time-row/time-row';
+export { RiviniaTimepickerComponent } from './lib/components/timepicker/timepicker';
+export type { RiviniaPickerApplied } from './lib/utils/picker-confirmation';

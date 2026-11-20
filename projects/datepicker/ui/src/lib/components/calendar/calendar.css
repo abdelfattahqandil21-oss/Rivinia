@@ -156,7 +156,7 @@
 }
 
 .rv-calendar-day--selected {
-  color: var(--rv-calendar-selected-fg, light-dark(#ffffff, #101014));
+  color: var(--rv-calendar-selected-fg, var(--rv-color-on-primary, light-dark(#ffffff, #101014)));
   background: var(--rv-calendar-selected-bg, var(--rv-color-primary, light-dark(#5b5bd6, #8b8bf0)));
   font-weight: var(--rv-calendar-selected-weight, 600);
 }
@@ -184,6 +184,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--rv-calendar-options-gap, 0.25rem);
+  padding-block-end: var(--rv-space-3, 0.75rem);
 }
 
 .rv-calendar-option {
@@ -196,12 +197,16 @@
   cursor: pointer;
 }
 
-.rv-calendar-option:hover {
-  background: var(--rv-calendar-day-hover-bg, color-mix(in srgb, currentColor 10%, transparent));
+.rv-calendar-option:hover:not(.rv-calendar-option--current):not(.rv-calendar-option--disabled) {
+  color: var(--rv-calendar-option-hover-fg, var(--rv-calendar-fg, var(--rv-color-text, light-dark(#111111, #f4f4f5))));
+  background: var(
+    --rv-calendar-option-hover-bg,
+    color-mix(in srgb, var(--rv-color-primary, #5b5bd6) 12%, transparent)
+  );
 }
 
 .rv-calendar-option--current {
-  color: var(--rv-calendar-selected-fg, light-dark(#ffffff, #101014));
+  color: var(--rv-calendar-selected-fg, var(--rv-color-on-primary, light-dark(#ffffff, #101014)));
   background: var(--rv-calendar-selected-bg, var(--rv-color-primary, light-dark(#5b5bd6, #8b8bf0)));
   font-weight: var(--rv-calendar-selected-weight, 600);
 }
@@ -235,5 +240,21 @@
   .rv-calendar-nav,
   .rv-calendar-heading {
     transition: background-color 120ms ease;
+  }
+
+  .rv-calendar-grid,
+  .rv-calendar-options {
+    animation: rv-calendar-view-enter 140ms ease-out both;
+  }
+}
+
+@keyframes rv-calendar-view-enter {
+  from {
+    opacity: 0.65;
+    transform: translateY(0.2rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

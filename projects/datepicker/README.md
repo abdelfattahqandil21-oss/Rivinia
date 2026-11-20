@@ -49,16 +49,18 @@ The UI uses `@rivinia/popup` for connected native panels; the core has no Popup/
 imports. Exit animation, draft discard, panel exclusivity and focus restoration
 remain the Datepicker's responsibility. No `/forms` entry or wrapper is required.
 Date-only controls now also use explicit confirmation by default: picking a day
-or pressing Today edits the draft; Apply commits it. Clear immediately commits
-`null` and closes the panel, including for date/time controls. Set
+edits the draft; OK commits it, while Cancel discards it.
+Clear stages a null draft for both pickers. OK commits it and Cancel discards it. Set
 `commitMode="immediate"` to retain the original date-only auto-close behavior.
 Date values are editable as borderless, format-ordered segments inside the field;
-custom patterns such as `dd:MM:yyyy` and `yy:dd:MM` keep their token order. The
+custom patterns such as `dd:MM:yyyy` and `yy:dd:MM` keep their token order. A
+subtle hint below date and date-time fields shows the active date format and
+updates when `format` or the configured locale changes. The
 time row's option tray is a nested Popup panel, so it can escape clipping and
 Escape dismisses only the tray before the date panel.
-Date/time controls share one panel footer for Now, Clear and Apply; the embedded
-time row hides its own footer while remaining independently usable with its
-default actions.
+Date/time controls share a compact panel footer for Clear (icon with tooltip),
+Cancel and OK; the embedded time row hides its own footer while remaining
+independently usable with its default actions.
 The hour, minute, and optional second controls are text inputs with numeric
 keyboards, spinbutton semantics, direct two-digit entry, and keyboard stepping.
 With 12-hour display, the hour input accepts 1–12 and the adjacent AM/PM control
@@ -118,3 +120,44 @@ The UI and controller are independent; use either or combine them.
 | Date and time              | [Date and time](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/datepicker/v1.0.4/docs/datepicker/date-and-time.md)           |
 | Time zones and DST         | [Time zones and DST](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/datepicker/v1.0.4/docs/datepicker/time-zones-and-dst.md) |
 | Design notes               | [Design notes](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/datepicker/v1.0.4/docs/datepicker/design-notes.md)             |
+
+### Brand colors and scoped overrides
+
+Load the Theme stylesheet and set semantic tokens on the project root or the
+nearest themed container. Each picker and its popover inherit that scope.
+
+```css
+[data-rv-theme='light'].booking-brand {
+  --rv-color-primary: #6542b5;
+  --rv-color-on-primary: #fff;
+  --rv-color-focus: #6542b5;
+}
+
+[data-rv-theme='dark'].booking-brand {
+  --rv-color-primary: #bcabff;
+  --rv-color-on-primary: #20133d;
+  --rv-color-focus: #bcabff;
+}
+```
+
+Theme defaults are in the `rivinia-theme` layer. Normal unlayered declarations
+on the same scope take precedence. A nested theme scope can set its own
+tokens. For picker-only changes, set the documented component token on the
+picker host. This works with plain CSS and framework adapters through the same
+custom properties, without requiring `!important`.
+
+The panel editor uses the active date format. Today selects the current date
+as a draft in confirmation mode. Clear stages a reset. Both pickers emit `applied` with `{ value, changed }` on successful confirmation, including when the value is unchanged.
+
+### Standalone time picker
+
+Import `RiviniaTimepickerComponent` from `@rivinia/datepicker/ui`, then use
+`<rv-timepicker label="Departure time" [(value)]="departureTime" />`.
+The model is `RiviniaTime | null` and supports Signal Forms through
+`FormValueControl`. It supports `min`, `max`, `disabledTime`, `required`,
+`readonly`, `disabled`, `clearable`, `timeFormat`, `hour12`, `showSeconds`,
+`minuteStep`, `locale`, `labels`, `label`, `placeholder`, and `theme`.
+The panel stages changes until OK and Cancel discards the draft. The instance
+commands are `open`, `close`, `toggle`, `focus`, `apply`, `clear`, and `cancel`.
+Outputs include `valueChange`, `applied`, `openedChange`, `cancelled`, and `touch`.
+The time picker inherits scoped theme tokens and exposes `--rv-timepicker-width`.

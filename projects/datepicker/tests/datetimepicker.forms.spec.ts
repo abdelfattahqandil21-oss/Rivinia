@@ -176,12 +176,15 @@ describe('rv-datetimepicker — reactive forms', () => {
     expect(triggerText(el)).toBe('Choose date and time');
   });
 
-  it('Clear empties the control immediately and marks it touched', () => {
+  it('Clear empties the control after OK and marks it touched', () => {
     host.control.setValue(dt(2026, 3, 15, 9, 45));
     fixture.detectChanges();
 
     openPanel(fixture, el);
     (el.querySelector('.rv-datetimepicker-clear') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(host.control.value).not.toBeNull();
+    (el.querySelector('.rv-datetimepicker-ok') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(host.control.value).toBeNull();
     expect(host.control.touched).toBe(true);

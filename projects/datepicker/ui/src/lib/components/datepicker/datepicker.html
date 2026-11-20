@@ -24,6 +24,7 @@
     [labels]="calendar.labels()"
     [label]="label() ?? calendar.labels().chooseDate"
     [disabled]="isDisabled()"
+    [attr.aria-describedby]="formatHintId"
     (valueChange)="onTypedDate($event)"
   />
   <button
@@ -50,6 +51,7 @@
     </svg>
   </button>
 </span>
+<small [id]="formatHintId" class="rv-datepicker-format-hint">{{ formatHint() }}</small>
 
 @if (open() || closing()) {
   <div
@@ -72,37 +74,64 @@
       [autofocus]="true"
       (picked)="onPicked($event)"
       (dismissed)="dismiss()"
-    />
-    <div class="rv-datepicker-actions">
-      <div class="rv-datepicker-actions-start">
+    >
+      <div calendarEditor class="rv-datepicker-panel-editor">
+        <rv-date-segments
+          [value]="calendar.selected()"
+          [locale]="effectiveLocale()"
+          [format]="effectiveFormat()"
+          [labels]="calendar.labels()"
+          [label]="label() ?? calendar.labels().chooseDate"
+          [disabled]="isDisabled()"
+          (valueChange)="onTypedDate($event)"
+        />
         <button
           type="button"
-          class="rv-datepicker-action rv-datepicker-now"
-          [disabled]="isDisabled() || !calendar.canSelect(calendar.today())"
-          (click)="onNow()"
-        >
-          {{ calendar.labels().today ?? calendar.labels().now }}
-        </button>
+          class="rv-datepicker-action"
+          [disabled]="!calendar.canSelect(calendar.today())"
+          (click)="onPicked(calendar.today())"
+        >{{ calendar.labels().today ?? 'Today' }}</button>
         @if (canClear()) {
           <button
             type="button"
             class="rv-datepicker-action rv-datepicker-clear-action"
             [attr.aria-label]="clearLabel()"
+            [attr.data-tooltip]="calendar.labels().clearDate"
             (click)="clearValue()"
           >
-            {{ calendar.labels().clear ?? calendar.labels().clearDate }}
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path
+                d="M2.75 4.25h10.5M6 4.25v-1.5h4v1.5m2.25 0-.6 9H4.35l-.6-9m3 2.25v4.5m3.5-4.5v4.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.25"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </button>
         }
       </div>
-      @if (commitMode() === 'explicit') {
-        <button
-          type="button"
-          class="rv-datepicker-action rv-datepicker-ok"
-          [disabled]="!canCommit()"
-          (click)="commit()"
-        >
-          {{ calendar.labels().apply ?? calendar.labels().ok }}
-        </button>
+    </rv-calendar>
+    <div class="rv-datepicker-actions">
+      @if (commitMode() === 'explicit' || pendingClear()) {
+        <div class="rv-datepicker-actions-end">
+          <button
+            type="button"
+            class="rv-datepicker-action rv-datepicker-cancel"
+            (click)="dismiss()"
+          >
+            {{ calendar.labels().cancel ?? 'Cancel' }}
+          </button>
+          <button
+            type="button"
+            class="rv-datepicker-action rv-datepicker-ok"
+            [disabled]="!canCommit()"
+            (click)="commit()"
+          >
+            {{ calendar.labels().ok }}
+          </button>
+        </div>
       }
     </div>
   </div>

@@ -77,7 +77,8 @@ export class RiviniaDateSegmentsComponent {
   protected onInput(part: DateSegment, event: Event): void {
     if (!part.field || part.field === 'weekday') return;
     const input = event.target as HTMLInputElement;
-    const value = input.value;
+    const value = part.numeric ? input.value.replace(/[^\p{Number}]/gu, '') : input.value;
+    if (value !== input.value) input.value = value;
     this.edits.update((edits) => ({ ...edits, [part.key]: value }));
 
     const parsed = this.buildDate();
@@ -166,7 +167,7 @@ export class RiviniaDateSegmentsComponent {
     const field: DatePartField | null =
       type === 'day' || type === 'month' || type === 'year' ? type : null;
     if (!field) return this.literal(index, value);
-    const numeric = /^\p{Number}+$/u.test(value);
+    const numeric = /^\p{Number}+$/u.test(value) || type === 'month';
     const token =
       field === 'year'
         ? value.length === 2

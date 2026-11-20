@@ -1,3 +1,4 @@
+import { confirmPickerValue, type RiviniaPickerApplied } from '../../utils/picker-confirmation';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -53,6 +54,7 @@ import type {
   RiviniaWeekday,
 } from '@rivinia/datepicker';
 import { RiviniaCalendarComponent } from '../calendar/calendar';
+import { dateFormatHint } from '../../utils/date-format-hint';
 import { RiviniaDateSegmentsComponent } from '../date-segments/date-segments';
 import { RiviniaTimeRowComponent } from '../time-row/time-row';
 import { DatepickerPanelRegistry } from '../../services/datepicker-panel-registry';
@@ -126,6 +128,11 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   readonly clearable = input<boolean | undefined>(undefined);
 
   readonly touch = output<void>();
+  readonly applied = output<RiviniaPickerApplied<RiviniaDateTime>>();
+  private readonly clearSnapshot = signal<RiviniaDateTime | null | undefined>(undefined);
+  protected readonly pendingClear = computed(
+    () => this.clearSnapshot() === this.normalized() && this.clearSnapshot() !== undefined,
+  );
   /** Emitted on commit when a zone is configured: the civil value + its instant. */
   readonly resolved = output<RiviniaDateTimeResolution>();
 
@@ -156,7 +163,9 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   );
   protected readonly draft = this.transaction.value;
   protected readonly canCommit = computed(() => {
-    if (this.isDisabled() || !this.transaction.valid()) return false;
+    if (this.isDisabled()) return false;
+    if (this.pendingClear()) return true;
+    if (!this.transaction.valid()) return false;
     const result = this.zoneResult();
     if (result?.kind === 'unsupported') return false;
     if (this.zoneCommitPolicy() !== 'explicit' || !result) return true;
@@ -171,6 +180,7 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   private readonly uid = ++nextId;
   protected readonly panelId = `rv-datetimepicker-panel-${this.uid}`;
   protected readonly headingId = `rv-datetimepicker-heading-${this.uid}`;
+  protected readonly formatHintId = `rv-datetimepicker-format-hint-${this.uid}`;
 
   private readonly triggerRef = viewChild<ElementRef<HTMLButtonElement>>('trigger');
   private readonly fieldRef = viewChild<ElementRef<HTMLElement>>('field');
@@ -183,6 +193,9 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   );
   protected readonly effectiveDateFormat = computed(
     () => this.format() ?? this.config.format ?? DEFAULT_DATE_FORMAT,
+  );
+  protected readonly formatHint = computed(() =>
+    dateFormatHint(this.effectiveLocale(), this.effectiveDateFormat()),
   );
   protected readonly effectiveTimeFormat = computed(
     () => this.timeFormat() ?? this.config.timeFormat ?? DEFAULT_TIME_FORMAT,
@@ -475,6 +488,7 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
 
   protected onPicked(date: RiviniaDate): void {
     if (this.isDisabled()) return;
+    this.clearSnapshot.set(undefined);
     // A day updates the DRAFT only. The calendar stays mounted; the time row
     // keeps its value; nothing is committed until OK.
     this.transaction.setDate(date);
@@ -482,15 +496,8 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
 
   protected onTimeChanged(time: RiviniaTime): void {
     if (this.isDisabled()) return;
+    this.clearSnapshot.set(undefined);
     this.transaction.setTime(time);
-  }
-
-  protected onNow(): void {
-    if (this.isDisabled()) return;
-    const zone = this.effectiveTimeZone();
-    const now = zone ? nowInTimeZone(zone) : nowDateTime();
-    this.transaction.reset(now);
-    this.calendar.setSelected(now.date);
   }
 
   protected useSuggested(): void {
@@ -524,6 +531,13 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   }
 
   protected commit(): void {
+    if (!this.open() || !this.canCommit()) return;
+    if (this.pendingClear()) {
+      const changed = this.value() !== null;
+      confirmPickerValue(this.value, this.applied, null, changed);
+      this.closePanel(true);
+      return;
+    }
     if (!this.canCommit()) return;
     const value = this.transaction.requestCommit();
     if (!value) return;
@@ -535,6 +549,7 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
 
   protected onTypedDate(date: RiviniaDate): void {
     if (this.isDisabled() || !this.calendar.canSelect(date)) return;
+    this.clearSnapshot.set(undefined);
     this.transaction.setDate(date);
     this.calendar.setSelected(date);
     if (this.open()) return;
@@ -556,10 +571,9 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   }
 
   protected clearValue(): void {
-    if (!this.canClear()) return;
-    this.value.set(null);
+    if (!this.open() || !this.canClear()) return;
+    this.clearSnapshot.set(this.normalized());
     this.calendar.setSelected(null);
-    this.closePanel(true);
   }
 
   protected dismiss(): void {
@@ -583,13 +597,28 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
 
   protected onFocusOut(event: FocusEvent): void {
     const related = event.relatedTarget as Node | null;
-    if (!related || !this.hostRef.nativeElement.contains(related)) {
-      if (this.open()) this.closePanel(false);
-      else this.touch.emit();
+    if (related && this.hostRef.nativeElement.contains(related)) return;
+
+    if (!related && this.open() && typeof document !== 'undefined') {
+      // Chromium can report a null relatedTarget when rendering replaces the
+      // focused calendar cell (for example, PageDown changes the month). Let
+      // the calendar's after-render focus restoration run before deciding the
+      // user actually left the non-modal control.
+      queueMicrotask(() => {
+        const active = document.activeElement;
+        if (this.open() && (!active || !this.hostRef.nativeElement.contains(active))) {
+          this.closePanel(false);
+        }
+      });
+      return;
     }
+
+    if (this.open()) this.closePanel(false);
+    else this.touch.emit();
   }
 
   private openPanel(preserveDraft = false): void {
+    this.clearSnapshot.set(undefined);
     // Reopening during the exit animation cancels the exit and reuses the
     // panel that is still in the DOM.
     this.finishClose();

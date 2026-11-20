@@ -34,7 +34,10 @@ for (const { id, confirm } of [
     await expect(trigger).toBeEnabled();
     await expect(trigger).toHaveAttribute('aria-expanded', 'false');
     await trigger.click();
-    await expect(panel.locator('[data-date="2026-11-09"]')).toHaveAttribute('aria-selected', 'true');
+    await expect(panel.locator('[data-date="2026-11-09"]')).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     await nextDay.click();
     await panel.locator(confirm).click();
     await expect(trigger).toHaveAttribute('aria-expanded', 'false');
@@ -78,6 +81,147 @@ test('typing changes a draft, Escape discards, and Enter commits once', async ({
   await expect(trigger).toContainText('14:05');
 });
 
+test('the time tray aligns each list with its input and keeps the clock after AM/PM', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 800, height: 1000 });
+  const picker = page.locator('#appointment-12-hour');
+  const trigger = picker.locator('.rv-datepicker-trigger');
+  await trigger.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+  await trigger.click();
+  const clock = picker.locator('.rv-time-toggle');
+  const meridiem = picker.locator('.rv-time-meridiem');
+  expect(await clock.evaluate((button) => button.previousElementSibling?.className)).toBe(
+    'rv-time-meridiem',
+  );
+  const clockBox = await clock.boundingBox();
+  const meridiemBox = await meridiem.boundingBox();
+  expect(clockBox!.x).toBeGreaterThanOrEqual(meridiemBox!.x + meridiemBox!.width - 1);
+  await clock.click();
+  for (const unit of ['Hour', 'Minute', 'Second']) {
+    const input = picker.getByRole('spinbutton', { name: unit, exact: true });
+    const list = picker.getByRole('listbox', { name: unit, exact: true });
+    await expect(list).toBeVisible();
+    const field = await input.boundingBox();
+    const column = await list.boundingBox();
+    expect(field!.width).toBeGreaterThanOrEqual(48);
+    expect(column!.width).toBeGreaterThanOrEqual(48);
+    expect(Math.abs(column!.x + column!.width / 2 - (field!.x + field!.width / 2))).toBeLessThan(2);
+    await expect(list).toHaveCSS('scrollbar-width', 'none');
+    await expect(list).toHaveCSS('border-width', '0px');
+  }
+  const tray = picker.locator('.rv-time-options');
+  await expect(tray).toHaveCSS('border-width', '1px');
+  await expect(tray).toHaveCSS('border-radius', '8px');
+});
+
+test('month and year options keep readable hover contrast and animate between views', async ({
+  page,
+}) => {
+  const picker = page.locator('#booking-date');
+  await picker.locator('.rv-datepicker-trigger').click();
+  await picker.locator('.rv-calendar-heading').click();
+  const months = picker.locator('.rv-calendar-options');
+  await expect
+    .poll(() =>
+      months.evaluate((element) =>
+        getComputedStyle(element).animationName.includes('rv-calendar-view-enter'),
+      ),
+    )
+    .toBe(true);
+  const december = months.locator('.rv-calendar-option').filter({ hasText: 'December' });
+  await december.hover();
+  const monthColors = await december.evaluate((option) => {
+    const style = getComputedStyle(option);
+    return { color: style.color, background: style.backgroundColor };
+  });
+  expect(monthColors.color).not.toBe('rgb(255, 255, 255)');
+  expect(monthColors.background).not.toBe('rgba(0, 0, 0, 0)');
+
+  await picker.locator('.rv-calendar-heading').click();
+  const years = picker.locator('.rv-calendar-options');
+  await expect
+    .poll(() =>
+      years.evaluate((element) =>
+        getComputedStyle(element).animationName.includes('rv-calendar-view-enter'),
+      ),
+    )
+    .toBe(true);
+  const nextYear = years.locator('.rv-calendar-option').filter({ hasText: '2027' });
+  await nextYear.hover();
+  const yearColor = await nextYear.evaluate((option) => getComputedStyle(option).color);
+  expect(yearColor).not.toBe('rgb(255, 255, 255)');
+});
+
+test('the time tray keeps each column independently scrollable', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  const picker = page.locator('#appointment-12-hour');
+  const trigger = picker.locator('.rv-datepicker-trigger');
+  const clock = picker.locator('.rv-time-toggle');
+  await trigger.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+  await trigger.click();
+  await expect(clock).toBeInViewport();
+  await clock.click();
+
+  const minutes = picker.getByRole('listbox', { name: 'Minute' });
+  const hours = picker.getByRole('listbox', { name: 'Hour' });
+  const selectedMinute = minutes.locator('[aria-selected="true"]');
+  await expect.poll(() => minutes.evaluate((list) => list.scrollTop)).toBeGreaterThan(0);
+  await expect(selectedMinute).toBeInViewport();
+  const initialScroll = await minutes.evaluate((list) => list.scrollTop);
+  expect(initialScroll).toBeGreaterThan(0);
+
+  const pageOffset = await page.evaluate(() => window.scrollY);
+  await minutes.hover();
+  await page.mouse.wheel(0, -200);
+  await expect.poll(() => minutes.evaluate((list) => list.scrollTop)).toBeLessThan(initialScroll);
+  expect(await page.evaluate(() => window.scrollY)).toBe(pageOffset);
+
+  await minutes.evaluate((list) => {
+    list.scrollTop = 0;
+  });
+  await hours.getByRole('option', { name: '02, 2 PM', exact: true }).click();
+  await expect(hours.locator('[aria-selected="true"]')).toHaveText('02');
+  expect(await minutes.evaluate((list) => list.scrollTop)).toBe(0);
+
+  const firstMinute = minutes.getByRole('option').first();
+  await firstMinute.press('End');
+  await expect(minutes.getByRole('option').last()).toBeFocused();
+  await expect(minutes.getByRole('option').last()).toBeInViewport();
+  expect(await page.evaluate(() => window.scrollY)).toBe(pageOffset);
+  await page.keyboard.press('Escape');
+  await expect(clock).toBeFocused();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('the date-time OK hover keeps readable foreground contrast', async ({ page }) => {
+  const picker = page.locator('#appointment-12-hour');
+  await picker.locator('.rv-datepicker-trigger').click();
+  const ok = picker.locator('.rv-datetimepicker-ok');
+  await ok.hover();
+  const ratio = await ok.evaluate((button) => {
+    const toRgb = (value: string): [number, number, number] => {
+      const match = value.match(/\d+(?:\.\d+)?/g) ?? [];
+      const channels = [Number(match[0]), Number(match[1]), Number(match[2])] as const;
+      return value.startsWith('color(srgb')
+        ? channels.map((channel) => channel * 255) as [number, number, number]
+        : [...channels];
+    };
+    const luminance = (value: string): number => {
+      const [r, g, b] = toRgb(value).map((part) => {
+        const channel = part / 255;
+        return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const style = getComputedStyle(button);
+    const foreground = luminance(style.color);
+    const background = luminance(style.backgroundColor);
+    return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+  });
+  expect(ratio).toBeGreaterThanOrEqual(4.5);
+});
+
 test('clipping the anchor closes the panel and does not reopen it on return', async ({ page }) => {
   const picker = page.locator('#booking-date');
   const trigger = picker.locator('.rv-datepicker-trigger');
@@ -118,13 +262,39 @@ test('date actions stay in the panel and selecting a day waits for OK', async ({
   await expect(picker.locator('.rv-datepicker-now')).toHaveCount(0);
   await trigger.click();
   const panel = picker.locator('.rv-datepicker-panel');
-  await expect(panel.getByRole('button', { name: 'Today', exact: true })).toBeVisible();
+  await expect(panel.getByRole('button', { name: 'Today', exact: true })).toHaveCount(0);
+  await expect(panel.getByRole('button', { name: 'Cancel', exact: true })).toBeVisible();
+  await expect(panel.getByRole('button', { name: 'OK', exact: true })).toBeVisible();
   await panel.locator('[data-date="2026-11-15"]').click();
   await expect(trigger).toHaveText(before);
   await expect(trigger).toHaveAttribute('aria-expanded', 'true');
-  await panel.getByRole('button', { name: 'Apply', exact: true }).click();
+  await panel.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(trigger).toHaveText(before);
+  await trigger.click();
+  await picker.locator('[data-date="2026-11-15"]').click();
+  await picker.getByRole('button', { name: 'OK', exact: true }).click();
   await expect(trigger).toContainText('Nov 15, 2026');
   await expect(trigger).toBeFocused();
+});
+
+test('Clear is an icon with a localized text tooltip', async ({ page }) => {
+  const picker = page.locator('#booking-date');
+  await picker.locator('.rv-datepicker-trigger').click();
+  const clear = picker.locator('.rv-datepicker-clear-action');
+  await expect(clear).toHaveText('');
+  await expect(clear.locator('svg')).toBeVisible();
+  await expect(clear).toHaveAttribute('aria-label', 'Booking date: Clear date');
+  await clear.hover();
+  await expect
+    .poll(() => clear.evaluate((button) => getComputedStyle(button, '::after').content))
+    .toContain('Clear date');
+  await clear.click();
+  await expect(picker.locator('.rv-datepicker-panel')).toBeVisible();
+  await picker.locator('.rv-datepicker-ok').click();
+  await expect(picker.locator('.rv-datepicker-panel')).toHaveCount(0);
+  await expect(picker.locator('.rv-datepicker-trigger')).toHaveAccessibleName(
+    'Booking date: Choose date',
+  );
 });
 
 test('neighbouring dates are quieter, select correctly and retain panel focus', async ({
@@ -144,6 +314,6 @@ test('neighbouring dates are quieter, select correctly and retain panel focus', 
   const selected = picker.locator('[aria-selected="true"]');
   await expect(selected).toHaveAttribute('data-date', date!);
   await expect(selected).toBeFocused();
-  await picker.getByRole('button', { name: 'Apply', exact: true }).click();
+  await picker.getByRole('button', { name: 'OK', exact: true }).click();
   await expect(trigger).toHaveAttribute('aria-expanded', 'false');
 });

@@ -192,6 +192,7 @@ describe('@rivinia/datepicker/ui — the published surface', () => {
       'RiviniaDatepickerComponent',
       'RiviniaDatetimepickerComponent',
       'RiviniaTimeRowComponent',
+      'RiviniaTimepickerComponent',
     ]);
   });
 });
