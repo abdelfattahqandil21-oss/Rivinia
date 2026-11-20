@@ -369,6 +369,11 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
 
     effect(() => this.calendar.setLabels(this.labels()));
     effect(() => this.calendar.setDisabledDate(this.disabledDate()));
+    effect(() => {
+      if (this.isDisabled() && this.open()) {
+        untracked(() => this.closePanel(false, true));
+      }
+    });
 
     // The wall date's "today" follows the configured zone, unless the
     // application pinned a today for SSR determinism.
@@ -469,16 +474,19 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   }
 
   protected onPicked(date: RiviniaDate): void {
+    if (this.isDisabled()) return;
     // A day updates the DRAFT only. The calendar stays mounted; the time row
     // keeps its value; nothing is committed until OK.
     this.transaction.setDate(date);
   }
 
   protected onTimeChanged(time: RiviniaTime): void {
+    if (this.isDisabled()) return;
     this.transaction.setTime(time);
   }
 
   protected onNow(): void {
+    if (this.isDisabled()) return;
     const zone = this.effectiveTimeZone();
     const now = zone ? nowInTimeZone(zone) : nowDateTime();
     this.transaction.reset(now);
@@ -486,6 +494,7 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   }
 
   protected useSuggested(): void {
+    if (this.isDisabled()) return;
     const gap = this.gapResolution();
     if (!gap) return;
     this.transaction.reset({
@@ -496,6 +505,7 @@ export class RiviniaDatetimepickerComponent implements FormValueControl<RiviniaD
   }
 
   protected chooseOffset(offsetMinutes: number): void {
+    if (this.isDisabled()) return;
     this.selectedOffset.set(offsetMinutes);
   }
 

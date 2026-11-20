@@ -12,6 +12,7 @@ import { RiviniaModalDialog, RvModalFooter } from '@rivinia/modal/ui';
 })
 export class App {
   readonly modalOpen = signal(false);
+  readonly pickersDisabled = signal(false);
   readonly options = [
     { id: 'draft', label: 'Draft' },
     { id: 'confirmed', label: 'Confirmed' },

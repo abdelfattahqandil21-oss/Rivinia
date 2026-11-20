@@ -178,6 +178,43 @@ describe('rv-datepicker — the trigger', () => {
     expect(mounted.trigger().textContent).toContain('أكتوبر');
   });
 
+  it.each(['immediate', 'explicit'] as const)(
+    'preserves the value when an open %s picker is disabled and re-enabled',
+    (commitMode) => {
+      const initial = d(2026, 10, 25);
+      const next = d(2026, 10, 26);
+      const mounted = mount({}, (host) => {
+        host.value.set(initial);
+        host.commitMode = commitMode;
+      });
+      mounted.open();
+      const nextDay = mounted.cells().find((cell) => cell.dataset['date'] === '2026-10-26')!;
+
+      mounted.host.disabled.set(true);
+      mounted.settle();
+      nextDay.click();
+      mounted.settle();
+      expect(mounted.trigger().getAttribute('aria-expanded')).toBe('false');
+      expect(mounted.panel()).toBeNull();
+      expect(mounted.host.value()).toEqual(initial);
+      expect(mounted.host.changes).toEqual([]);
+
+      mounted.host.disabled.set(false);
+      mounted.settle();
+      expect(mounted.trigger().getAttribute('aria-expanded')).toBe('false');
+      mounted.open();
+      expect(mounted.cells().find((cell) => cell.getAttribute('aria-selected') === 'true')
+        ?.dataset['date']).toBe('2026-10-25');
+      mounted.cells().find((cell) => cell.dataset['date'] === '2026-10-26')!.click();
+      mounted.settle();
+      if (commitMode === 'explicit') {
+        mounted.el.querySelector<HTMLButtonElement>('.rv-datepicker-ok')!.click();
+        mounted.settle();
+      }
+      expect(mounted.host.changes).toEqual([next]);
+    },
+  );
+
   it('is disabled when asked', () => {
     const mounted = mount({}, (host) => host.disabled.set(true));
     expect(mounted.trigger().disabled).toBe(true);
