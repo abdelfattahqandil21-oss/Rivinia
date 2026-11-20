@@ -1,0 +1,21 @@
+:host { display: grid; gap: .375rem; min-inline-size: 0; }
+textarea { display: block; inline-size: 100%; }
+label { font-weight: 600; }
+.count {
+  margin: 0;
+  text-align: end;
+  color: var(--rv-color-text-muted, CanvasText);
+  font-size: .875em;
+  font-variant-numeric: tabular-nums;
+}
+.sr-only { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+
+@supports (field-sizing: content) {
+  textarea.auto-grow {
+    field-sizing: content;
+    min-block-size: calc(var(--_rv-textarea-min-rows) * 1lh + 1.25rem + 2px);
+    max-block-size: calc(var(--_rv-textarea-max-rows) * 1lh + 1.25rem + 2px);
+    resize: none;
+    overflow-y: auto;
+  }
+}

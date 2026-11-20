@@ -1,0 +1,239 @@
+@layer rivinia-forms {
+  :where(input.rv-input, textarea.rv-input, select.rv-input, .rv-input-surface) {
+    --_rv-input-focus: var(--rv-input-focus, var(--rv-color-focus, Highlight));
+    box-sizing: border-box;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    min-block-size: var(--rv-input-height, 2.75rem);
+    padding-inline: var(--rv-input-padding, 0.75rem);
+    border: 1px solid var(--rv-input-border, var(--rv-color-border, GrayText));
+    border-radius: var(--rv-input-radius, 0.65rem);
+    background: var(
+      --rv-input-surface,
+      color-mix(in srgb, var(--rv-color-text, CanvasText) 4%, var(--rv-color-surface, Canvas))
+    );
+    color: var(--rv-input-text, var(--rv-color-text, CanvasText));
+    font: inherit;
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      outline-color 180ms ease;
+  }
+
+  :where(.rv-input[data-rv-input-variant='outlined'], .rv-input[data-rv-input-variant='minimal']) {
+    background: var(--rv-input-plain-surface, transparent);
+  }
+
+  :where(.rv-input[data-rv-input-variant='minimal']) {
+    border-color: transparent;
+    border-block-end-color: var(--rv-input-border, var(--rv-color-border, GrayText));
+    border-radius: var(--rv-input-minimal-radius, 0.25rem);
+  }
+
+  :where(.rv-input[data-rv-input-variant='minimal']):hover:not(:disabled) {
+    border-block-end-color: var(
+      --rv-input-hover-border,
+      var(--rv-input-text, var(--rv-color-text, CanvasText))
+    );
+  }
+
+  :where(textarea.rv-input) {
+    min-block-size: var(--rv-textarea-height, 6rem);
+    padding-block: 0.625rem;
+    resize: vertical;
+  }
+
+  :where(input.rv-input, textarea.rv-input, select.rv-input, .rv-input-surface):hover:where(:not(:disabled, [data-rv-input-variant="minimal"])) {
+    border-color: var(
+      --rv-input-hover-border,
+      var(--rv-input-text, var(--rv-color-text, CanvasText))
+    );
+  }
+
+  :where(input.rv-input, textarea.rv-input, select.rv-input):focus,
+  :where(.rv-input-surface):focus-within {
+    background: var(--rv-input-focus-surface, var(--rv-color-surface, Canvas));
+    outline: 2px solid var(--_rv-input-focus);
+    outline-offset: -2px;
+  }
+
+  :where(.rv-input[aria-invalid='true'], .rv-input-surface.invalid) {
+    border-color: var(--rv-input-error, var(--rv-color-danger, #b32828));
+  }
+
+  :where(.rv-input[aria-invalid='true'], .rv-input-surface.invalid) {
+    --_rv-input-focus: var(--rv-input-error, var(--rv-color-danger, #b32828));
+  }
+
+  :where(input.rv-input, textarea.rv-input, select.rv-input):disabled,
+  :where(.rv-input-surface):has(input:disabled) {
+    color: GrayText;
+    cursor: default;
+  }
+
+  @media (forced-colors: active) {
+    :where(input.rv-input, textarea.rv-input, select.rv-input):focus,
+    :where(.rv-input-surface):focus-within {
+      outline-color: Highlight;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(.rv-input, .rv-input-surface) {
+      transition: none;
+    }
+  }
+}
+
+
+@layer rivinia-forms {
+
+  :where(.rv-floating-field, .rv-icon-field) { position: relative; display: grid; min-inline-size: 0; }
+
+  :where(.rv-floating-field) {
+    --_rv-line-color: var(--rv-input-focus, var(--rv-color-focus, Highlight));
+    padding-block-start: 0.65rem;
+  }
+
+  :where(.rv-floating-field)::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: 2px;
+    background: var(--_rv-line-color);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 220ms cubic-bezier(.2, .65, .3, 1);
+    pointer-events: none;
+  }
+
+  :where(.rv-floating-field:focus-within)::after { transform: scaleX(1); }
+  :where(.rv-floating-field:has([aria-invalid='true'])) {
+    --_rv-line-color: var(--rv-input-error, var(--rv-color-danger, #b32828));
+  }
+
+  :where(.rv-floating-field) > label {
+    position: absolute;
+    inset-block-start: 1.32rem;
+    inset-inline-start: var(--rv-input-padding, 0.75rem);
+    max-inline-size: calc(100% - 1.5rem);
+    color: var(--rv-input-label, var(--rv-color-text-muted, CanvasText));
+    transform-origin: left center;
+    transition: transform 200ms cubic-bezier(.2, .65, .3, 1), color 200ms ease;
+    cursor: text;
+  }
+
+  :where(.rv-floating-field:dir(rtl)) > label { transform-origin: right center; }
+  :where(.rv-floating-field:focus-within, .rv-floating-field:has(.rv-input:not(:placeholder-shown))) > label {
+    transform: translateY(-1.45rem) scale(.82);
+  }
+  :where(.rv-floating-field:focus-within) > label { color: var(--_rv-line-color); }
+  :where(.rv-floating-field) > .rv-input:focus { outline-color: transparent; }
+  :where(.rv-floating-field) > textarea.rv-input { resize: vertical; }
+
+  :where(.rv-icon-field) > .rv-input {
+    padding-inline-start: calc(var(--rv-input-padding, 0.75rem) + 1.65rem);
+  }
+
+  :where(.rv-icon-field) > .rv-input-icon {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    inset-inline-start: var(--rv-input-padding, 0.75rem);
+    inset-block: 0;
+    color: var(--rv-input-icon-color, var(--rv-color-text-muted, CanvasText));
+    pointer-events: none;
+  }
+
+  :where(.rv-input-icon) svg {
+    inline-size: var(--rv-input-icon-size, 1.125rem);
+    block-size: var(--rv-input-icon-size, 1.125rem);
+  }
+
+  @media (forced-colors: active) {
+    :where(.rv-floating-field) > .rv-input:focus { outline-color: Highlight; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(.rv-input, .rv-input-surface, .rv-floating-field > label),
+    :where(.rv-floating-field)::after { transition: none; }
+  }
+}
+
+
+@layer rivinia-forms {
+  :where(button.rv-button) {
+    box-sizing: border-box;
+    min-block-size: var(--rv-button-height, 2.75rem);
+    padding-inline: var(--rv-button-padding, 1rem);
+    border: 1px solid transparent;
+    border-radius: var(--rv-button-radius, .65rem);
+    background: var(--rv-button-bg, var(--rv-color-primary, Highlight));
+    color: var(--rv-button-fg, var(--rv-color-on-primary, HighlightText));
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background-color 160ms, border-color 160ms;
+  }
+  :where(.rv-button[data-rv-button-variant='secondary']) {
+    border-color: var(--rv-color-border, GrayText);
+    background: var(--rv-color-surface, Canvas);
+    color: var(--rv-color-text, CanvasText);
+  }
+  :where(.rv-button[data-rv-button-variant='ghost']) {
+    background: transparent;
+    color: var(--rv-color-text, CanvasText);
+  }
+  :where(.rv-button[data-rv-button-variant='danger']) {
+    background: var(--rv-color-danger, #a02e25);
+    color: var(--rv-color-on-danger, white);
+  }
+  :where(.rv-button):hover:not(:disabled) { filter: brightness(.94); }
+  :where(.rv-button):focus-visible { outline: 2px solid var(--rv-color-focus, Highlight); outline-offset: 2px; }
+  :where(.rv-button):disabled { opacity: .55; cursor: default; }
+  @media (prefers-reduced-motion: reduce) { :where(.rv-button) { transition: none; } }
+}
+
+
+@layer rivinia-forms {
+  :where(button.rv-button) { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; }
+  :where(button.rv-button):active:not(:disabled) { filter: brightness(.86); }
+  :where(.rv-button[data-rv-button-variant='ghost']):hover:not(:disabled) {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+  }
+}
+
+/* Select uses unlayered component styles. Scope the integrated trigger override
+   to the add-on; the overlay retains its own color and border tokens. */
+.rv-field-select rv-select {
+  --rv-select-width: 100%;
+  --rv-select-trigger-padding: .4rem .5rem;
+  --rv-select-trigger-gap: .3rem;
+  display: block;
+  min-inline-size: 0;
+  inline-size: 100%;
+}
+.rv-field-select rv-select .rv-select-trigger {
+  border-color: transparent;
+  background: transparent;
+  border-radius: .35rem;
+  min-block-size: calc(var(--rv-input-height, 2.75rem) - 2px);
+}
+.rv-field-select rv-select .rv-select-trigger:focus {
+  outline: none;
+  box-shadow: none;
+}
+.rv-field-select rv-select .rv-select-trigger:focus-visible {
+  background: var(--rv-input-addon-focus, color-mix(in srgb, var(--rv-input-focus, Highlight) 10%, transparent));
+}
+
+@media (forced-colors: active) {
+  .rv-field-select rv-select .rv-select-trigger:focus-visible {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+}

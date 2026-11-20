@@ -1,0 +1,36 @@
+.phone { min-inline-size: 0; }
+.phone.with-country {
+  display: grid;
+  grid-template-columns: minmax(0, 38%) minmax(0, 1fr);
+  align-items: stretch;
+  gap: .6rem;
+  padding-inline-start: 0;
+}
+.with-country select, .with-country input {
+  min-inline-size: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+.with-country select {
+  inline-size: 100%;
+  padding-inline: .6rem .25rem;
+  border-inline-end: 1px solid var(--rv-input-divider, var(--rv-color-border, GrayText));
+  text-overflow: ellipsis;
+}
+.with-country select option { background: var(--rv-color-surface, Canvas); color: var(--rv-color-text, CanvasText); }
+.with-country > div { display: flex; min-inline-size: 0; }
+.with-country .rv-icon-field input { padding-inline-start: 1.8rem; }
+.with-country .rv-input-icon { inset-inline-start: 0; }
+.with-country select:focus, .with-country input:focus { outline: none; }
+.with-country select:focus-visible {
+  background: var(--rv-input-addon-focus, color-mix(in srgb, var(--rv-input-focus, Highlight) 10%, transparent));
+  border-start-start-radius: var(--rv-input-radius, .65rem);
+  border-end-start-radius: var(--rv-input-radius, .65rem);
+}
+
+.phone.with-country > .leading {
+  border-inline-end: 1px solid var(--rv-input-divider, var(--rv-color-border, GrayText));
+  align-items: center;
+}

@@ -1,0 +1,4 @@
+fieldset { margin: 0; padding: 0; border: 0; min-inline-size: 0; }
+legend { padding: 0; margin-block-end: .5rem; font-weight: 650; }
+.options { display: grid; justify-items: start; gap: .375rem; }
+.options.inline { display: flex; flex-wrap: wrap; gap: .375rem 1rem; }

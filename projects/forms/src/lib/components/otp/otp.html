@@ -1,0 +1,67 @@
+@if (state() === 'entry') {
+  <div
+    class="slots"
+    [style.--rv-otp-length]="size()"
+    role="group"
+    [attr.aria-label]="label()"
+    [attr.aria-describedby]="describedBy() || null"
+    dir="ltr"
+  >
+    @for (index of indexes(); track index) {
+      <input
+        class="rv-input"
+        #slot
+        type="text"
+        [id]="controlId() ? (index ? controlId() + '-' + (index + 1) : controlId()) : ''"
+        [attr.name]="name() ? name() + '-' + (index + 1) : null"
+        [inputMode]="alphabet() === 'numeric' ? 'numeric' : 'text'"
+        [autocomplete]="index === 0 ? 'one-time-code' : 'off'"
+        autocapitalize="off"
+        spellcheck="false"
+        [value]="value()[index] ?? ''"
+        [disabled]="disabled()"
+        [readOnly]="readonly()"
+        [attr.aria-label]="label() + ' ' + (index + 1) + ' / ' + size()"
+        [attr.aria-required]="required() ? 'true' : null"
+        [attr.aria-invalid]="invalid() ? 'true' : null"
+        (focus)="slot.select()"
+        (input)="onInput(index, slot, $event)"
+        (compositionend)="edit(index, slot, slot.value)"
+        (paste)="paste(index, slot, $event)"
+        (keydown)="keydown(index, $event)"
+      />
+    }
+  </div>
+} @else {
+  <div class="status" [attr.data-state]="state()" role="status">
+    <div class="motion-track" [style.--rv-otp-length]="size()" dir="ltr" aria-hidden="true">
+      @for (index of indexes(); track index) {
+        <span class="motion-cell" [style.--rv-otp-slot]="index"></span>
+      }
+      <span class="status-tile">
+        @switch (state()) {
+          @case ('checking') {
+            <span class="spinner"></span>
+          }
+          @case ('success') {
+            <span class="result-icon">✓</span>
+          }
+          @case ('failure') {
+            <span class="result-icon">×</span>
+          }
+        }
+      </span>
+    </div>
+    @switch (state()) {
+      @case ('checking') {
+        <span>{{ checkingLabel() }}</span>
+      }
+      @case ('success') {
+        <span>{{ successLabel() }}</span>
+      }
+      @case ('failure') {
+        <span>{{ failureLabel() }}</span>
+      }
+    }
+  </div>
+}

@@ -1,0 +1,19 @@
+<input
+  class="rv-input"
+  #editor
+  type="text"
+  inputmode="numeric"
+  dir="ltr"
+  [id]="controlId()"
+  [name]="name()"
+  [value]="display()"
+  [disabled]="disabled()"
+  [readOnly]="readonly()"
+  [required]="required()"
+  [attr.aria-describedby]="describedBy() || null"
+  [attr.aria-invalid]="invalid() ? 'true' : null"
+  (input)="onInput(editor, $event)"
+  (compositionend)="edit(editor)"
+  (beforeinput)="deleteAcrossLiteral(editor, $event)"
+  (blur)="touch.emit()"
+/>

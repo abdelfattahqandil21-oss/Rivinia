@@ -1,0 +1,13 @@
+<section [attr.aria-label]="label()">
+  <p class="title">{{ label() }}</p>
+  <div [hidden]="state() !== 'ready'">
+    <ng-content />
+  </div>
+  <div class="message" role="status">{{ state() === 'loading' ? loadingLabel() : '' }}</div>
+  @if (state() === 'error') {
+    <p class="error" role="alert">{{ errorMessage() }}</p>
+    @if (retryLabel()) {
+      <button type="button" (click)="retry.emit()">{{ retryLabel() }}</button>
+    }
+  }
+</section>

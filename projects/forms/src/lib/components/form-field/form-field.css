@@ -1,0 +1,36 @@
+:host {
+  display: grid;
+  gap: var(--rv-field-gap, 0.375rem);
+  min-inline-size: 0;
+  color: var(--rv-field-text, var(--rv-color-text, CanvasText));
+}
+
+label {
+  font-weight: 600;
+}
+
+p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.875em;
+  color: var(--rv-field-muted, var(--rv-color-text-muted, CanvasText));
+}
+
+.rv-field-message[data-kind='error'] {
+  color: var(--rv-field-error, var(--rv-color-danger, CanvasText));
+}
+
+.rv-field-spacer {
+  min-block-size: 1.25em;
+}
+
+
+.rv-field-message[data-kind='warning'] {
+  color: var(--rv-field-warning, var(--rv-color-warning-text, var(--rv-color-text, CanvasText)));
+}
+.rv-field-message[data-kind='success'] {
+  color: var(--rv-field-success, var(--rv-color-success-text, var(--rv-color-text, CanvasText)));
+}
+.rv-field-message[data-kind='pending'] {
+  color: var(--rv-field-pending, var(--rv-color-text-muted, CanvasText));
+}

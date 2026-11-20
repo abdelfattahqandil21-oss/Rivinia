@@ -1,0 +1,7 @@
+fieldset { display: grid; gap: .5rem; margin: 0; padding: 0; min-inline-size: 0; border: 0; }
+legend { padding: 0; margin-block-end: .45rem; font-weight: 650; }
+label { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .25rem .75rem; }
+.value { font-variant-numeric: tabular-nums; color: var(--rv-color-text-muted, CanvasText); }
+input { grid-column: 1 / -1; inline-size: 100%; min-inline-size: 0; min-block-size: 2rem; margin: 0;
+  accent-color: var(--rv-range-accent, var(--rv-color-primary, Highlight)); }
+input:focus-visible { outline: 2px solid var(--rv-color-focus, Highlight); outline-offset: 2px; }

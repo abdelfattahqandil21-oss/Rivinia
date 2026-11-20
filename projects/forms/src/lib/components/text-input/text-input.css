@@ -1,0 +1,27 @@
+:host { display: grid; gap: .375rem; min-inline-size: 0; }
+input { inline-size: 100%; }
+label { font-weight: 600; }
+.rv-floating-field.rv-icon-field > label { inset-inline-start: calc(var(--rv-input-padding, .75rem) + 1.65rem); }
+.rv-floating-field > .rv-input-icon { inset-block-start: .65rem; }
+
+.has-clear > input { padding-inline-end: calc(var(--rv-input-padding, .75rem) + 2rem); }
+.has-clear > input::-webkit-search-cancel-button { appearance: none; }
+.clear {
+  position: absolute;
+  inset-inline-end: .25rem;
+  inset-block-end: .25rem;
+  display: grid;
+  place-items: center;
+  inline-size: 2.25rem;
+  block-size: calc(var(--rv-input-height, 2.75rem) - .5rem);
+  padding: 0;
+  border: 0;
+  border-radius: .4rem;
+  background: transparent;
+  color: var(--rv-input-text, var(--rv-color-text, CanvasText));
+  cursor: pointer;
+}
+div.has-clear { position: relative; }
+.clear svg { inline-size: 1rem; block-size: 1rem; }
+.clear:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+.clear:focus-visible { outline: 2px solid var(--rv-input-focus, var(--rv-color-focus, Highlight)); outline-offset: -2px; }

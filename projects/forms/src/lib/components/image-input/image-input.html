@@ -1,0 +1,6 @@
+<rv-file-input [id]="controlId()" [label]="label()" [hint]="hint()" [accept]="accept()"
+  variant="dropzone" previewImages previewLayout="image" [maxBytes]="maxBytes()"
+  [chooseLabel]="value() ? replaceLabel() : chooseLabel()" [uploadIcon]="uploadIcon()" [removeIcon]="removeIcon()"
+  [disabled]="disabled()" [readonly]="readonly()" [required]="required()" [invalid]="invalid()"
+  [viewer]="viewer()" (viewRequested)="viewRequested.emit($event)" [value]="files()" [uploadStates]="states()" (valueChange)="value.set($event[0] ?? null)"
+  (rejectedFiles)="rejectedFiles.emit($event)" (retry)="retry.emit($event)" (touch)="touch.emit()" />

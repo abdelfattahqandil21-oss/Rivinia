@@ -1,0 +1,62 @@
+.amount-control {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.amount-control input {
+  flex: 1 1 0;
+  min-block-size: calc(var(--rv-input-height, 2.75rem) - 2px);
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.unit {
+  flex: none;
+  color: var(--rv-input-unit-color, var(--rv-color-text-muted, CanvasText));
+  font-size: .875em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.steppers { display: inline-flex; flex: none; gap: .15rem; }
+.steppers button {
+  border: 0;
+  border-radius: .375rem;
+  min-inline-size: 2rem;
+  min-block-size: 2rem;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.steppers button:hover:not(:disabled) { background: color-mix(in srgb, currentColor 8%, transparent); }
+.steppers button:focus-visible { outline: none; background: var(--rv-input-addon-focus, color-mix(in srgb, var(--rv-input-focus, Highlight) 10%, transparent)); }
+.steppers button:disabled { opacity: .5; cursor: default; }
+
+.currency {
+  flex: none;
+  max-inline-size: 5.25rem;
+  min-block-size: calc(var(--rv-input-height, 2.75rem) - 2px);
+  padding-inline-start: .55rem;
+  border: 0;
+  border-inline-start: 1px solid var(--rv-input-divider, var(--rv-color-border, GrayText));
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+.currency option { background: var(--rv-color-surface, Canvas); color: var(--rv-color-text, CanvasText); }
+.currency:focus-visible { outline: none; background: var(--rv-input-addon-focus, color-mix(in srgb, var(--rv-input-focus, Highlight) 10%, transparent)); }
+
+.amount-control > .trailing {
+  flex: 0 0 5.5rem;
+  min-inline-size: 0;
+  align-self: stretch;
+  display: grid;
+  align-items: center;
+  border-inline-start: 1px solid var(--rv-input-divider, var(--rv-color-border, GrayText));
+}

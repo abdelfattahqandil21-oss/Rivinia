@@ -1,0 +1,106 @@
+:host { display: block; min-inline-size: 0; }
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(var(--rv-otp-length), minmax(0, 1fr));
+  gap: var(--rv-otp-gap, clamp(0.125rem, 1vw, 0.375rem));
+  max-inline-size: var(--rv-otp-width, 28rem);
+}
+
+input {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: var(--rv-input-height, 2.75rem);
+  padding: 0;
+  text-align: center;
+  font-size: max(1rem, 1em);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+
+.status {
+  display: grid;
+  justify-items: center;
+  gap: 0.65rem;
+  max-inline-size: var(--rv-otp-width, 28rem);
+  color: var(--rv-input-text, var(--rv-color-text, CanvasText));
+}
+
+.motion-track {
+  display: grid;
+  position: relative;
+  place-items: center;
+  container-type: inline-size;
+  inline-size: 100%;
+  block-size: var(--rv-input-height, 2.75rem);
+  --gap: var(--rv-otp-gap, clamp(0.125rem, 1vw, 0.375rem));
+  --pitch: calc((100cqi + var(--gap)) / var(--rv-otp-length));
+  --cell-width: calc(var(--pitch) - var(--gap));
+}
+
+.motion-cell {
+  position: absolute;
+  inset-inline-start: calc(var(--pitch) * var(--rv-otp-slot));
+  box-sizing: border-box;
+  inline-size: var(--cell-width);
+  block-size: 100%;
+  border: 1px solid var(--rv-input-border, var(--rv-color-border, GrayText));
+  border-radius: var(--rv-input-radius, 0.5rem);
+  background: var(--rv-input-surface, color-mix(in srgb, var(--rv-color-text, CanvasText) 4%, var(--rv-color-surface, Canvas)));
+  animation: rv-otp-gather var(--rv-otp-gather-duration, 660ms) cubic-bezier(.45, 0, .2, 1) both;
+}
+
+.status-tile {
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  block-size: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--rv-input-radius, 0.5rem);
+  background: var(--rv-otp-status-surface, color-mix(in srgb, currentColor 10%, Canvas));
+  color: var(--rv-otp-status-color, var(--rv-color-primary, Highlight));
+  animation: rv-otp-reveal var(--rv-otp-result-duration, 360ms)
+    calc(var(--rv-otp-gather-duration, 660ms) * 0.72) both;
+  transition: background-color 340ms ease, color 340ms ease;
+}
+
+[data-state='success'] .status-tile {
+  color: var(--rv-otp-success-color, var(--rv-color-success, #16734e));
+}
+
+[data-state='failure'] .status-tile {
+  color: var(--rv-otp-failure-color, var(--rv-color-danger, #b32828));
+}
+
+.spinner {
+  inline-size: 42%;
+  aspect-ratio: 1;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: rv-otp-spin 750ms linear infinite;
+}
+
+.result-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  animation: rv-otp-reveal var(--rv-otp-result-duration, 360ms) ease-out both;
+}
+
+@keyframes rv-otp-gather {
+  65% { opacity: 1; }
+  to {
+    transform: translateX(calc(50cqi - var(--pitch) * var(--rv-otp-slot) - var(--cell-width) / 2)) scale(.65);
+    opacity: 0;
+  }
+}
+
+@keyframes rv-otp-reveal { from { opacity: 0; transform: scale(.82); } }
+@keyframes rv-otp-spin { to { transform: rotate(1turn); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-cell { display: none; }
+  .spinner, .status-tile, .result-icon { animation: none; transition: none; }
+}

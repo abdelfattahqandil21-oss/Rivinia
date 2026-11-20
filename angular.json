@@ -123,6 +123,27 @@
         }
       }
     },
+    "forms": {
+      "projectType": "library",
+      "root": "projects/forms",
+      "sourceRoot": "projects/forms/src",
+      "prefix": "rv",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": { "tsConfig": "projects/forms/tsconfig.lib.json" },
+          "configurations": { "production": {}, "development": {} },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/forms/tsconfig.spec.json",
+            "include": ["../tests/**/*.spec.ts"]
+          }
+        }
+      }
+    },
     "env": {
       "projectType": "library",
       "root": "projects/env",
