@@ -4,12 +4,12 @@
 [![license](https://img.shields.io/npm/l/@rivinia/select.svg)](https://www.npmjs.com/package/@rivinia/select)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/abdelfattahqandil21-oss/Rivinia/select/v1.0.4/assets/rivinia-abstract-mark-light.svg" alt="Rivinia" width="340" />
+  <img src="https://raw.githubusercontent.com/abdelfattahqandil21-oss/Rivinia/select/v2.0.0-alpha.1/assets/rivinia-abstract-mark-light.svg" alt="Rivinia" width="340" />
 </p>
 
 Angular select fields: an optional ready-made UI and the headless controller
 behind it — an option registry, an accent-insensitive filter, and a single or
-multi value. Package version: **1.0.4**.
+multi value. Package version: **2.0.0-alpha.1**.
 
 The `1.0.0` stable release follows the 1.0 release candidates; 0.x was experimental.
 
@@ -44,7 +44,7 @@ That is the whole field: type to filter, Tab into the list, Enter to pick,
 Escape back to the trigger, and a panel that stays attached to its trigger in a
 right-to-left form inside a left-to-right app. No service providers, no global
 styles to configure. The same page under
-[`projects/menu-e2e/src/app/pages/select.ts`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/projects/menu-e2e/src/app/pages/select.ts)
+[`projects/menu-e2e/src/app/pages/select.ts`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/projects/menu-e2e/src/app/pages/select.ts)
 is what the popup conformance suite drives — `npx ng build menu-e2e` runs it
 locally.
 
@@ -159,94 +159,22 @@ which is the path this suite measures three times a day.
 `@rivinia/select` needs no feature to work that Angular itself does not need.
 The floor dates, the `@supports` gate, and what has never been run (including
 real Safari) are in
-[browser support](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/browser-support.md).
+[browser support](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/docs/browser-support.md).
 
 ## Go further
 
 | Topic                                                                                        | Read                                                                                                                               |
 | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Every input, output, controller member and type, per entry point                             | [docs/select/api.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/api.md)                     |
-| Signal Forms, Reactive Forms, `ngModel`, value types, ownership rules                        | [docs/select/forms.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/forms.md)                 |
-| Keys, focus, the shipped ARIA, and the verification gaps                                     | [docs/select/accessibility.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/accessibility.md) |
-| Headless: the controller surface and a complete custom dropdown                              | [docs/select/headless.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/headless.md)           |
-| `optionTemplate` rows, paged data, a virtualised list, your own entrance animation           | [docs/select/recipes.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/recipes.md)             |
-| `simple` vs `premium`, what premium actually paints, and its measured byte cost              | [docs/select/variants.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/variants.md)           |
-| The select's tokens, classes, `data-*` hooks and forced-colors behaviour                     | [docs/select/theming.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/select/theming.md)             |
-| Theming every Rivinia component — the cascade, light and dark, where an override has to live | [docs/theme/README.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/docs/theme/README.md)                 |
+| Every input, output, controller member and type, per entry point                             | [docs/select/api.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/docs/select/api.md)                     |
+| Signal Forms, Reactive Forms, `ngModel`, value types, ownership rules                        | [docs/select/forms.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/docs/select/forms.md)                 |
+| Keys, focus, the shipped ARIA, and the verification gaps                                     | [docs/select/accessibility.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/docs/select/accessibility.md) |
+| Headless: the controller surface and a complete custom dropdown                              | [docs/select/headless.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/docs/select/headless.md)           |
+| `optionTemplate` rows, paged data, a virtualised list, your own entrance animation           | [docs/select/recipes.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/docs/select/recipes.md)             |
+| `simple` vs `premium`, what premium actually paints, and its measured byte cost              | [docs/select/variants.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/docs/select/variants.md)           |
+| The select's tokens, classes, `data-*` hooks and forced-colors behaviour                     | [docs/select/theming.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/docs/select/theming.md)             |
+| Theming every Rivinia component — the cascade, light and dark, where an override has to live | [docs/theme/README.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/docs/theme/README.md)                 |
 
-Release history: [CHANGELOG.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v1.0.4/projects/select/CHANGELOG.md).
+Release history: [CHANGELOG.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/projects/select/CHANGELOG.md).
 MIT licensed.
 
-## Composed Forms controls (unreleased major integration)
-
-The additive `@rivinia/select/headless` entry exports `SelectRootDirective`,
-`SelectInputDirective`, `SelectListDirective`, `SelectOptionDirective`, and
-`SelectStatusDirective`. `SelectController` is exported from `@rivinia/select`.
-Options use `{ key, value, label, disabled?, group? }`; object values require
-`rvSelectKeyOf`. The root supports a direct Angular Forms CVA and a `value`
-model for Signal Forms. Bind only one Forms system to each root.
-
-```html
-<section rvSelectRoot rvSelectRootId="city" [rvSelectOptions]="cities" [formControl]="cityControl">
-  <label for="city-combobox">City</label>
-  <input rvSelectInput />
-  <div rvSelectList>
-    @for (option of cities; track option.key) {
-      <div rvSelectOption [rvSelectOptionKey]="option.key"
-        [rvSelectOptionValue]="option.value" [rvSelectOptionLabel]="option.label">
-        {{ option.label }}
-      </div>
-    }
-  </div>
-</section>
-```
-
-The consumer owns panel visibility and styling in this low-level example. Import
-`SelectPanelDirective` from `@rivinia/select/ui` for a Popup-managed panel. The existing ready-made component continues to provide `optionTemplate`
-and `listTemplate`. Its `RiviniaSelect` facade now delegates selection and filtering to
-`SelectController`. The facade preserves ID values and removal pruning; the generic
-controller preserves unloaded object selections. The existing ready-made component retains its FormValueControl integration and
-menu-style interaction. The combobox presentation below uses the same selection
-engine through the headless Forms root. The incoming controller retains the primary package's
-accent-insensitive and Arabic-normalized search behavior.
-
-### Virtualized combobox
-
-`RiviniaSelectComboboxComponent` from `@rivinia/select/ui` provides an input with
-`role="combobox"`, a listbox, native Angular `animate.enter`/`animate.leave`, a
-loading state, and fixed-row virtual rendering above 80 options. Its own styles are
-included and scoped; no extra global stylesheet is required for this presentation.
-Theme tokens are inherited without a Theme runtime dependency.
-
-```html
-<rv-select-combobox
-  rvSelectRootId="cities"
-  labelText="City"
-  [rvSelectOptions]="cityOptions"
-  [formControl]="cityControl"
-  rvSelectAppearance="outline"
-  rvSelectVariant="premium"
-/>
-```
-
-Options are `{ key, value, label, disabled?, group? }`. Bind `rvSelectKeyOf` for
-object values. Reactive Forms, ngModel and Signal Forms bind to the host through
-its composed root; do not bind two Forms systems to one control. The selected value
-is displayed independently of the search query. Reopening starts at the selected
-option; pointer scroll remains free to move away from that active option. The panel
-tracks input width and closes after its input is fully clipped. Escape discards an
-uncommitted single-value search. Multi-value queries survive close/picks.
-
-Configure `rvSelectVirtualItemSize` (40px by default) and
-`rvSelectVirtualOverscan` (3 rows), or disable fixed-row windowing with
-`[rvSelectVirtualScroll]="false"`. Input appearance accepts surface/outline/plain/primary;
-size and density accept compact/comfortable/spacious; shape accepts square/rounded/pill.
-`loading` and `loadingLabel` show a non-option live status with decorative premium
-skeletons. Reduced-motion and forced-colors styles are included.
-
-The existing `<rv-select>` keeps its original menu-style focus and row/list
-TemplateRef customization. The combobox maintains focus in its input and exposes
-`aria-activedescendant`; it therefore uses a distinct selector rather than silently
-changing existing keyboard semantics. For fully custom combobox markup use the
-headless directives plus `SelectPanelDirective`. The combobox requires native Popover
-support; the original component retains its fallback for older engines.
+See [Composed controls and virtualized combobox](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/docs/select/composed-controls.md).

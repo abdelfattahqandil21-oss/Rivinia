@@ -1,6 +1,6 @@
 {
   "name": "@rivinia/table",
-  "version": "1.0.4",
+  "version": "2.0.0-alpha.1",
   "description": "Headless Angular table: typed columns, sorting, filtering, pagination, selection and real row/column spans.",
   "keywords": [
     "angular",

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-alpha.1
+
+- Align with the synchronized Rivinia V2 Alpha release group.
+
 ## Unreleased — proposed synchronized 1.1.0 (not published)
 
 - Update shared dismissal: page scroll repositions while the trigger remains visible, touch drags do not close the popup, height-only viewport changes reposition, and width changes close.

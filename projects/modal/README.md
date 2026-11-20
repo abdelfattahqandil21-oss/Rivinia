@@ -5,7 +5,7 @@
 
 An Angular modal manager with typed results, lifecycle policies, and optional ready-made UI.
 
-Package version: **1.0.4**
+Package version: **2.0.0-alpha.1**
 
 ```ts
 const handle = this.manager.openModal<DeleteData, boolean>(this.deleteTemplate, {
@@ -55,12 +55,12 @@ The UI and controller are independent; use either or combine them.
 
 | Topic | Read |
 | --- | --- |
-| Typed modals | [Typed modals](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v1.0.4/docs/modal/typed-modals.md) |
-| Lifecycle and guards | [Lifecycle and guards](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v1.0.4/docs/modal/lifecycle-and-guards.md) |
-| Ready-made UI | [Ready-made UI](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v1.0.4/docs/modal/ready-made-ui.md) |
-| Theming | [Theming](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v1.0.4/docs/modal/theming.md) |
-| Sizing and stacking | [Sizing and stacking](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v1.0.4/docs/modal/sizing-and-stacking.md) |
-| API reference | [API reference](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v1.0.4/docs/modal/api.md) |
+| Typed modals | [Typed modals](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v2.0.0-alpha.1/docs/modal/typed-modals.md) |
+| Lifecycle and guards | [Lifecycle and guards](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v2.0.0-alpha.1/docs/modal/lifecycle-and-guards.md) |
+| Ready-made UI | [Ready-made UI](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v2.0.0-alpha.1/docs/modal/ready-made-ui.md) |
+| Theming | [Theming](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v2.0.0-alpha.1/docs/modal/theming.md) |
+| Sizing and stacking | [Sizing and stacking](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v2.0.0-alpha.1/docs/modal/sizing-and-stacking.md) |
+| API reference | [API reference](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/modal/v2.0.0-alpha.1/docs/modal/api.md) |
 
 ## Local integration
 

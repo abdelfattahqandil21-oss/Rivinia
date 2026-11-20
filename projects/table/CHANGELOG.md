@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-alpha.1
+
+- Add grouped headers, row actions and details, column pinning and resizing, editing state, records views, pagination and CSV export.
+
 ## Unreleased
 
 - Preserve row selection by stable ID when `manualPagination` swaps the loaded

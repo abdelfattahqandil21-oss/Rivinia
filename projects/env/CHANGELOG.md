@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-alpha.1
+
+- Align with the synchronized Rivinia V2 Alpha release group.
+
 ## 1.0.4
 
 - Update published internal dependency metadata and version-pinned documentation links for the synchronized Rivinia 1.0 patch. No public API changes.

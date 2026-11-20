@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-alpha.1
+
+- Add standalone TimePicker and explicit Clear confirmation with typed applied events.
+
 ## Unreleased — integration (version undecided, not published)
 
 - Share civil date/time draft validation between custom rendering and the ready UI;

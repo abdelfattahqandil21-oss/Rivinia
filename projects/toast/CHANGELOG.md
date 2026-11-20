@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-alpha.1
+
+- Align with the synchronized Rivinia V2 Alpha release group.
+
 ## Unreleased — local integration (not published)
 
 - Add regionLabel and dismissLabel inputs so notification accessibility names can follow the application language.

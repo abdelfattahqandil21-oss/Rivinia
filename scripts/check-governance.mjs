@@ -199,10 +199,12 @@ export function validateGovernance({ root = repositoryRoot } = {}) {
         const popupVersion = readJson('projects/popup/package.json', 'projects/popup/package.json')?.version;
         const popupRange = typeof actual === 'string' && /^\^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(actual);
         const popupRelease = typeof popupVersion === 'string' && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(popupVersion);
-        const compatible = popupRange && popupRelease
+        const synchronizedPrerelease = isExactSemver(popupVersion)
+          && popupVersion.includes('-') && actual === `^${popupVersion}`;
+        const compatible = synchronizedPrerelease || (popupRange && popupRelease
           && popupRange[1] === popupRelease[1]
           && (Number(popupRange[2]) < Number(popupRelease[2])
-            || (Number(popupRange[2]) === Number(popupRelease[2]) && Number(popupRange[3]) <= Number(popupRelease[3])));
+            || (Number(popupRange[2]) === Number(popupRelease[2]) && Number(popupRange[3]) <= Number(popupRelease[3]))));
         if (!compatible) {
           problems.push(`projects/${short}/package.json: @rivinia/popup must be a regular caret dependency that accepts Popup ${String(popupVersion)}, got ${String(actual)}`);
         }

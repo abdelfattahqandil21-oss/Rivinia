@@ -1,6 +1,6 @@
 {
   "name": "@rivinia/select",
-  "version": "1.0.4",
+  "version": "2.0.0-alpha.1",
   "description": "Headless select behavior for Angular: options, search filter, single/multi value.",
   "keywords": [
     "angular",
@@ -32,7 +32,7 @@
     "@angular/forms": "^22.0.0"
   },
   "dependencies": {
-    "@rivinia/popup": "^1.0.4"
+    "@rivinia/popup": "^2.0.0-alpha.1"
   },
   "sideEffects": false
 }

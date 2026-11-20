@@ -1,6 +1,6 @@
 # @rivinia/i18n
 
-## Unreleased — local integration (not published)
+## 2.0.0-alpha.1
 
 - Share one lazy loader descriptor resolution across simultaneous language loads; retry descriptor failures without caching the rejection.
 

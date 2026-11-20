@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-alpha.1
+
+- Align with the synchronized Rivinia V2 Alpha release group.
+
 ## Unreleased — local integration (not published)
 
 - Add managed and direct `ng-template` Header/Footer slots, plus responsive scroll sections and configurable separators.

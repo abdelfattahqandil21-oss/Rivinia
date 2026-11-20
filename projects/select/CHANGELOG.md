@@ -1,6 +1,6 @@
 # @rivinia/select
 
-## Unreleased — proposed synchronized 1.1.0 (not published)
+## 2.0.0-alpha.1
 
 - Tab and Shift+Tab now traverse the filter, active option and focusable projected footer controls in sequence, then close the popup when focus leaves it. Footer controls and nested popup menus retain their keyboard events.
 - Projected interactive controls and nested Menu content keep keyboard ownership; Select does not expose a combobox role. The trigger remains a menu button, options use roving focus inside the named menu, and the filter and footer controls are separate focusable siblings.

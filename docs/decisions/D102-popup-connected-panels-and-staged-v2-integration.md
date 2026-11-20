@@ -1,6 +1,4 @@
-# D102 — Connected panels and staged V2 integration
-
-Date: 2026-11-15
+## 2026-11-15 — D102: Connected panels and staged V2 integration
 Status: Owner-approved; local implementation verified, release preparation pending.
 
 The owner approved the recommended integration of Popup, Menu and Select from V2 into the primary repository. Popup lands first, followed by Menu, then Select.

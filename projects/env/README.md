@@ -5,7 +5,7 @@
 
 Typed application environment contracts and Angular CLI schematics for inspecting, planning, and applying build-time environment configuration.
 
-Package version: **1.0.4**
+Package version: **2.0.0-alpha.1**
 
 ```ts
 import type { BaseEnvironment } from '@rivinia/env';
@@ -74,7 +74,7 @@ Angular environment files are compiled into the application bundle. Treat every 
 | Topic | Read |
 | --- | --- |
 | Reviewed workflow | [Environment workflow](../../docs/env/explicit-workflow.md) |
-| Existing scaffold options | [Scaffold environments](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/env/v1.0.4/docs/env/scaffolding.md) |
+| Existing scaffold options | [Scaffold environments](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/env/v2.0.0-alpha.1/docs/env/scaffolding.md) |
 
 ## License
 

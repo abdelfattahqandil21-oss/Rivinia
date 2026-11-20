@@ -1,6 +1,6 @@
 # @rivinia/theme
 
-## Unreleased
+## 2.0.0-alpha.1
 
 - Replace the old semantic token names with the unified V2 token contract and
   migrate Rivinia component styles and adapters to it. This is a breaking
