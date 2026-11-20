@@ -5,16 +5,21 @@ Back to [the README](../../projects/menu/README.md) ·
 
 ## What each entry point exports
 
-| Entry point        | Exports                                                                                                                                                                                                       |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@rivinia/menu`    | `RiviniaMenu` (the controller class), `RiviniaMenuController`, `RiviniaMenuItem`, `RiviniaMenuItemData`, `RiviniaMenuFocus`, `RiviniaMenuPlacement` (types)                                                   |
-| `@rivinia/menu/ui` | `RiviniaMenuComponent`, `RiviniaMenuItem` (the row directive), `computeMenuPosition`, `MENU_GAP`, `RiviniaMenuUiPlacement`, `MenuPick`, `MenuCoordinates`, `MenuPanelSize`, `MenuTriggerRect`, `MenuViewport` |
+| Entry point     | Exports |
+| --------------- | ------- |
+| `@rivinia/menu` | Compatibility facade: `RiviniaMenu`, `RiviniaMenuController`, `RiviniaMenuFocus`, `RiviniaMenuItem`, `RiviniaMenuItemData`, `RiviniaMenuPlacement`. V2 headless API: `MenuController`, `MenuActivation`, `MenuActivationSource`, `MenuEdge`, `MenuItem`, `MenuItemDefinition`, `MenuItemId`, `MenuItemKind`, `MenuMovement`, `MenuTypeaheadOptions`. |
+| `@rivinia/menu/ui` | Existing ready-made and positioning API: `RiviniaMenuComponent`, `RiviniaMenuItem`, `computeMenuPosition`, `MENU_GAP`, `RiviniaMenuUiPlacement`, `MenuPick`, `MenuCoordinates`, `MenuPanelSize`, `MenuTriggerRect`, `MenuViewport`. Composed UI: `MenuItemDirective`, `MenuPanelDirective`, `MenuRootDirective`, `MenuSeparatorDirective`, `MenuTriggerDirective`, `MenuActionDirective`, `MenuHeaderDirective`, `MenuItemDefDirective`, `MenuLoadingTemplateDirective`, `MenuEmptyTemplateDirective`, `MenuLabelDirective`, `MenuRadioGroupDirective`, `MENU_ITEM_NAVIGATION`, `MenuItemNavigationAdapter`. |
 
 `RiviniaMenuItem` is deliberately spelled the same in both entries: in the
 headless one it is the shape a registered row must have, in `/ui` it is the
 directive that registers one. Nothing else crosses the boundary — `/ui` depends
 on the headless package through its public API only, and the headless entry has
 no DOM and no styles.
+
+The 2.0.0-alpha.1 candidate surface is frozen in the
+[release API baseline](../releases/2.0/API-SURFACE.md). The optional Router
+adapter has its own `@rivinia/menu/router` entry point and is outside this
+two-entry-point table.
 
 ## `rv-menu` inputs and outputs
 

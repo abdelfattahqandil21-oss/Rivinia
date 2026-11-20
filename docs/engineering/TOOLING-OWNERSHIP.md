@@ -7,7 +7,7 @@
 
 | Tool | Package command / caller | Responsibility | Inputs and output behavior | Classification |
 | --- | --- | --- | --- | --- |
-| `scripts/api-surface.mjs` + `scripts/api-surface.snapshot.json` | `scripts/tests/api-surface.spec.ts` | Compare named public exports for the eleven 1.0 packages | Reads package `public-api.ts`; test-only snapshot, no generated output | Active shared API gate |
+| `scripts/api-surface.mjs` + `scripts/api-surface.snapshot.json` | `scripts/tests/api-surface.spec.ts` | Compare named public exports for eight entry points in the initial four synchronized packages against the 2.0.0-alpha.1 candidate baseline; the 1.0 snapshot is archived separately | Reads package `public-api.ts`; test-only snapshots, no generated output | Active shared API gate |
 | `scripts/capture-a11y-tree.mjs` | Manual command documented in file; tested by `capture-a11y-tree.spec.ts` | Capture real Chromium accessibility trees for Select states | Reads built `dist/menu-e2e/browser`; writes JSON under requested output directory, normally `docs/a11y-snapshots/` | Active evidence capture; output is deliberately tracked |
 | `scripts/check-component-theme.mjs` | `pnpm check:component-theme` | Verify shipped Menu/Select/i18n components use theme tokens in real browsers | Reads built `dist/menu-e2e` and `dist/i18n-e2e-csr`, port 4322, and `scripts/fixtures/component-theme/*.json`; normal run is read-only, `--update` rewrites snapshots | Active browser gate; update mode is explicit |
 | `scripts/check-contrast.mjs` | `pnpm check:contrast` | Verify shipped palette values and contrast thresholds | Reads theme CSS and package source; no persistent output | Active deterministic gate |

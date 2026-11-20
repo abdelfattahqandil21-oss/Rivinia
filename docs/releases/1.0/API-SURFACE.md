@@ -4,10 +4,12 @@ S8 of [`docs/specifications/1.0-readiness.md`](https://github.com/abdelfattahqan
 under D88. This is the list of names and defaults the four 1.0 packages ship with.
 Every symbol below was read off the entry point that publishes it, and
 [`scripts/api-surface.mjs`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/main/scripts/api-surface.mjs)
-plus its snapshot
-[`scripts/api-surface.snapshot.json`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/main/scripts/api-surface.snapshot.json)
-pin the eight lists, so changing one is a deliberate diff rather than an accident
-in a refactor. **79 published names across 8 entry points.**
+plus its archived snapshot
+[`scripts/api-surface-1.0.snapshot.json`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/main/scripts/api-surface-1.0.snapshot.json)
+preserve the eight 1.0 lists. The active gate now checks the owner-approved
+2.0.0-alpha.1 candidate baseline; see
+[`docs/releases/2.0/API-SURFACE.md`](../2.0/API-SURFACE.md). **79 published
+names across 8 entry points.**
 
 What this document freezes is what gets published, and publishing is a human step:
 the commands are in
@@ -213,7 +215,8 @@ read from the source that ships it, 2026-11-02.
 
 `scripts/tests/api-surface.spec.ts` (run by `pnpm test:scripts`) reads each entry
 point's `public-api.ts`, resolves `export { a as b }` to the published name, and
-compares the sorted list against the committed snapshot. It answers one question:
+compares the sorted list against the active 2.0.0-alpha.1 candidate snapshot.
+The 1.0 snapshot is retained separately as historical evidence. The test answers one question:
 _did the set of published names change?_ It cannot tell you whether a name is a
 good name, whether a type's shape moved, or whether a default changed — those are
 this document, the tier tables, and the unit suites.

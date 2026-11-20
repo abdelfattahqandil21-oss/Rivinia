@@ -25,9 +25,18 @@ point; the controller and its types live in the headless one.
 | `RiviniaSelectController`                                       |         ✓         |          —           |
 | `RiviniaSelectOption`, `RiviniaSelectMode`                      |         ✓         |          —           |
 | `RIVINIA_SELECT`, `provideRiviniaSelect`, `injectRiviniaSelect` |         ✓         |          —           |
+| `SelectController` and its generic option/load types            |         ✓         |          —           |
 | `computeSelectPosition`, `SELECT_GAP`                           |         —         |          ✓           |
 | `SelectPlacement`, `RiviniaSelectVariant`                       |         —         |          ✓           |
 | `PanelCoordinates`, `PanelSize`, `TriggerRect`, `ViewportSize`  |         —         |          ✓           |
+| `RiviniaSelectComboboxComponent`, `SelectPanelDirective`        |         —         |          ✓           |
+
+The generic headless entry also exports `NormalizedSelectOption`,
+`SelectControllerOptions`, `SelectLoadRequest`, `SelectLoadState`,
+`SelectLoadStatus`, `SelectMode`, and `SelectOption`. The UI entry exports the
+combobox component and shared panel directive in addition to the existing
+`RiviniaSelectComponent`. The 2.0.0-alpha.1 candidate surface is frozen in the
+[release API baseline](../releases/2.0/API-SURFACE.md).
 
 ```ts
 // Ready-made UI
