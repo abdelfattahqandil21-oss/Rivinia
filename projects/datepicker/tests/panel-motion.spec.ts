@@ -1,63 +1,54 @@
-import { afterEach, describe, expect, it } from 'vitest';
+// @vitest-environment jsdom
+
+import { describe, expect, it } from 'vitest';
 
 import { panelViewportShift } from '../ui/src/lib/utils/panel-motion';
 
-const originalGetComputedStyle = window.getComputedStyle;
+const trigger = document.createElement('button');
 
-function makePanel(height: number, marginBlockStart = '4px'): HTMLElement {
+function panelAt(top: number, height: number, appliedShift = 0): HTMLElement {
   const panel = document.createElement('div');
-  Object.defineProperty(panel, 'offsetHeight', { configurable: true, value: height });
-  // jsdom does not resolve logical margin properties; the helper only needs
-  // the parsed gap, so a minimal computed-style stub is enough here.
-  window.getComputedStyle = (() =>
-    ({ marginBlockStart }) as CSSStyleDeclaration) as typeof window.getComputedStyle;
+  panel.style.setProperty('--rv-datepicker-panel-shift', `${appliedShift}px`);
+
+  panel.getBoundingClientRect = () => ({
+    x: 0,
+    y: top,
+    top,
+    bottom: top + height,
+    left: 0,
+    right: 308,
+    width: 308,
+    height,
+    toJSON: () => ({}),
+  }) as DOMRect;
+
   return panel;
 }
 
-function makeTrigger(top: number, bottom: number): HTMLElement {
-  const trigger = document.createElement('button');
-  trigger.getBoundingClientRect = () =>
-    ({ top, bottom, left: 0, right: 200, width: 200, height: bottom - top }) as DOMRect;
-  return trigger;
-}
-
-afterEach(() => {
-  window.getComputedStyle = originalGetComputedStyle;
-});
-
 describe('panelViewportShift', () => {
-  it('does not move a panel that fits below the field', () => {
-    const panel = makePanel(337);
-    const trigger = makeTrigger(100, 140);
-    expect(panelViewportShift(panel, trigger, 912)).toBe(0);
+  it('preserves a panel already inside the viewport', () => {
+    expect(panelViewportShift(panelAt(80, 200), trigger, 568)).toBe(0);
   });
 
-  it('leaves the flip-above case to CSS', () => {
-    // 48px below, 446px above: the CSS flip puts the panel above.
-    const panel = makePanel(337);
-    expect(panelViewportShift(panel, makeTrigger(458, 500), 560)).toBe(0);
-    // Neither side fits: 266px below, 228px above → the deficit is applied.
-    expect(panelViewportShift(panel, makeTrigger(240, 282), 560)).toBe(-71);
+  it('clamps the bottom edge after anchor positioning', () => {
+    expect(panelViewportShift(panelAt(30, 404), trigger, 420)).toBe(-22);
   });
 
-  it('shifts up by the deficit when neither side fits', () => {
-    const panel = makePanel(336.8);
-    const trigger = makeTrigger(200, 236.3);
-    // viewport 568 - margin 8 - bottom 236.3 - gap 4 = 319.7 below.
-    expect(panelViewportShift(panel, trigger, 568)).toBe(-18);
+  it('moves an already-flipped panel down when above the viewport', () => {
+    expect(panelViewportShift(panelAt(-208, 404), trigger, 420)).toBe(216);
   });
 
-  it('uses the panel gap from the computed style', () => {
-    const panel = makePanel(336.8, '16px');
-    const trigger = makeTrigger(200, 236.3);
-    // 568 - 8 - 236.3 - 16 = 307.7 → 29.1 deficit.
-    expect(panelViewportShift(panel, trigger, 568)).toBe(-30);
+  it('does not accumulate shifts across repeated measurements', () => {
+    expect(panelViewportShift(panelAt(8, 404, -22), trigger, 420)).toBe(-22);
   });
 
-  it('does nothing without layout (jsdom, SSR, a hidden panel)', () => {
-    const panel = makePanel(0);
-    expect(panelViewportShift(panel, makeTrigger(200, 236.3), 568)).toBe(0);
-    expect(panelViewportShift(makePanel(300), null, 568)).toBe(0);
-    expect(panelViewportShift(makePanel(300), makeTrigger(200, 236.3), 0)).toBe(0);
+  it('handles taller datetime panels after CSS height constraints', () => {
+    expect(panelViewportShift(panelAt(30, 464), trigger, 480)).toBe(-22);
+  });
+
+  it('does nothing without measurable browser geometry', () => {
+    expect(panelViewportShift(panelAt(0, 0), trigger, 420)).toBe(0);
+    expect(panelViewportShift(panelAt(30, 404), null, 420)).toBe(0);
+    expect(panelViewportShift(panelAt(30, 404), trigger, 0)).toBe(0);
   });
 });

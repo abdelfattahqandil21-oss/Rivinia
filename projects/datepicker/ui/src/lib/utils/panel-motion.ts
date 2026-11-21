@@ -28,46 +28,51 @@ export function panelExitMotionEnabled(): boolean {
 }
 
 /**
- * The vertical offset, in pixels, that keeps an open panel inside the viewport.
+ * Clamps the actual rendered panel to the visual viewport.
  *
- * CSS anchor positioning puts the panel BELOW its field and flips it above
- * when it does not fit below and the space above is enough. When neither side
- * fits — a short viewport with the field near the middle — the browser keeps
- * it below and the bottom edge is clipped (measured 9.1px at 320×568).
- *
- * This returns a NEGATIVE shift (up) for that case only, so the panel overlaps
- * its field by the deficit instead of leaving the viewport. The caller applies
- * it with the `translate` property, which composes with the `transform` the
- * enter/exit keyframes animate and does not disturb the anchor math.
- *
- * `offsetHeight` is layout height and ignores transforms, so it is safe to
- * read during the entrance animation. jsdom and SSR report 0 and shift nothing.
+ * CSS anchor positioning may flip the panel before this runs.
+ * Deriving a shift from the trigger alone would move an already-flipped
+ * panel offscreen. Account for the currently applied shift and any
+ * entry-animation transform so repeated measurements stay idempotent.
  */
 export function panelViewportShift(
   panel: HTMLElement,
   trigger: HTMLElement | null | undefined,
-  viewportHeight = typeof window === 'undefined' ? 0 : window.innerHeight,
+  fallbackHeight = typeof window === 'undefined' ? 0 : window.innerHeight,
 ): number {
-  if (!trigger || !viewportHeight) return 0;
-  const height = panel.offsetHeight;
-  if (height <= 0) return 0;
+  if (trigger == null || fallbackHeight <= 0) return 0;
 
-  const rect = trigger.getBoundingClientRect();
-  if (rect.width === 0 && rect.height === 0) return 0;
+  const view = panel.ownerDocument.defaultView;
+  if (view === null) return 0;
 
-  let gap = 4;
-  if (typeof getComputedStyle === 'function') {
-    const parsed = Number.parseFloat(getComputedStyle(panel).marginBlockStart);
-    if (Number.isFinite(parsed)) gap = parsed;
+  const rect = panel.getBoundingClientRect();
+  if (rect.height <= 0) return 0;
+
+  const viewport = view.visualViewport;
+  const viewportTop = viewport?.offsetTop ?? 0;
+  const viewportHeight = viewport?.height ?? fallbackHeight;
+
+  const style = view.getComputedStyle(panel);
+  const appliedShift =
+    Number.parseFloat(style.getPropertyValue('--rv-datepicker-panel-shift')) || 0;
+
+  let transformY = 0;
+  if (style.transform.startsWith('matrix')) {
+    try {
+      transformY = new DOMMatrixReadOnly(style.transform).m42;
+    } catch {
+      transformY = 0;
+    }
   }
 
-  const margin = 8;
-  const below = viewportHeight - margin - rect.bottom - gap;
-  if (height <= below) return 0;
+  const naturalTop = rect.top - appliedShift - transformY;
+  const padding = 8;
+  const minTop = viewportTop + padding;
+  const maxTop = Math.max(
+    minTop,
+    viewportTop + viewportHeight - padding - rect.height,
+  );
 
-  const above = rect.top - gap - margin;
-  // The CSS flip handles the "fits above" case on its own.
-  if (height <= above) return 0;
-
-  return -Math.ceil(height - below);
+  const targetTop = Math.max(minTop, Math.min(naturalTop, maxTop));
+  return Math.round((targetTop - naturalTop) * 1000) / 1000;
 }

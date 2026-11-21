@@ -99,7 +99,8 @@ export class RiviniaCalendarComponent {
 
       if (this.autofocus() && !this.autofocused) {
         this.autofocused = true;
-        this.focusActiveCell();
+        // Keep initial focus without scrolling the document past the trigger.
+        this.focusActiveCell(true);
         return;
       }
       if (this.pendingFocus || viewChanged) {
@@ -110,7 +111,7 @@ export class RiviniaCalendarComponent {
   }
 
   /** Focus the cell that carries `tabindex="0"` in the current view. */
-  focusActiveCell(): void {
+  focusActiveCell(preventScroll = false): void {
     const root = this.host.nativeElement;
     const calendar = this.calendar();
     const view = calendar.view();
@@ -123,7 +124,7 @@ export class RiviniaCalendarComponent {
           ? `[data-month="${focused.month}"]`
           : `[data-year="${focused.year}"]`;
 
-    root.querySelector<HTMLElement>(selector)?.focus();
+    root.querySelector<HTMLElement>(selector)?.focus({ preventScroll });
   }
 
   protected iso(date: RiviniaDate): string {

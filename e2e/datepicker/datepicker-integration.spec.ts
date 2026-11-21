@@ -105,13 +105,9 @@ test('the time tray aligns each list with its input and keeps the clock after AM
     meridiemBox.y < clockBox.y + clockBox.height - 1;
 
   if (sameRow) {
-    expect(clockBox.x).toBeGreaterThanOrEqual(
-      meridiemBox.x + meridiemBox.width - 1,
-    );
+    expect(clockBox.x).toBeGreaterThanOrEqual(meridiemBox.x + meridiemBox.width - 1);
   } else {
-    expect(clockBox.y).toBeGreaterThanOrEqual(
-      meridiemBox.y + meridiemBox.height - 1,
-    );
+    expect(clockBox.y).toBeGreaterThanOrEqual(meridiemBox.y + meridiemBox.height - 1);
   }
 
   await expect(clock).toBeInViewport();
@@ -222,7 +218,7 @@ test('the date-time OK hover keeps readable foreground contrast', async ({ page 
       const match = value.match(/\d+(?:\.\d+)?/g) ?? [];
       const channels = [Number(match[0]), Number(match[1]), Number(match[2])] as const;
       return value.startsWith('color(srgb')
-        ? channels.map((channel) => channel * 255) as [number, number, number]
+        ? (channels.map((channel) => channel * 255) as [number, number, number])
         : [...channels];
     };
     const luminance = (value: string): number => {
@@ -336,13 +332,14 @@ test('neighbouring dates are quieter, select correctly and retain panel focus', 
   await expect(trigger).toHaveAttribute('aria-expanded', 'false');
 });
 
-
 for (const scenario of [
   { id: 'booking-date', width: 360, height: 420 },
   { id: 'appointment-12-hour', width: 390, height: 480 },
   { id: 'default-datetime', width: 320, height: 568 },
 ]) {
-  test(`${marker}: ${scenario.id} at ${scenario.width}x${scenario.height}`, async ({ page }) => {
+  test(`short viewport keeps the picker panel usable: ${scenario.id} at ${scenario.width}x${scenario.height}`, async ({
+    page,
+  }) => {
     await page.setViewportSize({
       width: scenario.width,
       height: scenario.height,
@@ -351,14 +348,18 @@ for (const scenario of [
     const picker = page.locator(`#${scenario.id}`);
     const trigger = picker.locator('.rv-datepicker-trigger');
 
-    await trigger.evaluate((element) =>
-      element.scrollIntoView({ block: 'center' }),
-    );
+    await trigger.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+
+    const initialScrollY = await page.evaluate(() => window.scrollY);
 
     await trigger.click();
 
     const panel = picker.locator('.rv-datepicker-panel');
     await expect(panel).toBeVisible();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+    const currentScrollY = await page.evaluate(() => window.scrollY);
+    expect(Math.abs(currentScrollY - initialScrollY)).toBeLessThanOrEqual(2);
 
     const metrics = await panel.evaluate((element) => {
       const rect = element.getBoundingClientRect();
@@ -387,19 +388,30 @@ for (const scenario of [
       };
     });
 
-    console.log(JSON.stringify({ scenario, metrics }));
-
     expect(metrics.panel.left).toBeGreaterThanOrEqual(metrics.viewport.left - 2);
     expect(metrics.panel.right).toBeLessThanOrEqual(metrics.viewport.right + 2);
     expect(metrics.panel.top).toBeGreaterThanOrEqual(metrics.viewport.top - 2);
     expect(metrics.panel.bottom).toBeLessThanOrEqual(metrics.viewport.bottom + 2);
 
-    const confirm = panel.locator(
-      '.rv-datepicker-ok, .rv-datetimepicker-ok, .rv-datetimepicker-apply',
-    ).first();
+    const confirm = panel
+      .locator('.rv-datepicker-ok, .rv-datetimepicker-ok, .rv-datetimepicker-apply')
+      .first();
 
     await expect(confirm).toBeVisible();
+
+    const needsScroll = await panel.evaluate(
+      (element) => element.scrollHeight > element.clientHeight + 1,
+    );
+
+    if (needsScroll) {
+      await panel.evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+      });
+      await expect.poll(() => panel.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    }
+
     await expect(confirm).toBeInViewport();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
     await page.keyboard.press('Escape');
     await expect(trigger).toBeFocused();

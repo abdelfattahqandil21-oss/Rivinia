@@ -145,6 +145,10 @@
   inset-block-start: calc(100% + var(--rv-datepicker-panel-gap, 0.25rem));
   inset-inline-start: 0;
   box-sizing: border-box;
+  max-block-size: calc(100vh - 1rem);
+  max-block-size: calc(100dvh - 1rem);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
   /*
    * A date panel must never be NARROWER than its field, and never narrower
    * than a readable calendar. It follows the field's width when the field is
@@ -183,7 +187,7 @@
   border: 1px solid
     var(--rv-datepicker-panel-border, var(--rv-color-border, light-dark(#e0e0e0, #3f3f46)));
   padding: var(--rv-datepicker-panel-padding, 0.5rem);
-  overflow: visible;
+  overflow-y: auto;
 }
 
 /* ── Top layer + anchor positioning where supported ─────────────────────── */
