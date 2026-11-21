@@ -3,7 +3,7 @@
 - **Owner/agent:**
 - **From → to:**
 - **Timestamp (UTC, verified):**
-- **Branch / worktree / base SHA / HEAD:**
+- **Repository / branch / base SHA / HEAD:**
 - **Owned files:**
 - **Changed files and actual commits:**
 - **Completed work:**

@@ -24,14 +24,14 @@ Create directories/files with user-only permissions (`umask 077`). Do not sync o
 At task start, before edits:
 
 1. Read root `AGENTS.md`, `docs/engineering/README.md`, applicable nested instructions, the routed skill and relevant decisions/runbook.
-2. Record task ID, agent identity, goal/scope, branch, worktree, base SHA, allowed paths and owner.
-3. Capture `git status --short --branch`, `git worktree list`, and active HEAD. Preserve existing work and identify another task's ownership before editing.
+2. Record task ID, agent identity, goal/scope, branch, base SHA, allowed paths and owner. **Worktrees are prohibited unless explicitly requested.**
+3. Capture `git status --short --branch`, `git branch --show-current`, and `git rev-parse HEAD`. Do not create or inspect additional worktrees as routine task setup. Preserve existing work and identify another task's ownership before editing.
 4. Write decisions, completed work, blockers and exact commands/results as they happen. Label planned or inferred facts; only mark executed verification as passed.
 5. Before handoff, record actual changed paths and actual commit IDs (or “uncommitted”), final status, open decisions and next safe action.
 
 ## Task record fields
 
-Use [the task-record template](templates/task-record.md). One task owns one branch/worktree. Shared-file ownership must be explicit. A task record is not a substitute for `git status` or a commit.
+Use [the task-record template](templates/task-record.md). One task owns its approved branch and paths in the existing checkout; no worktree by default. Shared-file ownership must be explicit. A task record is not a substitute for `git status` or a commit.
 
 ## Timeline
 

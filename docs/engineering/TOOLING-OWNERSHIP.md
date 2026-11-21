@@ -1,6 +1,6 @@
 # Shared tooling ownership
 
-**Status:** audited 2026-11-03; no script was proven obsolete or duplicated.
+**Status:** inventory audited 2026-11-03 (historical paths); as of 2026-11-21 root scripts restructuring is an **approved future target**, not completed.
 **Purpose:** explain which root tool owns each gate, what it reads or writes, and where its test evidence lives.
 
 ## Root scripts
@@ -39,4 +39,4 @@ Root `schematics:<package>` commands compile generated JavaScript into package s
 
 ## Organization decision
 
-The scripts are already grouped by responsibility at the top level, with tests and reusable fixture data in dedicated subdirectories. Splitting each narrow executable into more folders would add navigation cost without changing ownership. The named tools above have distinct callers or output contracts; none was deleted or consolidated. Menu/Select popup duplication is retained per decision D86 and its dedicated conformance/mutation checks.
+The 2026-11-03 inventory intentionally did not move any executable. The 2026-11-21 owner direction now targets purpose-based `scripts/build`, `checks`, `ci`, `release`, `smoke`, and `utils` **only where real ownership justifies them**; tooling tests target `unit-tests/tooling`. See [migration plan](MIGRATION-PLAN.md). The commands above use pre-migration paths and require a fresh checkout inspection before execution. No tool was deleted or consolidated in this docs-only reorganization.

@@ -1,3 +1,5 @@
+> **Historical pilot notes.** This page describes a pre-release Forms prototype. The source now exists at `projects/forms/` in the 2026-11-21 tree; inspect its current manifest and exports before treating pilot observations as the released API. [Forms index](README.md).
+
 # Forms foundation pilot
 
 The pilot lives in the original Rivinia workspace as a private package. It exercises the public imports and Angular Package Format before any decision on release-group membership or a split into publishable packages.

@@ -1,0 +1,117 @@
+> **ARCHIVED — 2026-11-03 governance proposal.** Historical evidence only. Current branch-only workflow: [Git workflow](../../engineering/GIT-WORKFLOW.md); current test/script migration: [migration plan](../../engineering/MIGRATION-PLAN.md).
+
+# RFC: Engineering governance and repository organization
+
+**Owner:** Rivinia maintainers
+**Purpose:** specify version-aware ownership and safe agent workflows without moving package or test trees.
+**Status:** approved direction; implementation is additive and limited to governance foundation.
+**Base audited:** `75c50384d19fa98c7aadfa71d7c93bbe5d4026a` (`main`, 2026-11-03).
+**Task branch:** `chore/repository-architecture`.
+
+## Decision summary
+
+### Owner-approved constraints
+
+- The initial synchronized group was `@rivinia/menu`, `@rivinia/select`, `@rivinia/theme`, and `@rivinia/i18n`. D97 subsequently admitted the remaining seven packages; the current `rivinia-1.0` group contains all eleven packages listed in [release-groups.json](../../../release-groups.json), all at one version.
+- Major versions are compatibility boundaries. Compatibility information spans source/API, tests, consumer docs, skills, changelogs and release evidence.
+- Keep `projects/` and the current E2E layout. Do not copy all source or test suites per major.
+- Keep public API, package manifests/versions, release tags, registry state and runtime code unchanged in this governance task.
+- Preserve historical ADRs. New durable architectural/product decisions go in one file under `docs/decisions/`; `docs/DECISIONS.md` remains the stable pointer to the index.
+- Never let task memory override current owner instructions, repository policy or directory instructions.
+
+### Proposed operating rules
+
+- Use `docs/engineering/` as the navigation point for governance. Keep the existing package docs, `docs/decisions/`, and release runbooks authoritative for their own subjects; link them rather than copy their history.
+- Treat exact tagged source as the immutable documentation and source snapshot for a release. A future hosted documentation platform is an open decision, not an assumed service.
+- Keep actual task journals private by default. Commit only sanitized, public-safe engineering outcomes.
+- Add directory instructions only where ownership/operations differ from the root rules.
+
+## Current ownership matrix
+
+| Path | Responsibility | Owner boundary | Verification/record |
+| --- | --- | --- | --- |
+| `projects/<library>/src`, `ui/`, `package.json`, `ng-package.json` | Publishable source, exports, package metadata | Maintainers of that library; changes stay inside public package boundaries | Package unit/build/pack/consumer gates; package README and CHANGELOG |
+| `projects/<library>/tests` or colocated specs | Unit/component contract for that library | Same library owner | `ng test <package>` or its configured test runner |
+| `e2e/fixtures/` (overlays, table, theme, toast, i18n) | Independent Angular browser harness applications; not packages (`i18n-e2e` is package-exclusive, with its fixture centralized under `e2e/fixtures/i18n`) | Shared harness owner for Menu/Select; i18n package owner for its harness | Production harness build before dependent Playwright suite |
+| `e2e/menu`, `e2e/select`, `e2e/popup` | Cross-component browser behavior and popup conformance | E2E suite owner; package owners review contract changes | Root Playwright config and current built harness |
+| `e2e/i18n` | i18n consumer/browser workflows | i18n package owner | i18n production build, CSR harness build, configured Playwright suite |
+| `docs/<topic>`, `projects/<library>/README.md` | Consumer documentation and examples | Relevant package owner; shared docs have maintainer review | `check:docs`, exact-version link check at release, example build where applicable |
+| `projects/<library>/CHANGELOG.md` | User-visible package release history | Package/release owner | Entry matches actual released version and release evidence |
+| `.agents/skills/` | Agent procedures shared by Codex and OpenCode | Maintainers | Skill role/version metadata checks; examples against declared versions |
+| `scripts/`, root config and `package.json` | Shared developer/release tooling | Repository maintainers | Script-specific tests and relevant package gates |
+| `docs/decisions/*.md` and `docs/DECISIONS.md` | Long-lived architecture/product decisions and stable index pointer | Maintainers + owner approval for foundational policy | D-numbered ADR; preserve prior records |
+| `docs/engineering/` | Governance procedures and public-safe templates | Repository maintainers | `pnpm check:governance` |
+| `$HOME/.local/share/rivinia/tasks/` | Private task records and timeline | Local user/agent; outside repository | Private permissions; Git remains evidence for commit/ref facts |
+
+Package-level maintainers have not been assigned to named people; ownership above is by responsibility, not an invented org chart.
+
+## Current dependency and test topology
+
+```text
+publishable libraries (projects/<library>)
+  └─ primary/secondary entry points → package exports
+
+@rivinia/i18n/select ── public optional import ──> @rivinia/select/ui
+
+menu/select popup behavior
+  ├─ browser app: e2e/fixtures/overlays
+  └─ suites: e2e/menu, e2e/select, e2e/popup
+
+i18n browser behavior
+  ├─ independent Angular app: e2e/fixtures/i18n (project name: i18n-e2e)
+  └─ suites: e2e/i18n
+
+consumer-facing docs: projects/<library>/README.md + docs/<topic>/
+shared checks: scripts/ + root package scripts
+```
+
+The repository currently has eleven publishable Angular libraries and five E2E Angular application targets: `menu-e2e`, `table-e2e`, `theme-compat-e2e`, `toast-compat-e2e`, and `i18n-e2e`. Their consumer fixtures live under `e2e/fixtures/`, while browser and SSR suites live under `e2e/`. This layout supersedes the earlier hybrid test placement without changing published packages.
+
+## Instruction precedence and discovery
+
+Within applicable system/developer/user instructions, resolve repository guidance in this order:
+
+1. Explicit current task and owner-approved decisions.
+2. Root `AGENTS.md` safety/release policy.
+3. The nearest applicable directory `AGENTS.md`.
+4. The invoked maintainer skill.
+5. Task records, audits and other historical context.
+
+A higher-level source wins; task memory never changes a policy. If two authoritative sources conflict, stop the affected action, cite both sources and record the conflict for maintainer resolution. Do not delete contradictory historical ADRs; add a current decision and mark superseded entries with a link only when maintainers approve that edit.
+
+Codex discovers root-to-working-directory `AGENTS.md` instructions and merges deeper guidance later. OpenCode uses `AGENTS.md` too; nested files are discovered as it reads/explores those directories, and it combines instructions rather than resolving conflicts. Therefore nested instructions must narrow or point to root rules, never restate a competing policy. Sources checked 2026-11-03: [Codex AGENTS.md guidance](https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide) and [OpenCode instructions](https://dev.opencode.ai/v2/docs/instructions/).
+
+## Alternatives considered
+
+- **One E2E tree per package and major:** rejected; it duplicates harnesses/suites and ignores the current shared popup coverage.
+- **Move all browser specs under `projects/`:** rejected; root `e2e/` currently owns menu/select cross-component behavior, while i18n tests correctly live beside the i18n app.
+- **Copy docs and skills into each package/major:** rejected; use exact tagged release snapshots and compatibility metadata to avoid source duplication.
+- **Keep the initial four packages as the sole release group:** superseded by D97, which admits all eleven packages to the synchronized `rivinia-1.0` group.
+- **Assume a hosted docs site:** rejected; platform and URL contract remain open.
+
+## Migration dependency graph
+
+```text
+root instructions + ownership map
+  ├─ task memory + worktree protocol
+  ├─ release/version policy ──> package README/changelog/doc-link release gates
+  ├─ skill compatibility metadata ──> version-aware consumer/maintainer instructions
+  ├─ test architecture ──> deterministic popup build prerequisite
+  └─ versioned docs policy ──> tag snapshot + link/example validation
+
+Disruptive E2E/doc/package moves depend on: design review → baseline capture →
+side-by-side compatibility proof → explicit approval → migration → rollback-ready verification.
+```
+
+## Open questions
+
+- What support/end-of-life and security-fix policy applies to older 1.x and future major versions? The existing 0.x line was intentionally deprecated; that does not define future-major maintenance.
+- Should npm `next` always move in lockstep for all release-group members? Current registry snapshot has menu/select at rc.1 and theme/i18n at rc.2 while `latest` is rc.2 for all. No registry state is changed here.
+- What hosted documentation platform, if any, should serve immutable release snapshots?
+- Who approves public API baselines for the eleven synchronized packages?
+- Which maintainers should be assigned as code owners and release approvers?
+- Which package owners are assigned to named maintainers?
+
+## Rollback
+
+Governance files and the validator are additive. Revert the task's governance commit(s) to restore the prior instruction/docs state; no migration of runtime files is involved. Do not roll back or rewrite historical package tags/artifacts. A later structural migration must have its own rollback instructions before it starts.

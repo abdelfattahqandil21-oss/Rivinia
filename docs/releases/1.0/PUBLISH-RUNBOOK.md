@@ -318,7 +318,7 @@ propagation, not the network: the packument was reachable the whole way and simp
 not list the version until it appeared. See the network rule above.
 
 This file is S8 step 5 of
-[`docs/specifications/1.0-readiness.md`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/main/docs/specifications/1.0-readiness.md).
+[`docs/specifications/1.0-readiness.md`](../../archive/release-readiness-2026-10-31.md).
 Read [`docs/releases/1.0/RELEASE.md`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/main/docs/releases/1.0/RELEASE.md)
 first: it explains the order and why `@rivinia/i18n` goes last. The checks each
 step must pass are in `AGENTS.md` (gates 1–8) and

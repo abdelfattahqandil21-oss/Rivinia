@@ -198,4 +198,4 @@ loud that a patch release may still change them.
 | `LanguageLike`, `RiviniaLanguageManager` (re-exported)                                         | `/select` types     | Experimental |
 
 Every symbol above is exported from the entry point named in its row, and
-`projects/i18n/tests` imports the same public paths a consumer uses.
+`unit-tests/i18n` imports the same public paths a consumer uses.

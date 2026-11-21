@@ -21,8 +21,8 @@ gates; do not install or copy them automatically.
 | Documentation, examples, agent rules | `writing-for-agents` for agent instructions; `research` for sourced API facts only when delegation is allowed | `research` requires a background agent; if delegation is not allowed, use primary docs directly and cite them |
 | OpenCode configuration or behavior | Official OpenCode docs and `opencode --help`; use an `opencode` skill only if the active runtime lists it | This host snapshot had no `opencode` skill installed; verify current CLI/docs rather than assuming availability |
 | Release, tag, version bump, npm | Explicitly invoke `rivinia-release` | Never publish without explicit owner approval; follow the immutable artifact and registry verification gates in root `AGENTS.md` |
-| Git safety and worktrees | Root `AGENTS.md` plus `docs/engineering/WORKTREES.md` | Do not use `git-guardrails-claude-code` here; it configures Claude Code hooks, not Codex/OpenCode |
-| Long task handoff / delegation | `handoff` for a requested fresh-session handoff; `chief-of-staff` only for an explicitly delegated long-running goal | Respect single-owner worktrees and the current no-delegation/no-write constraints |
+| Git safety and branch-only workflow | Root `AGENTS.md` plus [`GIT-WORKFLOW.md`](GIT-WORKFLOW.md); `WORKTREES.md` only for explicitly authorized exceptions | Do not use `git-guardrails-claude-code` here; it configures Claude Code hooks, not Codex/OpenCode |
+| Long task handoff / delegation | `handoff` for a requested fresh-session handoff; `chief-of-staff` only for an explicitly delegated long-running goal | Respect branch-owned paths in the single checkout; no worktrees, delegation or writes without current authorization |
 
 ## Version-aware skill use
 

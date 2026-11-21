@@ -1,11 +1,11 @@
 # 2.0.0-alpha.1 API surface candidate
 
 This is the owner-approved candidate baseline for the eight TypeScript entry
-points tracked by [`scripts/api-surface.mjs`](../../scripts/api-surface.mjs):
+points tracked by [`scripts/api-surface.mjs`](../../../scripts/api-surface.mjs):
 the initial four synchronized packages, Menu, Select, Theme and i18n. The
 exact, sorted names are in
-[`scripts/api-surface.snapshot.json`](../../scripts/api-surface.snapshot.json);
-[`scripts/tests/api-surface.spec.ts`](../../scripts/tests/api-surface.spec.ts)
+[`scripts/api-surface.snapshot.json`](../../../scripts/api-surface.snapshot.json);
+[`scripts/tests/api-surface.spec.ts`](../../../scripts/tests/api-surface.spec.ts)
 checks that list against the current entry-point sources.
 
 | Entry point | Published names |
@@ -26,7 +26,7 @@ Menu/Select controller and composed UI described in
 [D102](../../decisions/D102-popup-connected-panels-and-staged-v2-integration.md)
 and the package [Menu API](../../menu/api.md) and
 [Select API](../../select/api.md) references. The 1.0 list remains preserved in
-[`scripts/api-surface-1.0.snapshot.json`](../../scripts/api-surface-1.0.snapshot.json)
+[`scripts/api-surface-1.0.snapshot.json`](../../../scripts/api-surface-1.0.snapshot.json)
 and [its release record](../1.0/API-SURFACE.md).
 
 This document records an API baseline for the current candidate only. It is not

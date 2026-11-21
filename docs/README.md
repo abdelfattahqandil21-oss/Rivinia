@@ -1,34 +1,51 @@
-# Documentation guide
+# Rivinia documentation
 
-Use the package README in `projects/<package>/` for its public setup and API. This guide routes to shared engineering material without copying release history or package examples.
+**Primary navigation for the single Rivinia repository.** This directory contains public library guides, engineering contracts, test evidence, dated architecture decisions, and release history. The package README and `public-api.ts` remain the source of truth for **implemented** consumer APIs; do not infer implementation or release status from a proposal.
 
-## Find by responsibility
+## Library documentation
 
-| Need | Canonical location | Status and ownership |
+| Library | Guide | Ownership and status |
 | --- | --- | --- |
-| Package APIs and consumer guidance | `projects/<package>/README.md`, `docs/{datepicker,env,http,i18n,menu,modal,select,table,theme,toast}/` | Current; maintained with the package |
-| Architecture policy and workflows | [`engineering/README.md`](engineering/README.md) | Current policy and procedures |
-| Durable architecture decisions | [Decision index](decisions/README.md); stable entry point [`DECISIONS.md`](DECISIONS.md) | Append-only records, one file per decision |
-| Feature specifications and designs | `projects/<package>/specifications/` plus the [cross-library index](specifications/README.md) | Package-owned records stay with their owners; each record states its status |
-| Consumer architecture guidance | [`guides/feature-first-consumer.md`](guides/feature-first-consumer.md) | Optional organization patterns; examples do not prescribe a required folder layout |
-| Future package/component candidates | [`specifications/future-library-roadmap.md`](specifications/future-library-roadmap.md) | Candidate backlog only; not an implementation or package-admission decision |
-| Testing and browser evidence | [`testing/README.md`](testing/README.md) | Testing procedures plus dated verification evidence |
-| Release history | [`releases/1.0/README.md`](releases/1.0/README.md) | Historical RC records and current stable release index |
-| 1.0.0 stable preparation | [`releases/1.0/STABLE-1.0.0.md`](releases/1.0/STABLE-1.0.0.md) | Eleven-package candidate; human checks, soak, main integration and owner publish remain |
-| 1.0.0-rc.4 preparation | [`releases/1.0/RC4.md`](releases/1.0/RC4.md) | Historical Popup publish record |
-| Historical 1.1 plan | [`releases/1.1/README.md`](releases/1.1/README.md) | Superseded for Popup first publish by the 1.0.0-rc.4 decision |
-| Research | [`research/theme-stacks.md`](research/theme-stacks.md) | Dated investigation, not normative API guidance |
-| Repository architecture history | [`repository-architecture/README.md`](repository-architecture/README.md) | Index to archived audits and task reports |
-| Historical audits, proofs, and reports | [`archive/README.md`](archive/README.md) | Dated evidence snapshots, not current policy |
-| Skills and agent workflows | [`engineering/SKILLS-INVENTORY.md`](engineering/SKILLS-INVENTORY.md), [`engineering/SKILLS-ROUTING.md`](engineering/SKILLS-ROUTING.md) | Current routing; version-specific claims follow `engineering/AI-SKILLS.md` |
-| Task and package README templates | `docs/engineering/templates/`, [`releases/1.0/README-TEMPLATE.md`](releases/1.0/README-TEMPLATE.md) | Reusable process templates and historical S9 package template |
+| Datepicker | [Datepicker](datepicker/README.md) | `projects/datepicker`; core plus UI |
+| Env | [Environment tooling](env/README.md) | `projects/env`; protected schematics |
+| Forms | [Forms](forms/README.md) | `projects/forms`; present in source, **not automatically in the synchronized release group** |
+| HTTP | [HTTP](http/README.md) | `projects/http` |
+| i18n | [Internationalization](i18n/README.md) | `projects/i18n`; core/UI/select |
+| Menu | [Menu](menu/README.md) | `projects/menu` |
+| Modal | [Modal](modal/README.md) | `projects/modal` |
+| Popup | [Popup](popup/README.md) | `projects/popup`; shared overlay behavior |
+| Select | [Select](select/README.md) | `projects/select` |
+| Table | [Table](table/README.md) | `projects/table` |
+| Theme | [Theme](theme/README.md) | `projects/theme` |
+| Toast | [Toast](toast/README.md) | `projects/toast` |
 
-The dated JSON baselines in [`a11y-snapshots/`](a11y-snapshots/) are retained test evidence linked by the accessibility guide and decision history.
+These are **12 source directories**, not a claim that 12 packages are published. Verify membership in `release-groups.json` before a release or public package statement.
 
-## Former paths
+## Engineering and repository operations
 
-Use the canonical locations in the table above. Former root paths were removed
-after active repository links were updated; historical path mentions in the
-append-only decision log describe the records as they existed at the time.
+| Need | Canonical document |
+| --- | --- |
+| Agent startup and task ownership | Root `AGENTS.md`, [engineering](engineering/README.md) |
+| Current project layout, migration **target vs reality** | [Repository layout](engineering/REPOSITORY-LAYOUT.md) |
+| Branch-only workflow and approval boundaries | [Git workflow](engineering/GIT-WORKFLOW.md) |
+| Angular 22 library conventions | [Angular standards](engineering/ANGULAR-STANDARDS.md) |
+| Units/E2E/fixtures and proof requirements | [Testing architecture](engineering/TESTING-ARCHITECTURE.md) |
+| Library/source/test ownership | [Library ownership](engineering/LIBRARY-OWNERSHIP.md) |
+| Automation and release command owners | [Tooling ownership](engineering/TOOLING-OWNERSHIP.md) |
+| Documentation conventions, links and old files | [Documentation standards](engineering/DOCUMENTATION-STANDARDS.md) |
+| Phased test/E2E/scripts migration | [Migration plan](engineering/MIGRATION-PLAN.md) |
+| Versioning and release membership | [Versioning](engineering/VERSIONING.md) and `release-groups.json` |
+| Architecture decisions | [Decision index](decisions/README.md), [stable pointer](DECISIONS.md) |
+| Test evidence and browser floor | [Testing records](testing/README.md) |
+| Release history (historical, not authorization) | [Release index](releases/README.md) |
+| Completed audits and superseded plans | [Archive](archive/README.md) |
+| Feature candidates (not approved work) | [Future library roadmap](engineering/FUTURE-LIBRARY-ROADMAP.md) |
 
-Use root `package.json` as the source of truth for command names. Do not infer current registry state from a historical release record; inspect the registry and exact tag when preparing a release.
+The fixed accessibility baseline files remain under [`a11y-snapshots/`](a11y-snapshots/) because shared verification tooling may use that path. Two compatibility pointers remain at `browser-support.md` and `README-TEMPLATE.md` because original append-only decisions refer to those exact locations.
+
+## Source-of-truth rules
+
+1. For **what exists**, inspect the checked-out branch, files, manifests, tests, and package exports. The 2026-11-21 unit-test move is complete: current library unit suites live under `unit-tests/<library>/`; the migration plan records its verified counts. The checked-out tree remains authoritative for later changes.
+2. For **what is approved**, read the current owner's instructions and root `AGENTS.md`; old RFCs and dated audit notes are evidence only.
+3. For **what was released**, verify the immutable tag, registry version, and inspected tarball. An old release runbook does not approve anything.
+4. For **future layout**, see the migration plan; a target tree is not evidence that files have moved.

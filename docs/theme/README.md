@@ -1,3 +1,30 @@
+# `@rivinia/theme` — documentation index
+**Scope:** CSS/token contracts, adapters and opt-in theme UI. This is a documentation map, not an independent assertion of npm version, publication status or public API exports. Verify the package README, `src/public-api.ts`, package manifest and active branch before editing a consumer contract.
+
+## Ownership
+
+- **Implementation:** `projects/theme/src/`, `styles/` and configured secondary entries.
+- **Unit tests:** `unit-tests/theme/` via `pnpm test:theme`.
+- **Browser/integration:** `e2e/theme-compat/`, `e2e/fixtures/theme/`, and browser theme tooling.
+- **Package source of truth:** [`projects/theme/README.md`](../../projects/theme/README.md).
+
+## Guides
+
+- [Tokens](tokens.md)
+- [Component Theme](component-theme.md)
+- [Styling Stacks](styling-stacks.md)
+- [Contrast](contrast.md)
+- [Contributing](contributing.md)
+- [Research Theme Stacks](research-theme-stacks.md)
+
+## Working agreement
+
+The package owns public APIs and its unit tests regardless of the physical test directory. `docs/` contains guides and dated evidence. For source, test/E2E and scripts relocation, see the [owner-approved migration plan](../engineering/MIGRATION-PLAN.md); no folder movement is implied by this index.
+
+---
+
+## Theme overview and usage
+
 # Theming Rivinia components
 
 Owned by [`@rivinia/theme`](../../projects/theme/README.md), this shared CSS

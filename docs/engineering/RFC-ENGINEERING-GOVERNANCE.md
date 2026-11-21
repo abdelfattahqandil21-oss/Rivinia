@@ -6,6 +6,8 @@
 **Base audited:** `75c50384d19fa98c7aadfa71d7c93bbe5d4026a` (`main`, 2026-11-03).
 **Task branch:** `chore/repository-architecture`.
 
+**Historical path note:** This RFC records the 2026-11-03 layout. Its package-local test paths are historical; current unit suites live under `unit-tests/<library>/` as described in [testing architecture](TESTING-ARCHITECTURE.md).
+
 ## Decision summary
 
 ### Owner-approved constraints
@@ -24,7 +26,7 @@
 - Keep actual task journals private by default. Commit only sanitized, public-safe engineering outcomes.
 - Add directory instructions only where ownership/operations differ from the root rules.
 
-## Current ownership matrix
+## Ownership matrix at the audited base
 
 | Path | Responsibility | Owner boundary | Verification/record |
 | --- | --- | --- | --- |
@@ -43,7 +45,7 @@
 
 Package-level maintainers have not been assigned to named people; ownership above is by responsibility, not an invented org chart.
 
-## Current dependency and test topology
+## Dependency and test topology at the audited base
 
 ```text
 publishable libraries (projects/<library>)
@@ -63,7 +65,7 @@ consumer-facing docs: projects/<library>/README.md + docs/<topic>/
 shared checks: scripts/ + root package scripts
 ```
 
-The repository currently has eleven publishable Angular libraries and five E2E Angular application targets: `menu-e2e`, `table-e2e`, `theme-compat-e2e`, `toast-compat-e2e`, and `i18n-e2e`. Their consumer fixtures live under `e2e/fixtures/`, while browser and SSR suites live under `e2e/`. This layout supersedes the earlier hybrid test placement without changing published packages.
+At the 2026-11-03 audit snapshot, the repository had eleven publishable Angular libraries and five E2E Angular application targets: `menu-e2e`, `table-e2e`, `theme-compat-e2e`, `toast-compat-e2e`, and `i18n-e2e`. Their consumer fixtures lived under `e2e/fixtures/`, while browser and SSR suites lived under `e2e/`. This historical layout note does not describe the later unit-test centralization.
 
 ## Instruction precedence and discovery
 

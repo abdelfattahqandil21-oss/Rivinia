@@ -500,13 +500,13 @@ and §9's 5,261 B (`entry-tw.css`, no scoped selectors).
 
 ### 8.2 THM-02 — `check:theme`
 
-- `projects/theme/tests/check-theme-package.spec.ts`: 11 tests, all against
+- `unit-tests/theme/check-theme-package.spec.ts`: 11 tests, all against
   synthetic packages in `mkdtemp` dirs (good package, `style` removed, dangling
   `style`, missing export target, dangling export key, wrong file list, `--rv-bg`
   outside the layer, tarball with a `package/` root, missing directory, CLI exit
   codes 0/1, and a spawn of `pnpm check:theme <tarball>` that asserts the given
   tarball is really the thing checked — not the default `dist/theme`). Run with
-  `pnpm test:theme` (`vitest run projects/theme/tests` from the repo root — no
+  `pnpm test:theme` (`vitest run unit-tests/theme` from the repo root — no
   new `angular.json` target).
 - On the real artifacts before adding `CHANGELOG.md`: the 8-file `dist/theme`
   and the 0.1.0 tarball each fail with exactly one problem —

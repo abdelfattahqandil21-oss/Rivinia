@@ -1,31 +1,23 @@
 # Engineering governance
 
-**Owner:** Rivinia maintainers
-**Purpose:** entry point for repository ownership, compatibility, agent work, and release policy.
-**Status:** active; policy changes that affect compatibility or releases require a reviewed decision record.
+**Status:** Current navigation as of 2026-11-21. **Policy authority:** current owner instruction > root `AGENTS.md` > nearest `AGENTS.md` > invoked skill; decision/runbook records give additional context but do not override owner-approved current policy.
 
-This is the navigation index. `AGENTS.md` is the concise, always-loaded instruction source; these documents contain detailed procedures.
-
-| Need | Canonical document |
+| Responsibility | Document |
 | --- | --- |
-| Overall architecture, ownership, migration sequence and rollback | [Architecture RFC](RFC-ENGINEERING-GOVERNANCE.md) |
-| Durable architecture decisions | [Decision index](../decisions/README.md); stable landing page [`DECISIONS.md`](../DECISIONS.md) |
-| Per-library code, test, harness and documentation ownership | [Library ownership map](LIBRARY-OWNERSHIP.md) |
-| Root scripts, fixtures, and generated outputs | [Shared tooling ownership](TOOLING-OWNERSHIP.md) |
-| Package versions, release group, support claims and admission | [Version and release policy](VERSIONING.md) |
-| Package documentation snapshots and links | [Versioned documentation](VERSIONED-DOCUMENTATION.md) |
-| Maintainer/consumer skill metadata and compatibility | [AI skill compatibility](AI-SKILLS.md) |
-| Skill discovery, source inventory and task routing | [Skills inventory](SKILLS-INVENTORY.md), [reference matrix](SKILLS-REFERENCE-MATRIX.md), [routing guide](SKILLS-ROUTING.md) |
-| Unit, browser, integration and consumer verification | [Testing architecture](TESTING-ARCHITECTURE.md) |
-| Private task memory, templates and session start/handoff | [Task memory and lifecycle](TASK-MEMORY.md) |
-| Worktree safety and parallel work | [Worktree workflow](WORKTREES.md) |
-| Package, engineering and task journal boundaries | [Changelog policy](CHANGELOG-POLICY.md) |
-| Ordered migration, gates and verification status | [Migration and verification](MIGRATION-PLAN.md) |
-| Public-safe task record template | [Task record](templates/task-record.md) |
-| Public-safe handoff template | [Handoff](templates/handoff.md) |
-| Engineering-only change timeline | [Engineering changelog](CHANGELOG.md) |
-| Machine-readable synchronized release membership | [`release-groups.json`](../../release-groups.json) |
+| Start an agent task | Root `AGENTS.md` and [Task memory](TASK-MEMORY.md) |
+| Branches; no automatic worktrees, commits, merge or push | [Git workflow](GIT-WORKFLOW.md); [worktree exceptions](WORKTREES.md) |
+| Angular 22, Signals, OnPush, SSR, DI, cleanup | [Angular standards](ANGULAR-STANDARDS.md) |
+| Source/test/harness/script layout | [Repository layout](REPOSITORY-LAYOUT.md) |
+| Logical ownership by library | [Library ownership](LIBRARY-OWNERSHIP.md) |
+| Angular unit and real-browser gates | [Testing architecture](TESTING-ARCHITECTURE.md) |
+| Reorganize Unit/E2E/Scripts safely | [Migration plan](MIGRATION-PLAN.md) |
+| Root executable ownership | [Tooling ownership](TOOLING-OWNERSHIP.md) |
+| Public docs, relative links, historical records | [Documentation standards](DOCUMENTATION-STANDARDS.md) |
+| Versions and sync release boundary | [Versioning](VERSIONING.md) |
+| Release docs tied to tags | [Versioned documentation](VERSIONED-DOCUMENTATION.md) |
+| Library task records / handoffs | [Task record](templates/task-record.md), [handoff](templates/handoff.md) |
+| Skills and routing | [Skills routing](SKILLS-ROUTING.md), [inventory](SKILLS-INVENTORY.md), [matrix](SKILLS-REFERENCE-MATRIX.md) |
+| Changelog boundaries | [Changelog policy](CHANGELOG-POLICY.md), [engineering changelog](CHANGELOG.md) |
+| Durable, append-only decisions | [Decision log](../decisions/README.md) |
 
-## Current state snapshot
-
-As checked on 2026-11-03, the unified release group is `menu`, `select`, `theme`, and `i18n`; their workspace manifests and npm `latest` versions are all `1.0.0-rc.2`. npm `next` is `rc.1` for menu/select and `rc.2` for theme/i18n. This is an observed snapshot, not an instruction to change registry tags. Refresh it when release evidence is next updated.
+**Do not reuse stale snapshots:** historical release-group membership, npm dist-tags, audit branch names, E2E paths, and test counts embedded in old records describe *their dated state*, not the current workspace. The current `release-groups.json`, manifests, and current test targets win. Historical 2026-11-03 governance RFC: [archive](../archive/repository-architecture/RFC-ENGINEERING-GOVERNANCE.md).

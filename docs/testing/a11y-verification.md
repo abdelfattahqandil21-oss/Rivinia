@@ -23,7 +23,7 @@ person says **not tested**; nothing in this file was inferred.
 | Keyboard: arrows, Home/End, Enter, Escape     | `e2e/select/a11y.spec.ts`                                              | asserted                                   |
 | Keyboard: Space picks the focused row         | `e2e/select/a11y.spec.ts`                                              | asserted                                   |
 | Keyboard: typing jumps to the matching row    | `e2e/select/a11y.spec.ts`                                              | asserted                                   |
-| Keyboard: typeahead, Tab moves into the rows  | `projects/select/tests/select-aria.spec.ts`, `select-contract.spec.ts` | asserted (jsdom)                           |
+| Keyboard: typeahead, Tab moves into the rows  | `unit-tests/select/select-aria.spec.ts`, `select-contract.spec.ts` | asserted (jsdom)                           |
 | Chromium accessibility tree, six states       | `docs/a11y-snapshots/*.json`                                           | captured 2026-10-31, Chromium 156.0.8078.4 |
 
 Automated tooling cannot hear the result. axe checks rules, the DOM assertions
