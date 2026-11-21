@@ -106,7 +106,7 @@
       "path": "./projects/table/tsconfig.spec.json"
     },
     {
-      "path": "./projects/menu-e2e/tsconfig.app.json"
+      "path": "./e2e/fixtures/overlays/tsconfig.app.json"
     }
   ]
 }

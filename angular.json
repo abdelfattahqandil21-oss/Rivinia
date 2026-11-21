@@ -282,23 +282,23 @@
           "skipTests": true
         }
       },
-      "root": "projects/menu-e2e",
-      "sourceRoot": "projects/menu-e2e/src",
+      "root": "e2e/fixtures/overlays",
+      "sourceRoot": "e2e/fixtures/overlays/src",
       "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "browser": "projects/menu-e2e/src/main.ts",
-            "tsConfig": "projects/menu-e2e/tsconfig.app.json",
+            "browser": "e2e/fixtures/overlays/src/main.ts",
+            "tsConfig": "e2e/fixtures/overlays/tsconfig.app.json",
             "assets": [
               {
                 "glob": "**/*",
-                "input": "projects/menu-e2e/public"
+                "input": "e2e/fixtures/overlays/public"
               }
             ],
             "styles": [
-              "projects/menu-e2e/src/styles.css"
+              "e2e/fixtures/overlays/src/styles.css"
             ]
           },
           "configurations": {

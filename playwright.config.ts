@@ -8,6 +8,7 @@ function executableOverride(variable: string) {
 export default defineConfig({
   testDir: './e2e',
   testIgnore: [
+    '**/fixtures/**',
     '**/datepicker/**',
     '**/table/**',
     '**/theme-compat/**',

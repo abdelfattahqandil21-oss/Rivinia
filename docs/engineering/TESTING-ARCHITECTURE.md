@@ -9,7 +9,7 @@
 | Layer | Contract | Current location | Required evidence |
 | --- | --- | --- | --- |
 | Unit/component | Current implementation behavior and local accessibility/state contracts | Package tests under `projects/<package>` | Configured unit runner; record exact package and command |
-| Browser E2E | Real browser interaction, focus, layout, ARIA and cross-component composition | Shared `e2e/menu`, `e2e/select`, `e2e/popup`; app in `projects/menu-e2e` | Build package dependencies and exact app first, then Playwright in named browser |
+| Browser E2E | Real browser interaction, focus, layout, ARIA and cross-component composition | Shared `e2e/menu`, `e2e/select`, `e2e/popup`; app in `e2e/fixtures/overlays` | Build package dependencies and exact app first, then Playwright in named browser |
 | i18n browser | Translation, direction, language selection and SSR/CSR integration | `e2e/i18n` and independent `i18n-e2e` app under `projects/i18n/testing/app` | Build i18n, build correct CSR/SSR target, then configured suite |
 | Cross-package integration | Public package imports/optional peer composition | Current i18n/select integration and consumer fixtures | Import only documented package exports; test with/without optional peer when relevant |
 | API compatibility | Exported symbols/types/entry points | `scripts/api-surface.mjs` gates eight entry points in the initial four synchronized packages against the 2.0.0-alpha.1 candidate baseline; the 1.0 baseline is archived separately | Review snapshots against the base/tag; do not auto-accept regenerated output |
