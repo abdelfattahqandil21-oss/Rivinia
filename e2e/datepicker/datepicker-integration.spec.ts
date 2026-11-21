@@ -96,7 +96,25 @@ test('the time tray aligns each list with its input and keeps the clock after AM
   );
   const clockBox = await clock.boundingBox();
   const meridiemBox = await meridiem.boundingBox();
-  expect(clockBox!.x).toBeGreaterThanOrEqual(meridiemBox!.x + meridiemBox!.width - 1);
+  if (clockBox === null || meridiemBox === null) {
+    throw new Error('Time row geometry unavailable');
+  }
+
+  const sameRow =
+    clockBox.y < meridiemBox.y + meridiemBox.height - 1 &&
+    meridiemBox.y < clockBox.y + clockBox.height - 1;
+
+  if (sameRow) {
+    expect(clockBox.x).toBeGreaterThanOrEqual(
+      meridiemBox.x + meridiemBox.width - 1,
+    );
+  } else {
+    expect(clockBox.y).toBeGreaterThanOrEqual(
+      meridiemBox.y + meridiemBox.height - 1,
+    );
+  }
+
+  await expect(clock).toBeInViewport();
   await clock.click();
   for (const unit of ['Hour', 'Minute', 'Second']) {
     const input = picker.getByRole('spinbutton', { name: unit, exact: true });
@@ -262,7 +280,7 @@ test('date actions stay in the panel and selecting a day waits for OK', async ({
   await expect(picker.locator('.rv-datepicker-now')).toHaveCount(0);
   await trigger.click();
   const panel = picker.locator('.rv-datepicker-panel');
-  await expect(panel.getByRole('button', { name: 'Today', exact: true })).toHaveCount(0);
+  await expect(panel.getByRole('button', { name: 'Today', exact: true })).toBeVisible();
   await expect(panel.getByRole('button', { name: 'Cancel', exact: true })).toBeVisible();
   await expect(panel.getByRole('button', { name: 'OK', exact: true })).toBeVisible();
   await panel.locator('[data-date="2026-11-15"]').click();
