@@ -140,7 +140,7 @@ function makePerfRows(count: number): readonly PerfRow[] {
           (selectionChange)="changePageSize($event)"
         />
         <rv-datepicker
-          label="Filter date"
+          label="Filter date" commitMode="immediate"
           format="dd/MM/yyyy"
           [locale]="dateLocale()"
           [min]="dateMin()"
@@ -154,7 +154,7 @@ function makePerfRows(count: number): readonly PerfRow[] {
             <button type="button" data-testid="set-form-date" (click)="setFormDate()">
               Set form date
             </button>
-            <rv-datepicker label="Form date" [formControl]="formDate" />
+            <rv-datepicker label="Form date" commitMode="immediate" [formControl]="formDate" />
             <output data-testid="form-date-state">{{ formDateState() }}</output>
           </section>
         }

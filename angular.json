@@ -341,16 +341,16 @@
     },
     "table-e2e": {
       "projectType": "application",
-      "root": "projects/table-e2e",
-      "sourceRoot": "projects/table-e2e/src",
+      "root": "e2e/fixtures/table",
+      "sourceRoot": "e2e/fixtures/table/src",
       "prefix": "table-audit",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "browser": "projects/table-e2e/src/main.ts",
-            "index": "projects/table-e2e/src/index.html",
-            "tsConfig": "projects/table-e2e/tsconfig.app.json",
+            "browser": "e2e/fixtures/table/src/main.ts",
+            "index": "e2e/fixtures/table/src/index.html",
+            "tsConfig": "e2e/fixtures/table/tsconfig.app.json",
             "assets": [],
             "styles": [],
             "outputPath": "dist/table-e2e"

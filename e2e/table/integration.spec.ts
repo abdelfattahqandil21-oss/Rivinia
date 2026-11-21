@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
 
+// Desktop integration coverage.
+// Compact viewport and anchor-scroll behavior require separate regression coverage.
+test.use({ viewport: { width: 1280, height: 1100 } });
+
 test('composes Select and Datepicker controls through public Table signals and restores a saved view', async ({
   page,
 }) => {
@@ -27,7 +31,28 @@ test('composes Select and Datepicker controls through public Table signals and r
   await page.getByTestId('save-view').click();
   await page.getByTestId('page-size-control').locator('button.rv-select-trigger').click();
   await page.getByRole('menuitemradio', { name: '50 rows' }).click();
-  await page.locator('rv-datepicker button.rv-datepicker-clear').click();
+  const filterTrigger = page.locator('rv-datepicker button.rv-datepicker-trigger').first();
+
+  // Keep the anchor near the viewport top before opening the calendar.
+  await filterTrigger.evaluate((element) => {
+    element.scrollIntoView({ block: 'start', inline: 'nearest' });
+  });
+
+  await filterTrigger.click();
+
+  const clearDialog = page.getByRole('dialog');
+  await expect(clearDialog).toBeVisible();
+
+  await clearDialog.locator('button.rv-datepicker-clear-action').click();
+
+
+
+  // A staged clear must keep the panel open until confirmation.
+  await expect(clearDialog).toBeVisible();
+  await expect(clearDialog.locator('button.rv-datepicker-ok')).toBeVisible();
+  await expect(page.getByTestId('date-filter-count')).toHaveText('322');
+
+  await clearDialog.locator('button.rv-datepicker-ok').click();
   await expect(page.getByTestId('perf-page-size')).toHaveText('50');
   await expect(page.getByTestId('date-filter-count')).toHaveText('10000');
 
