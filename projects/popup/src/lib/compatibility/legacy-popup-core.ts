@@ -60,7 +60,8 @@ export function computePopupPosition(
   let top = below ? trigger.top + trigger.height + gap : trigger.top - gap - panel.height;
   let flipped = false;
 
-  const fitsBelow = trigger.top + trigger.height + gap + panel.height <= viewport.height - POPUP_EDGE_INSET;
+  const fitsBelow =
+    trigger.top + trigger.height + gap + panel.height <= viewport.height - POPUP_EDGE_INSET;
   const fitsAbove = trigger.top - gap - panel.height >= POPUP_EDGE_INSET;
   if (below && top + panel.height > viewport.height - POPUP_EDGE_INSET && fitsAbove) {
     top = trigger.top - gap - panel.height;
@@ -78,8 +79,14 @@ export function computePopupPosition(
     left = trigger.left;
   }
 
-  left = Math.min(Math.max(left, POPUP_EDGE_INSET), Math.max(POPUP_EDGE_INSET, viewport.width - panel.width - POPUP_EDGE_INSET));
-  top = Math.min(Math.max(top, POPUP_EDGE_INSET), Math.max(POPUP_EDGE_INSET, viewport.height - panel.height - POPUP_EDGE_INSET));
+  left = Math.min(
+    Math.max(left, POPUP_EDGE_INSET),
+    Math.max(POPUP_EDGE_INSET, viewport.width - panel.width - POPUP_EDGE_INSET),
+  );
+  top = Math.min(
+    Math.max(top, POPUP_EDGE_INSET),
+    Math.max(POPUP_EDGE_INSET, viewport.height - panel.height - POPUP_EDGE_INSET),
+  );
   return { left: Math.round(left), top: Math.round(top), flipped };
 }
 
@@ -87,16 +94,19 @@ const TOUCH_TAP_SLOP = 10;
 const TOUCH_TAP_MAX_DURATION = 500;
 
 /** Attach outside-dismissal and viewport listeners to one open host instance. */
-export function bindPopupDismissal(
-  options: PopupDismissalOptions,
-  destroyRef: DestroyRef,
-): void {
+export function bindPopupDismissal(options: PopupDismissalOptions, destroyRef: DestroyRef): void {
   const { document: doc, window: win } = options;
   if (!doc || !win) return;
 
   let active = true;
   let frame: number | null = null;
-  let touch: { readonly id: number; readonly x: number; readonly y: number; readonly at: number; moved: boolean } | null = null;
+  let touch: {
+    readonly id: number;
+    readonly x: number;
+    readonly y: number;
+    readonly at: number;
+    moved: boolean;
+  } | null = null;
   let widthAtLastResize = win.innerWidth;
 
   const cleanup = () => {
@@ -198,8 +208,7 @@ export function bindPopupDismissal(
 
   const onPointerUp = (event: PointerEvent) => {
     if (!touch || event.pointerId !== touch.id) return;
-    const isTap =
-      !touch.moved && win.performance.now() - touch.at <= TOUCH_TAP_MAX_DURATION;
+    const isTap = !touch.moved && win.performance.now() - touch.at <= TOUCH_TAP_MAX_DURATION;
     touch = null;
     if (isTap) close();
   };

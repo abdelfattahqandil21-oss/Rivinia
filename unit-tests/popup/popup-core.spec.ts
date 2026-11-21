@@ -1,7 +1,7 @@
 import { DestroyRef, EnvironmentInjector, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { bindPopupDismissal, computePopupPosition } from '../../projects/popup/src/lib/popup-core';
+import { bindPopupDismissal, computePopupPosition } from '../../projects/popup/src/lib/compatibility/legacy-popup-core';
 
 describe('computePopupPosition', () => {
   const viewport = { width: 1280, height: 900 };

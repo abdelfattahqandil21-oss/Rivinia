@@ -3,7 +3,7 @@ export {
   computePopupPosition,
   POPUP_EDGE_INSET,
   POPUP_GAP,
-} from './lib/popup-core';
+} from './lib/compatibility/legacy-popup-core';
 export type {
   PopupDirection,
   PopupDismissalOptions,
@@ -12,11 +12,27 @@ export type {
   PopupRect,
   PopupSize,
   PopupViewport,
-} from './lib/popup-core';
+} from './lib/compatibility/legacy-popup-core';
 
 // Connected panels use an options object; the existing positional helper remains supported.
-export { computePopupPosition as computeConnectedPopupPosition } from './lib/geometry';
-export type { ComputePopupPositionOptions, PopupAlignment, PopupBounds, PopupOriginRect, PopupPanelSize, PopupSide, TextDirection, PopupPlacement as ConnectedPopupPlacement, PopupPosition as ConnectedPopupPosition } from './lib/geometry';
-export { connectPopup } from './lib/connect-popup';
-export type { PopupConnection, PopupConnectionOptions, PopupConnectionUpdate, PopupDismissReason, PopupScrollStrategy } from './lib/connect-popup';
-export { PopupPanelDirective } from './lib/popup-panel.directive';
+export { computePopupPosition as computeConnectedPopupPosition } from './lib/positioning/compute-position';
+export type {
+  ComputePopupPositionOptions,
+  PopupAlignment,
+  PopupBounds,
+  PopupOriginRect,
+  PopupPanelSize,
+  PopupSide,
+  TextDirection,
+  PopupPlacement as ConnectedPopupPlacement,
+  PopupPosition as ConnectedPopupPosition,
+} from './lib/positioning/compute-position';
+export { connectPopup } from './lib/connection/connect-popup';
+export type {
+  PopupConnection,
+  PopupConnectionOptions,
+  PopupConnectionUpdate,
+  PopupDismissReason,
+  PopupScrollStrategy,
+} from './lib/contracts/connection.types';
+export { PopupPanelDirective } from './lib/angular/popup-panel.directive';

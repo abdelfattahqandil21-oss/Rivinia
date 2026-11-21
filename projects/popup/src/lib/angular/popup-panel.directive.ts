@@ -11,12 +11,12 @@ import {
   output,
 } from '@angular/core';
 import {
-  connectPopup,
   type PopupConnection,
   type PopupDismissReason,
   type PopupScrollStrategy,
-} from './connect-popup';
-import type { PopupPlacement } from './geometry';
+} from '../contracts/connection.types';
+import { connectPopup } from '../connection/connect-popup';
+import type { PopupPlacement } from '../positioning/compute-position';
 
 interface PopupPanelInputs {
   readonly open: boolean;
