@@ -12,7 +12,7 @@ Every publishable library is an Angular project under `projects/<name>/`, with i
 | `http` | `projects/http/src`; one entry point | `projects/http/tests` (3 files) | No dedicated browser harness; shared consumer checks are infrastructure-owned | `projects/http/README.md` | `ng build http`; schematic tests are package-owned |
 | `toast` | `projects/toast/src`, `projects/toast/ui` (2 entry points) | `projects/toast/tests` (3 files) | No dedicated browser suite; component behavior is covered by unit tests | `projects/toast/README.md` | `ng build toast`; package schematics |
 | `modal` | `projects/modal/src`, `projects/modal/ui` (2) | `projects/modal/tests` (6 files) | No dedicated browser harness currently | `projects/modal/README.md` | `ng build modal`; package schematics |
-| `i18n` | `projects/i18n/src`, `ui`, and `select` (3) | `projects/i18n/tests` (36 files) | Exclusive independent app under `projects/i18n/testing/app`, browser/SSR suites under `e2e/i18n` | `projects/i18n/README.md`, `CHANGELOG.md`, `projects/i18n/specifications/`, and `docs/i18n/` | `ng build i18n`; independent Angular project name `i18n-e2e`, CSR/SSR builds, colocated Playwright config and SSR smoke |
+| `i18n` | `projects/i18n/src`, `ui`, and `select` (3) | `projects/i18n/tests` (36 files) | Independent consumer app under `e2e/fixtures/i18n`, browser/SSR suites under `e2e/i18n` | `projects/i18n/README.md`, `CHANGELOG.md`, `projects/i18n/specifications/`, and `docs/i18n/` | `ng build i18n`; independent Angular project name `i18n-e2e`, CSR/SSR builds, centralized Playwright config and SSR smoke |
 | `env` | `projects/env/src`; one entry point | `projects/env/tests` (1 file) | Schematics integration tests are package-owned | `projects/env/README.md` | `ng build env`; `projects/env/schematics/` is protected |
 | `menu` | `projects/menu/src`, `projects/menu/ui` (2) | `projects/menu/tests` (7 files) | Shares `e2e/fixtures/overlays` with Select and root `e2e/menu` + `e2e/popup`; no exclusive ownership is implied by the harness name | `projects/menu/README.md`, `CHANGELOG.md`, `projects/menu/specifications/`, `docs/menu/` | `ng build menu`; shared browser build precedes Playwright |
 | `popup` | `projects/popup/src`; one entry point | `projects/popup/tests` | Shared popup behavior is verified through root `e2e/popup` and the Menu/Select harness | `projects/popup/README.md`, `CHANGELOG.md` | `ng build popup`; shared browser build precedes Playwright |
@@ -27,12 +27,14 @@ Counts are a navigation aid, not a measure of coverage. The Angular project file
 
 - `e2e/fixtures/overlays` is one browser app shared by Menu, Select, and popup contract suites. Keep it single and shared until an evidence-backed change shows its runtime or ownership has diverged.
 - Root `e2e/menu`, `e2e/select`, and `e2e/popup` are cross-component browser contracts. The `e2e/` instructions and root Playwright configuration own their execution; package owners own the behavior under test.
-- `projects/i18n/testing` owns the independent `i18n-e2e` Angular application and its exclusive routes, assets, browser tests, and SSR proof. Unlike the shared popup harness, it is package-exclusive.
+- `e2e/fixtures/i18n` contains the independent `i18n-e2e` consumer application. Its browser and SSR suites live under `e2e/i18n`; the i18n package continues to own the tested behavior.
 - `scripts/`, `scripts/tests/`, and `scripts/fixtures/` hold repository-wide verification tooling and evidence, not copies owned by individual packages.
 - Maintainer routing and release skills live in `.agents/skills/`; package consumer guidance lives in package READMEs and topic docs. There is no package-specific consumer skill today.
 - Current topic documentation lives under `docs/i18n/`, `docs/menu/`, `docs/select/`, and `docs/theme/`; package-owned specifications live under each library's `specifications/` directory. `docs/specifications/README.md` is the cross-library status index and old paths remain pointers, not duplicate records.
 
 ## i18n pilot path map
+
+Historical migration record: the table below documents the earlier package-colocated layout. The current consumer application lives under `e2e/fixtures/i18n`, with browser and SSR suites under `e2e/i18n`.
 
 The pilot changed physical ownership while preserving the Angular project name `i18n-e2e`, its independent build/test behavior, and output path:
 

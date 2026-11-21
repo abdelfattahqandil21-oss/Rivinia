@@ -2,7 +2,7 @@
 
 **Owner:** Package and test-harness maintainers
 **Purpose:** connect each compatibility claim to evidence for the exact package version.
-**Status:** package-owned i18n testing is colocated; a reusable packed-consumer smoke runner is available.
+**Status:** consumer fixtures and browser suites are centralized under e2e/; a reusable packed-consumer smoke runner is available.
 
 ## Test layers and owners
 
@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | Unit/component | Current implementation behavior and local accessibility/state contracts | Package tests under `projects/<package>` | Configured unit runner; record exact package and command |
 | Browser E2E | Real browser interaction, focus, layout, ARIA and cross-component composition | Shared `e2e/menu`, `e2e/select`, `e2e/popup`; app in `e2e/fixtures/overlays` | Build package dependencies and exact app first, then Playwright in named browser |
-| i18n browser | Translation, direction, language selection and SSR/CSR integration | `e2e/i18n` and independent `i18n-e2e` app under `projects/i18n/testing/app` | Build i18n, build correct CSR/SSR target, then configured suite |
+| i18n browser | Translation, direction, language selection and SSR/CSR integration | `e2e/i18n` and independent `i18n-e2e` app under `e2e/fixtures/i18n` | Build i18n, build correct CSR/SSR target, then configured suite |
 | Cross-package integration | Public package imports/optional peer composition | Current i18n/select integration and consumer fixtures | Import only documented package exports; test with/without optional peer when relevant |
 | API compatibility | Exported symbols/types/entry points | `scripts/api-surface.mjs` gates eight entry points in the initial four synchronized packages against the 2.0.0-alpha.1 candidate baseline; the 1.0 baseline is archived separately | Review snapshots against the base/tag; do not auto-accept regenerated output |
 | Packed consumer | What npm actually ships | `npm pack`, `scripts/consumer-smoke.mjs`, tracked template at `scripts/fixtures/consumer-smoke/` | Install exact tarball files (not workspace links), compile supplied public imports, run the production Angular build, record package versions and SHA-256, then clean the external temp consumer |

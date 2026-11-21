@@ -30,9 +30,9 @@
 | --- | --- | --- | --- |
 | `projects/<library>/src`, `ui/`, `package.json`, `ng-package.json` | Publishable source, exports, package metadata | Maintainers of that library; changes stay inside public package boundaries | Package unit/build/pack/consumer gates; package README and CHANGELOG |
 | `projects/<library>/tests` or colocated specs | Unit/component contract for that library | Same library owner | `ng test <package>` or its configured test runner |
-| `projects/menu-e2e`, `projects/i18n/testing` | Independent Angular browser harness applications; not packages (`i18n-e2e` is package-exclusive and colocated) | Shared harness owner for Menu/Select; i18n package owner for its harness | Production harness build before dependent Playwright suite |
+| `e2e/fixtures/` (overlays, table, theme, toast, i18n) | Independent Angular browser harness applications; not packages (`i18n-e2e` is package-exclusive and colocated) | Shared harness owner for Menu/Select; i18n package owner for its harness | Production harness build before dependent Playwright suite |
 | `e2e/menu`, `e2e/select`, `e2e/popup` | Cross-component browser behavior and popup conformance | E2E suite owner; package owners review contract changes | Root Playwright config and current built harness |
-| `projects/i18n/testing/e2e` | i18n consumer/browser workflows | i18n package owner | i18n production build, CSR harness build, configured Playwright suite |
+| `e2e/i18n` | i18n consumer/browser workflows | i18n package owner | i18n production build, CSR harness build, configured Playwright suite |
 | `docs/<topic>`, `projects/<library>/README.md` | Consumer documentation and examples | Relevant package owner; shared docs have maintainer review | `check:docs`, exact-version link check at release, example build where applicable |
 | `projects/<library>/CHANGELOG.md` | User-visible package release history | Package/release owner | Entry matches actual released version and release evidence |
 | `.agents/skills/` | Agent procedures shared by Codex and OpenCode | Maintainers | Skill role/version metadata checks; examples against declared versions |
@@ -52,18 +52,18 @@ publishable libraries (projects/<library>)
 @rivinia/i18n/select ── public optional import ──> @rivinia/select/ui
 
 menu/select popup behavior
-  ├─ browser app: projects/menu-e2e
+  ├─ browser app: e2e/fixtures/overlays
   └─ suites: e2e/menu, e2e/select, e2e/popup
 
 i18n browser behavior
-  ├─ independent Angular app: projects/i18n/testing/app (project name: i18n-e2e)
-  └─ suites: projects/i18n/testing/e2e
+  ├─ independent Angular app: e2e/fixtures/i18n (project name: i18n-e2e)
+  └─ suites: e2e/i18n
 
 consumer-facing docs: projects/<library>/README.md + docs/<topic>/
 shared checks: scripts/ + root package scripts
 ```
 
-The repository has eleven publishable Angular libraries, two E2E Angular applications, and no cross-library integration app beyond the optional i18n/select composition. Root `e2e/` is already the shared menu/select/popup suite; i18n keeps its own harness and suite beside its app. Keep this hybrid: it follows executable ownership today, avoids duplicated browser infrastructure, and does not warrant a disruptive move. Extract one shared runner only if multiple suites demonstrably need the same runner lifecycle and a before/after proof preserves Angular/Playwright configuration.
+The repository currently has eleven publishable Angular libraries and five E2E Angular application targets: `menu-e2e`, `table-e2e`, `theme-compat-e2e`, `toast-compat-e2e`, and `i18n-e2e`. Their consumer fixtures live under `e2e/fixtures/`, while browser and SSR suites live under `e2e/`. This layout supersedes the earlier hybrid test placement without changing published packages.
 
 ## Instruction precedence and discovery
 
