@@ -32,7 +32,17 @@ export function clippedOrigin(origin: HTMLElement, bounds: PopupBounds): boolean
 
   for (let ancestor = composedParent(origin); ancestor; ancestor = composedParent(ancestor)) {
     const style = view.getComputedStyle(ancestor);
-    if (!clips(style.overflowX) && !clips(style.overflowY)) continue;
+    // Top-layer elements escape clipping by their outer DOM ancestors.
+    // Still inspect clipping on the top-layer element itself.
+    const topLayerBoundary = ancestor.matches('dialog:modal, :popover-open');
+    const clipsX = clips(style.overflowX);
+    const clipsY = clips(style.overflowY);
+
+    if (clipsX === false && clipsY === false) {
+      if (topLayerBoundary) break;
+      continue;
+    }
+
     const ancestorRect = ancestor.getBoundingClientRect();
     const clipLeft = ancestorRect.left + ancestor.clientLeft;
     const clipTop = ancestorRect.top + ancestor.clientTop;
@@ -45,6 +55,7 @@ export function clippedOrigin(origin: HTMLElement, bounds: PopupBounds): boolean
       bottom = Math.min(bottom, clipTop + ancestor.clientHeight);
     }
     if (right <= left || bottom <= top) return true;
+    if (topLayerBoundary) break;
   }
 
   return (

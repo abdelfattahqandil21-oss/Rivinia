@@ -113,14 +113,21 @@ export class DismissalCoordinator<T extends PopupParticipant<T>> {
 
   private dismissOutside(path: readonly EventTarget[]): void {
     for (const root of [...this.roots]) {
-      const deepestInside = this.deepestContaining(root, path);
-      if (!deepestInside) {
-        this.dismissTree(root, 'outside');
-        continue;
-      }
-      for (const child of [...deepestInside.children]) {
-        if (!this.deepestContaining(child, path)) this.dismissTree(child, 'outside');
-      }
+      this.dismissOutsideBranch(root, path);
+    }
+  }
+
+  private dismissOutsideBranch(node: T, path: readonly EventTarget[]): void {
+    if (node.active === false) return;
+
+    // Keep the interaction branch and dismiss unrelated siblings.
+    if (this.deepestContaining(node, path) === null) {
+      this.dismissTree(node, 'outside');
+      return;
+    }
+
+    for (const child of [...node.children]) {
+      this.dismissOutsideBranch(child, path);
     }
   }
 
@@ -138,7 +145,16 @@ export class DismissalCoordinator<T extends PopupParticipant<T>> {
       (node) =>
         !dialog || composedContains(dialog, node.origin) || composedContains(dialog, node.panel),
     );
-    const top = candidates.sort((a, b) => b.depth - a.depth || b.order - a.order)[0];
+    // Prefer the popup owning the keyboard event.
+    // Use connection order when the event is outside all popups.
+    const targeted = candidates.filter(
+      (node) =>
+        pathContains(path, node.panel) ||
+        pathContains(path, node.origin),
+    );
+
+    const top = (targeted.length > 0 ? targeted : candidates)
+      .sort((a, b) => b.order - a.order)[0];
     if (!top) return;
     event.preventDefault();
     event.stopPropagation();

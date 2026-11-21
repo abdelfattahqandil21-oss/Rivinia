@@ -54,7 +54,8 @@ export class AutoUpdate {
       ) {
         relevantAncestors.add(ancestor);
       }
-      const visibilityAttributes = ['class', 'hidden', 'style'];
+      // Direction changes can alter logical popup alignment at runtime.
+      const visibilityAttributes = ['class', 'hidden', 'style', 'dir'];
       observer.observe(this.origin, {
         attributes: true,
         attributeFilter: visibilityAttributes,

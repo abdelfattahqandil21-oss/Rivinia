@@ -30,8 +30,14 @@ function fixedContainingBlock(panel: HTMLElement, view: BrowserWindow): HTMLElem
     const style = view.getComputedStyle(ancestor);
     const contain = style.contain.split(/\s+/);
     const willChange = style.willChange.split(/,\s*/);
+    const translate = style.getPropertyValue('translate');
+    const scale = style.getPropertyValue('scale');
     if (
       style.transform !== 'none' ||
+      // Independent translate establishes a fixed containing block too.
+      (translate.length > 0 && translate !== 'none') ||
+      // Independent scale also establishes a fixed containing block.
+      (scale.length > 0 && scale !== 'none') ||
       style.perspective !== 'none' ||
       style.filter !== 'none' ||
       (style.getPropertyValue('backdrop-filter') !== '' &&

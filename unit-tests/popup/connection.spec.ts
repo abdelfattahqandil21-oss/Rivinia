@@ -160,6 +160,174 @@ describe('connectPopup', () => {
     childElements.panel.remove();
   });
 
+  it('dismisses a newer independent popup before an older nested popup', () => {
+    const parentElements = createPopupElements();
+    const childElements = createPopupElements();
+    const latestElements = createPopupElements();
+
+    parentElements.panel.append(childElements.origin);
+
+    const parentDismiss = vi.fn();
+    const childDismiss = vi.fn();
+    const latestDismiss = vi.fn();
+
+    const parent = connectPopup({ ...parentElements, onDismiss: parentDismiss });
+    const child = connectPopup({ ...childElements, parent, onDismiss: childDismiss });
+    const latest = connectPopup({ ...latestElements, onDismiss: latestDismiss });
+
+    const escape = () => document.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
+    try {
+      escape();
+      expect(latestDismiss).toHaveBeenCalledExactlyOnceWith('escape');
+      expect(childDismiss).not.toHaveBeenCalled();
+      expect(parentDismiss).not.toHaveBeenCalled();
+
+      escape();
+      expect(childDismiss).toHaveBeenCalledExactlyOnceWith('escape');
+      expect(parentDismiss).not.toHaveBeenCalled();
+
+      escape();
+      expect(parentDismiss).toHaveBeenCalledExactlyOnceWith('escape');
+    } finally {
+      latest.destroy();
+      child.destroy();
+      parent.destroy();
+      parentElements.origin.remove();
+      parentElements.panel.remove();
+      childElements.origin.remove();
+      childElements.panel.remove();
+      latestElements.origin.remove();
+      latestElements.panel.remove();
+    }
+  });
+
+  it('closes sibling popups when interacting inside another child', () => {
+    const parentElements = createPopupElements();
+    const firstElements = createPopupElements();
+    const secondElements = createPopupElements();
+
+    parentElements.panel.append(
+      firstElements.origin,
+      secondElements.origin,
+    );
+
+    const parentDismiss = vi.fn();
+    const firstDismiss = vi.fn();
+    const secondDismiss = vi.fn();
+
+    const parent = connectPopup({
+      ...parentElements,
+      onDismiss: parentDismiss,
+    });
+    const first = connectPopup({
+      ...firstElements,
+      parent,
+      onDismiss: firstDismiss,
+    });
+    const second = connectPopup({
+      ...secondElements,
+      parent,
+      onDismiss: secondDismiss,
+    });
+
+    try {
+      firstElements.panel.dispatchEvent(
+        new PointerEvent('pointerdown', {
+          bubbles: true,
+          composed: true,
+          pointerType: 'mouse',
+        }),
+      );
+
+      expect(parentDismiss).not.toHaveBeenCalled();
+      expect(firstDismiss).not.toHaveBeenCalled();
+      expect(secondDismiss).toHaveBeenCalledExactlyOnceWith('outside');
+    } finally {
+      second.destroy();
+      first.destroy();
+      parent.destroy();
+
+      for (const elements of [
+        parentElements,
+        firstElements,
+        secondElements,
+      ]) {
+        elements.origin.remove();
+        elements.panel.remove();
+      }
+    }
+  });
+
+  it('routes Escape from a portaled child to its logical popup before unrelated connections', () => {
+    const dialog = document.createElement('dialog');
+    const parentElements = createPopupElements();
+    const childElements = createPopupElements();
+    const unrelatedElements = createPopupElements();
+
+    document.body.append(dialog);
+    dialog.open = true;
+    dialog.append(parentElements.origin, parentElements.panel);
+    parentElements.panel.append(childElements.origin);
+
+    const parentDismiss = vi.fn();
+    const childDismiss = vi.fn();
+    const unrelatedDismiss = vi.fn();
+
+    const parent = connectPopup({
+      ...parentElements,
+      onDismiss: parentDismiss,
+    });
+
+    const child = connectPopup({
+      ...childElements,
+      parent,
+      onDismiss: childDismiss,
+    });
+
+    const unrelated = connectPopup({
+      ...unrelatedElements,
+      onDismiss: unrelatedDismiss,
+    });
+
+    try {
+      const escape = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      });
+
+      childElements.panel.dispatchEvent(escape);
+
+      expect(escape.defaultPrevented).toBe(true);
+      expect(childDismiss).toHaveBeenCalledExactlyOnceWith('escape');
+      expect(parentDismiss).not.toHaveBeenCalled();
+      expect(unrelatedDismiss).not.toHaveBeenCalled();
+    } finally {
+      unrelated.destroy();
+      child.destroy();
+      parent.destroy();
+
+      dialog.remove();
+
+      for (const elements of [
+        parentElements,
+        childElements,
+        unrelatedElements,
+      ]) {
+        elements.origin.remove();
+        elements.panel.remove();
+      }
+    }
+  });
+
   it('uses one Escape for the top popup and leaves dialog cancellation untouched', () => {
     const dialog = document.createElement('dialog');
     const parentElements = createPopupElements();

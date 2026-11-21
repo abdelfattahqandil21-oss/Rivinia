@@ -64,4 +64,58 @@ describe('computePopupPosition', () => {
       }),
     ).toEqual({ left: 140, top: 66, placement: 'top-end' });
   });
+
+  it('positions right-end with vertical end alignment', () => {
+    expect(
+      computePopupPosition({
+        origin: { left: 100, top: 90, width: 40, height: 30 },
+        panel: { width: 50, height: 70 },
+        viewport,
+        direction: 'ltr',
+        placement: 'right-end',
+        offset: 6,
+        padding: 8,
+      }),
+    ).toEqual({ left: 146, top: 50, placement: 'right-end' });
+  });
+
+  it('flips a right-side popup to the left near the viewport edge', () => {
+    expect(
+      computePopupPosition({
+        origin: { left: 365, top: 100, width: 20, height: 30 },
+        panel: { width: 80, height: 50 },
+        viewport,
+        direction: 'ltr',
+        placement: 'right-start',
+        offset: 8,
+        padding: 10,
+      }),
+    ).toEqual({ left: 277, top: 100, placement: 'left-start' });
+  });
+
+  it('aligns logical end correctly in RTL', () => {
+    expect(
+      computePopupPosition({
+        origin: { left: 100, top: 40, width: 80, height: 20 },
+        panel: { width: 120, height: 60 },
+        viewport,
+        direction: 'rtl',
+        placement: 'bottom-end',
+      }),
+    ).toEqual({ left: 100, top: 60, placement: 'bottom-end' });
+  });
+
+  it('honors non-zero viewport bounds when flipping and clamping', () => {
+    expect(
+      computePopupPosition({
+        origin: { left: 440, top: 300, width: 40, height: 20 },
+        panel: { width: 90, height: 60 },
+        viewport: { left: 100, top: 50, right: 500, bottom: 350 },
+        direction: 'ltr',
+        placement: 'bottom-start',
+        offset: 8,
+        padding: 12,
+      }),
+    ).toEqual({ left: 398, top: 232, placement: 'top-start' });
+  });
 });
