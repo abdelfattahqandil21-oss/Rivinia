@@ -335,3 +335,73 @@ test('neighbouring dates are quieter, select correctly and retain panel focus', 
   await picker.getByRole('button', { name: 'OK', exact: true }).click();
   await expect(trigger).toHaveAttribute('aria-expanded', 'false');
 });
+
+
+for (const scenario of [
+  { id: 'booking-date', width: 360, height: 420 },
+  { id: 'appointment-12-hour', width: 390, height: 480 },
+  { id: 'default-datetime', width: 320, height: 568 },
+]) {
+  test(`${marker}: ${scenario.id} at ${scenario.width}x${scenario.height}`, async ({ page }) => {
+    await page.setViewportSize({
+      width: scenario.width,
+      height: scenario.height,
+    });
+
+    const picker = page.locator(`#${scenario.id}`);
+    const trigger = picker.locator('.rv-datepicker-trigger');
+
+    await trigger.evaluate((element) =>
+      element.scrollIntoView({ block: 'center' }),
+    );
+
+    await trigger.click();
+
+    const panel = picker.locator('.rv-datepicker-panel');
+    await expect(panel).toBeVisible();
+
+    const metrics = await panel.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const viewport = window.visualViewport;
+
+      const left = viewport?.offsetLeft ?? 0;
+      const top = viewport?.offsetTop ?? 0;
+
+      return {
+        panel: {
+          left: rect.left,
+          top: rect.top,
+          right: rect.right,
+          bottom: rect.bottom,
+          height: rect.height,
+        },
+        viewport: {
+          left,
+          top,
+          right: left + (viewport?.width ?? window.innerWidth),
+          bottom: top + (viewport?.height ?? window.innerHeight),
+        },
+        overflowY: getComputedStyle(element).overflowY,
+        scrollHeight: element.scrollHeight,
+        clientHeight: element.clientHeight,
+      };
+    });
+
+    console.log(JSON.stringify({ scenario, metrics }));
+
+    expect(metrics.panel.left).toBeGreaterThanOrEqual(metrics.viewport.left - 2);
+    expect(metrics.panel.right).toBeLessThanOrEqual(metrics.viewport.right + 2);
+    expect(metrics.panel.top).toBeGreaterThanOrEqual(metrics.viewport.top - 2);
+    expect(metrics.panel.bottom).toBeLessThanOrEqual(metrics.viewport.bottom + 2);
+
+    const confirm = panel.locator(
+      '.rv-datepicker-ok, .rv-datetimepicker-ok, .rv-datetimepicker-apply',
+    ).first();
+
+    await expect(confirm).toBeVisible();
+    await expect(confirm).toBeInViewport();
+
+    await page.keyboard.press('Escape');
+    await expect(trigger).toBeFocused();
+  });
+}
