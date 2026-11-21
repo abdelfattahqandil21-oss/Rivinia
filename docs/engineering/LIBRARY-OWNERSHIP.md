@@ -1,6 +1,6 @@
 # Library ownership map
 
-**Status:** current layout inventory recorded 2026-11-03; i18n testing colocation is the first verified ownership migration.
+**Status:** current ownership map revised 2026-11-21; the historical i18n pilot is retained below as a migration record.
 **Purpose:** show who owns implementation, tests, harnesses, documentation, and verification before moving files.
 
 ## Package boundaries
@@ -10,16 +10,16 @@ Every publishable library is an Angular project under `projects/<name>/`, with i
 | Library | Entry points and implementation | Unit tests | Integration / browser ownership | Specs and consumer docs | Build and verification |
 | --- | --- | --- | --- | --- | --- |
 | `http` | `projects/http/src`; one entry point | `projects/http/tests` (3 files) | No dedicated browser harness; shared consumer checks are infrastructure-owned | `projects/http/README.md` | `ng build http`; schematic tests are package-owned |
-| `toast` | `projects/toast/src`, `projects/toast/ui` (2 entry points) | `projects/toast/tests` (3 files) | No dedicated browser suite; component behavior is covered by unit tests | `projects/toast/README.md` | `ng build toast`; package schematics |
-| `modal` | `projects/modal/src`, `projects/modal/ui` (2) | `projects/modal/tests` (6 files) | No dedicated browser harness currently | `projects/modal/README.md` | `ng build modal`; package schematics |
+| `toast` | `projects/toast/src`, `projects/toast/ui` (2 entry points) | `projects/toast/tests` (3 files) | Dedicated browser contracts in `e2e/toast`, with standalone and Theme consumer fixture under `e2e/fixtures/toast` | `projects/toast/README.md` | `ng build toast`; package schematics |
+| `modal` | `projects/modal/src`, `projects/modal/ui` (2) | `projects/modal/tests` (6 files) | Shared browser coverage in `e2e/theme-compat`, including Modal surface and interaction checks | `projects/modal/README.md` | `ng build modal`; package schematics |
 | `i18n` | `projects/i18n/src`, `ui`, and `select` (3) | `projects/i18n/tests` (36 files) | Independent consumer app under `e2e/fixtures/i18n`, browser/SSR suites under `e2e/i18n` | `projects/i18n/README.md`, `CHANGELOG.md`, `projects/i18n/specifications/`, and `docs/i18n/` | `ng build i18n`; independent Angular project name `i18n-e2e`, CSR/SSR builds, centralized Playwright config and SSR smoke |
 | `env` | `projects/env/src`; one entry point | `projects/env/tests` (1 file) | Schematics integration tests are package-owned | `projects/env/README.md` | `ng build env`; `projects/env/schematics/` is protected |
 | `menu` | `projects/menu/src`, `projects/menu/ui` (2) | `projects/menu/tests` (7 files) | Shares `e2e/fixtures/overlays` with Select and root `e2e/menu` + `e2e/popup`; no exclusive ownership is implied by the harness name | `projects/menu/README.md`, `CHANGELOG.md`, `projects/menu/specifications/`, `docs/menu/` | `ng build menu`; shared browser build precedes Playwright |
 | `popup` | `projects/popup/src`; one entry point | `projects/popup/tests` | Shared popup behavior is verified through root `e2e/popup` and the Menu/Select harness | `projects/popup/README.md`, `CHANGELOG.md` | `ng build popup`; shared browser build precedes Playwright |
 | `select` | `projects/select/src`, `projects/select/ui` (2) | `projects/select/tests` (20 files) | Shares the Menu harness and root `e2e/select` + `e2e/popup` contracts | `projects/select/README.md`, `CHANGELOG.md`, `projects/select/specifications/`, `docs/select/` | `ng build select`; shared browser build precedes Playwright |
 | `theme` | `projects/theme/src` and `styles`; one package entry | `projects/theme/tests` (1 file) | Browser theme/contrast/component checks are shared verification infrastructure in `scripts/` and `scripts/fixtures/` | `projects/theme/README.md`, `CHANGELOG.md`, `projects/theme/specifications/`, `docs/theme/` | `ng build theme`, package-content, contrast, dark-mode and component-theme gates |
-| `datepicker` | `projects/datepicker/src`, `ui` (2) | `projects/datepicker/tests` (15 files) | No dedicated browser harness currently | `projects/datepicker/README.md` | `ng build datepicker`; unit coverage owns calendar/date/time behavior |
-| `table` | `projects/table/src`, `ui` (2) | `projects/table/tests` (4 files) | No dedicated browser harness currently | `projects/table/README.md`, `projects/table/specifications/` | `ng build table`; unit coverage owns pipeline, spans and UI behavior |
+| `datepicker` | `projects/datepicker/src`, `ui` (2) | `projects/datepicker/tests` (15 files) | Browser coverage through `playwright.datepicker.config.ts` and shared `e2e/theme-compat` contracts | `projects/datepicker/README.md` | `ng build datepicker`; unit coverage owns calendar/date/time behavior |
+| `table` | `projects/table/src`, `ui` (2) | `projects/table/tests` (4 files) | Browser contracts in `e2e/table`, using the independent `e2e/fixtures/table` consumer app | `projects/table/README.md`, `projects/table/specifications/` | `ng build table`; unit coverage owns pipeline, spans and UI behavior |
 
 Counts are a navigation aid, not a measure of coverage. The Angular project files, package manifests, public entry points, and actual suite references are authoritative.
 

@@ -30,7 +30,7 @@
 | --- | --- | --- | --- |
 | `projects/<library>/src`, `ui/`, `package.json`, `ng-package.json` | Publishable source, exports, package metadata | Maintainers of that library; changes stay inside public package boundaries | Package unit/build/pack/consumer gates; package README and CHANGELOG |
 | `projects/<library>/tests` or colocated specs | Unit/component contract for that library | Same library owner | `ng test <package>` or its configured test runner |
-| `e2e/fixtures/` (overlays, table, theme, toast, i18n) | Independent Angular browser harness applications; not packages (`i18n-e2e` is package-exclusive and colocated) | Shared harness owner for Menu/Select; i18n package owner for its harness | Production harness build before dependent Playwright suite |
+| `e2e/fixtures/` (overlays, table, theme, toast, i18n) | Independent Angular browser harness applications; not packages (`i18n-e2e` is package-exclusive, with its fixture centralized under `e2e/fixtures/i18n`) | Shared harness owner for Menu/Select; i18n package owner for its harness | Production harness build before dependent Playwright suite |
 | `e2e/menu`, `e2e/select`, `e2e/popup` | Cross-component browser behavior and popup conformance | E2E suite owner; package owners review contract changes | Root Playwright config and current built harness |
 | `e2e/i18n` | i18n consumer/browser workflows | i18n package owner | i18n production build, CSR harness build, configured Playwright suite |
 | `docs/<topic>`, `projects/<library>/README.md` | Consumer documentation and examples | Relevant package owner; shared docs have maintainer review | `check:docs`, exact-version link check at release, example build where applicable |
