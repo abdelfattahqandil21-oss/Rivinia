@@ -21,8 +21,13 @@ export class RiviniaFileInputComponent implements FormValueControl<readonly File
   readonly maxBytes = input<number>();
   readonly chooseLabel = input('Choose files');
   readonly retryLabel = input('Try again');
+  readonly uploadingLabel = input('Uploading');
+  readonly completeLabel = input('Complete');
+  readonly failedLabel = input('Failed');
+  readonly uploadProgressLabel = input('Upload progress for');
   readonly uploadIcon = input<TemplateRef<unknown>>();
   readonly removeIcon = input<TemplateRef<unknown>>();
+  readonly viewIcon = input<TemplateRef<unknown>>();
   readonly uploadStates = input<ReadonlyMap<File, FileUploadStatus>>();
   readonly viewer = input<'none' | 'dialog' | 'external'>('none');
   readonly viewLabel = input('View image');
@@ -178,3 +183,4 @@ export class RiviniaFileInputComponent implements FormValueControl<readonly File
     if (!(event.relatedTarget instanceof Node) || !host.contains(event.relatedTarget)) this.touch.emit();
   }
 }
+

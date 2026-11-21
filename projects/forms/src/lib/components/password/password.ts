@@ -1,7 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -18,7 +17,6 @@ import type { PasswordIconContext } from '../../models/password-icon-context';
 
 @Component({
   selector: 'rv-password',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet],
   templateUrl: './password.html',
   host: { '(focusout)': 'onFocusOut($event)' },

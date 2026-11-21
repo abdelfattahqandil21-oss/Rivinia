@@ -23,11 +23,21 @@ export class RiviniaImageInputComponent implements FormValueControl<File | null>
   readonly invalid = input(false, { transform: booleanAttribute });
   readonly uploadIcon = input<TemplateRef<unknown>>();
   readonly removeIcon = input<TemplateRef<unknown>>();
+  readonly viewIcon = input<TemplateRef<unknown>>();
   readonly viewer = input<'none' | 'dialog' | 'external'>('none');
   readonly viewRequested = output<File>();
   readonly uploadState = input<FileUploadStatus>();
   readonly chooseLabel = input('Choose image');
   readonly replaceLabel = input('Replace image');
+  readonly removeLabel = input('Remove');
+  readonly viewLabel = input('View image');
+  readonly closeViewLabel = input('Close preview');
+  readonly retryLabel = input('Try again');
+  readonly dropHint = input('Drag files here or choose files.');
+  readonly uploadingLabel = input('Uploading');
+  readonly completeLabel = input('Complete');
+  readonly failedLabel = input('Failed');
+  readonly uploadProgressLabel = input('Upload progress for');
   readonly rejectedFiles = output<readonly File[]>();
   readonly retry = output<File>();
   readonly touch = output<void>();
@@ -47,3 +57,4 @@ export class RiviniaImageInputComponent implements FormValueControl<File | null>
     this.picker().focus(options);
   }
 }
+

@@ -51,21 +51,36 @@
           <span class="file-copy">
             <strong>{{ file.name }}</strong>
             <span class="hint">{{ sizeLabel(file.size) }}@if (upload) {
-              · {{ upload.message || (upload.state === 'uploading' ? 'Uploading' : upload.state === 'complete' ? 'Complete' : 'Failed') }}
+              · {{ upload.message || (upload.state === 'uploading' ? uploadingLabel() : upload.state === 'complete' ? completeLabel() : failedLabel()) }}
             }</span>
           </span>
         </span>
-        <button type="button" [disabled]="blocked()" [attr.aria-label]="removeLabel() + ' ' + file.name"
-          (click)="remove($index)">
-          @if (removeIcon(); as custom) { <span class="action-icon" aria-hidden="true"><ng-container [ngTemplateOutlet]="custom" /></span> }
-          @else { {{ removeLabel() }} }
-        </button>
-        @if (previewLayout() !== 'gallery' && viewer() !== 'none' && previews().has(file)) {
-          <button type="button" class="view-link" [attr.aria-label]="viewLabel() + ' ' + file.name"
-            (click)="openView(file)">{{ viewLabel() }}</button>
-        }
+        <div class="file-actions">
+          @if (previewLayout() !== 'gallery' && viewer() !== 'none' && previews().has(file)) {
+            <button type="button" class="viewer-action" [attr.aria-label]="viewLabel() + ' ' + file.name"
+              [attr.data-tooltip]="viewLabel()" (click)="openView(file)">
+              @if (viewIcon(); as custom) {
+                <span aria-hidden="true"><ng-container [ngTemplateOutlet]="custom" /></span>
+              } @else {
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+                  <circle cx="12" cy="12" r="2.5" />
+                </svg>
+              }
+            </button>
+          }
+          <button type="button" [class.viewer-action]="!!removeIcon()" [disabled]="blocked()"
+            [attr.aria-label]="removeLabel() + ' ' + file.name" [attr.data-tooltip]="removeIcon() ? removeLabel() : null"
+            (click)="remove($index)">
+            @if (removeIcon(); as custom) {
+              <span class="action-icon" aria-hidden="true"><ng-container [ngTemplateOutlet]="custom" /></span>
+            } @else {
+              {{ removeLabel() }}
+            }
+          </button>
+        </div>
         @if (upload?.state === 'uploading' && upload) {
-          <progress [attr.aria-label]="'Upload progress for ' + file.name" max="100" [attr.value]="progress(upload)"></progress>
+          <progress [attr.aria-label]="uploadProgressLabel() + ' ' + file.name" max="100" [attr.value]="progress(upload)"></progress>
         }
         @if (upload?.state === 'failed' && retryLabel()) {
           <button class="retry" type="button" [disabled]="blocked()" (click)="retry.emit(file)">{{ retryLabel() }}</button>
@@ -104,3 +119,4 @@
     }
   </dialog>
 }
+

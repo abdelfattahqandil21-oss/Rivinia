@@ -2,5 +2,9 @@
   variant="dropzone" previewImages previewLayout="image" [maxBytes]="maxBytes()"
   [chooseLabel]="value() ? replaceLabel() : chooseLabel()" [uploadIcon]="uploadIcon()" [removeIcon]="removeIcon()"
   [disabled]="disabled()" [readonly]="readonly()" [required]="required()" [invalid]="invalid()"
-  [viewer]="viewer()" (viewRequested)="viewRequested.emit($event)" [value]="files()" [uploadStates]="states()" (valueChange)="value.set($event[0] ?? null)"
+  [viewer]="viewer()" [viewIcon]="viewIcon()" [removeLabel]="removeLabel()" [viewLabel]="viewLabel()"
+  [closeViewLabel]="closeViewLabel()"
+  [retryLabel]="retryLabel()" [dropHint]="dropHint()" [uploadingLabel]="uploadingLabel()"
+  [completeLabel]="completeLabel()" [failedLabel]="failedLabel()" [uploadProgressLabel]="uploadProgressLabel()"
+  (viewRequested)="viewRequested.emit($event)" [value]="files()" [uploadStates]="states()" (valueChange)="value.set($event[0] ?? null)"
   (rejectedFiles)="rejectedFiles.emit($event)" (retry)="retry.emit($event)" (touch)="touch.emit()" />

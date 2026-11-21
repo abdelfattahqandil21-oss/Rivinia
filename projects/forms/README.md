@@ -209,3 +209,5 @@ Supply optional decorative templates with `[uploadIcon]` and `[removeIcon]`. Dri
 Use `previewImages previewLayout="gallery" multiple` on `rv-file-input` to present an array as responsive image tiles. `rv-image-input` supplies the dedicated large preview for one file. Add `viewer="dialog"` to either for a native full-size preview with navigation for arrays. Use `viewer="external"` and `(viewRequested)` to open your own viewer, such as Rivinia Modal, from the selected File. Neither path introduces a Modal dependency into Forms.
 
 Use `multiple selectionMode="append"` to add each batch from the picker or dropzone to the existing array. The default `replace` replaces the array. A single-file field always replaces its selection.
+
+The view action uses a default eye icon and a tooltip. Pass a decorative template using `[viewIcon]` to customize the icon on a single-image preview or a list row. Gallery thumbnails remain the action that opens each image.
