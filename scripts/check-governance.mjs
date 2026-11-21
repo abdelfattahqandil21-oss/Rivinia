@@ -224,7 +224,7 @@ export function validateGovernance({ root = repositoryRoot } = {}) {
   }
   const taskTemplate = 'docs/engineering/templates/task-record.md';
   if (existsSync(join(root, taskTemplate))) {
-    for (const field of ['Agent identity', 'Goal and scope', 'Branch / worktree', 'Base SHA', 'Owned paths', 'Verification', 'Next safe action']) {
+    for (const field of ['Agent identity', 'Goal and scope', 'Branch', 'Base SHA', 'Owned paths', 'Verification', 'Next safe action']) {
       if (!read(taskTemplate).includes(`**${field}:**`)) problems.push(`task record template missing field: ${field}`);
     }
   }

@@ -1,5 +1,8 @@
 # Worktrees — forbidden by default
 
+**Owner:** Rivinia maintainers
+**Purpose:** Document the approval required for a Git worktree operation.
+
 **Status: restricted exception; superseded worktree-first policy.** Owner policy on 2026-11-21 is to use **branches in the single existing Rivinia checkout**, not worktrees.
 
 Do not execute `git worktree add`, `git worktree move`, `git worktree remove`, `git worktree prune`, or create alternative clones/workspaces because a task is complicated, because parallel work is convenient, or because older instructions recommend it.

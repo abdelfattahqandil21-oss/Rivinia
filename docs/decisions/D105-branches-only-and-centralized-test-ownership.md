@@ -1,6 +1,6 @@
 # D105 — Branch-only agent workflow and centralized test/tooling ownership
 
-**Date:** 2026-11-21
+## 2026-11-21 — D105: Branch-only agent workflow and centralized test/tooling ownership
 **Status:** Owner-approved *direction and Git policy*; physical migrations not automatically completed
 **Scope:** Repository governance, Angular test organization, Playwright and script ownership; **not** runtime APIs, released versions or publish authorization.
 

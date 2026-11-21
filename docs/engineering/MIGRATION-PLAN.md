@@ -1,5 +1,8 @@
 # Architecture refactor — migration plan and verification gates
 
+**Owner:** Rivinia maintainers
+**Purpose:** Track architecture migration stages and verification gates.
+
 **Status:** Phase 1 (library unit-test centralization) completed and verified on 2026-11-21. E2E and scripts phases remain unstarted. Historical governance migration reports are preserved under [the archive](../archive/repository-architecture/README.md).
 
 ## 0. Preflight, every scoped change

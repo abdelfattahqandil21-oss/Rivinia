@@ -34,7 +34,7 @@ function fixture() {
     mkdirSync(path.slice(0, path.lastIndexOf('/')), { recursive: true });
     const metadata = file.includes('/templates/') ? '' : '**Owner:** Test\n**Purpose:** Test fixture\n';
     const fields = file.endsWith('task-record.md')
-      ? ['Agent identity', 'Goal and scope', 'Branch / worktree', 'Base SHA', 'Owned paths', 'Verification', 'Next safe action']
+      ? ['Agent identity', 'Goal and scope', 'Branch', 'Base SHA', 'Owned paths', 'Verification', 'Next safe action']
           .map((field) => `**${field}:**`)
           .join('\n')
       : '';

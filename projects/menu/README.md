@@ -41,7 +41,7 @@ That is the whole menu: arrow keys and typeahead, one highlighted row, Escape
 back to the trigger, and a panel that stays attached to its button in
 right-to-left layouts. No service providers, no global styles to configure. The
 same page under
-[`projects/menu-e2e/src/app/pages`](https://github.com/abdelfattahqandil21-oss/Rivinia/tree/menu/v2.0.0-alpha.1/projects/menu-e2e/src/app/pages)
+[`e2e/fixtures/overlays/src/app/pages`](https://github.com/abdelfattahqandil21-oss/Rivinia/tree/menu/v2.0.0-alpha.1/e2e/fixtures/overlays/src/app/pages)
 is what the conformance suite drives — `npx ng build menu-e2e` runs it locally.
 
 ## Why `@rivinia/menu`

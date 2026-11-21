@@ -1,5 +1,8 @@
 # Testing architecture — contract and location
 
+**Owner:** Rivinia maintainers
+**Purpose:** Define test ownership, locations and verification gates.
+
 **Status:** Library unit suites are centralized under `unit-tests/<library>/`. Verify the live checkout before relying on counts. The previous dated testing memo is preserved in the [archive](../archive/repository-architecture/TESTING-ARCHITECTURE-LEGACY.md).
 
 ## Four distinct layers

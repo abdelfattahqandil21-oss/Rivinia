@@ -3,7 +3,7 @@
 - **Agent identity:**
 - **Started at (UTC, verified):**
 - **Goal and scope:**
-- **Branch (single checkout; no worktree):**
+- **Branch:**
 - **Base SHA:**
 - **Owned paths:**
 - **Out-of-scope paths/actions:**

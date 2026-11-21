@@ -1,5 +1,8 @@
 # Engineering governance
 
+**Owner:** Rivinia maintainers
+**Purpose:** Index of current engineering policies and verification guides.
+
 **Status:** Current navigation as of 2026-11-21. **Policy authority:** current owner instruction > root `AGENTS.md` > nearest `AGENTS.md` > invoked skill; decision/runbook records give additional context but do not override owner-approved current policy.
 
 | Responsibility | Document |

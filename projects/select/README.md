@@ -44,7 +44,7 @@ That is the whole field: type to filter, Tab into the list, Enter to pick,
 Escape back to the trigger, and a panel that stays attached to its trigger in a
 right-to-left form inside a left-to-right app. No service providers, no global
 styles to configure. The same page under
-[`projects/menu-e2e/src/app/pages/select.ts`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/projects/menu-e2e/src/app/pages/select.ts)
+[`e2e/fixtures/overlays/src/app/pages/select.ts`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/select/v2.0.0-alpha.1/e2e/fixtures/overlays/src/app/pages/select.ts)
 is what the popup conformance suite drives — `npx ng build menu-e2e` runs it
 locally.
 

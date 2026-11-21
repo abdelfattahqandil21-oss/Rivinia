@@ -43,7 +43,7 @@ export class Header {
 
 `title()` and the pipe update on the click and the page's direction flips with the
 language — nothing else is wired by hand. The same app under
-[`projects/i18n/testing/app/src`](https://github.com/abdelfattahqandil21-oss/Rivinia/tree/i18n/v2.0.0-alpha.1/projects/i18n/testing/app/src)
+[`e2e/fixtures/i18n/src`](https://github.com/abdelfattahqandil21-oss/Rivinia/tree/i18n/v2.0.0-alpha.1/e2e/fixtures/i18n/src)
 is what the Playwright suites drive: `npx ng build i18n-e2e` runs it locally.
 
 ## Why `@rivinia/i18n`
