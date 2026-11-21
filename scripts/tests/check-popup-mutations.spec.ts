@@ -14,14 +14,14 @@ import { failingCases, failingChecks } from '../check-popup-mutations.mjs';
  * `check()`.
  */
 
-const RED = '  ✘  1 [chromium] › e2e/popup/conformance.spec.ts:41:7 › rv-menu popup › a height-only resize keeps the panel open (1.2s)';
-const GREEN = '  ✓  2 [chromium] › e2e/popup/conformance.spec.ts:52:7 › rv-menu popup › Escape closes and returns focus (34ms)';
+const RED = '  ✘  1 [chromium] › e2e/popup/conformance.spec.ts:645:9 › popup conformance: menu panel › a height-only resize keeps the panel open and attached (1.2s)';
+const GREEN = '  ✓  2 [chromium] › e2e/popup/conformance.spec.ts:458:9 › popup conformance: menu panel › Escape closes and returns focus to the trigger (34ms)';
 const SUMMARY = '  1 failed\n  1 passed (1.1s)';
 
 describe('failingCases — the browser harness', () => {
   it('reads the describe-prefixed title out of a red line, minus location and duration', () => {
     expect(failingCases(RED)).toEqual([
-      'rv-menu popup › a height-only resize keeps the panel open',
+      'popup conformance: menu panel › a height-only resize keeps the panel open and attached',
     ]);
   });
 
@@ -33,16 +33,16 @@ describe('failingCases — the browser harness', () => {
     const other =
       '  ✘  1 [chromium] › e2e/select/select.spec.ts:9:7 › select: multi mode › picks two (88ms)';
     const [title] = failingCases(other);
-    // Not dropped, and still matched by the harness's `endsWith` comparison.
+    // Unrelated failures remain visible to the exact-match mutation gate.
     expect(title.endsWith('select: multi mode › picks two')).toBe(true);
   });
 
   it('counts a retried case once, and returns a stable order', () => {
     const second =
-      '  ✘  2 [chromium] › e2e/popup/conformance.spec.ts:60:7 › rv-select popup › a width change closes it (5ms)';
+      '  ✘  2 [chromium] › e2e/popup/conformance.spec.ts:684:9 › popup conformance: select popup › a width change closes it while focus remains inside the panel (5ms)';
     expect(failingCases(`${second}\n${RED}\n${RED}`)).toEqual([
-      'rv-menu popup › a height-only resize keeps the panel open',
-      'rv-select popup › a width change closes it',
+      'popup conformance: menu panel › a height-only resize keeps the panel open and attached',
+      'popup conformance: select popup › a width change closes it while focus remains inside the panel',
     ].sort());
   });
 });
