@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.json",
-  "compilerOptions": { "types": ["vitest/globals"] },
-  "include": ["tests/**/*.ts"]
+  "compilerOptions": { "rootDir": "../..", "types": ["vitest/globals"] },
+  "include": ["../../unit-tests/forms/*.ts"]
 }

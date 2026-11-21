@@ -3,13 +3,13 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "rootDir": "../..",
     "outDir": "../../out-tsc/spec",
     "types": ["vitest/globals"]
   },
   /*
-   * The specs live in `<project>/tests`, OUTSIDE the source root: `src/`
-   * holds only what the package ships. The test target's `include` (see
-   * angular.json) reaches them; this tsconfig compiles them.
+   * Unit tests live under `unit-tests/toast`, outside the publishable package.
+   * The test target's `include` (see angular.json) reaches them.
    */
-  "include": ["src/**/*.d.ts", "tests/**/*.d.ts", "tests/**/*.spec.ts"]
+  "include": ["src/**/*.d.ts", "../../unit-tests/toast/*.d.ts", "../../unit-tests/toast/*.spec.ts"]
 }
