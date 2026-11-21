@@ -612,6 +612,38 @@ describe('rv-datepicker — clearing', () => {
     expect(mounted.trigger().textContent?.trim()).toBe('Choose date');
   });
 
+  it('keeps staged clear after an equivalent external date update', () => {
+    const mounted = mount({}, (host) => {
+      host.commitMode = 'immediate';
+      host.clearable.set(true);
+      host.value.set(d(2026, 10, 25));
+    });
+
+    mounted.open();
+
+    const clear = mounted.panel()
+      ?.querySelector<HTMLButtonElement>('.rv-datepicker-clear-action');
+
+    expect(clear).toBeTruthy();
+    clear?.click();
+    mounted.settle();
+
+    // Same date values, different object reference.
+    mounted.host.value.set(d(2026, 10, 25));
+    mounted.settle();
+
+    const ok = mounted.panel()
+      ?.querySelector<HTMLButtonElement>('.rv-datepicker-ok');
+
+    expect(ok).toBeTruthy();
+    expect(ok?.disabled).toBe(false);
+
+    ok?.click();
+    mounted.settle();
+
+    expect(mounted.host.value()).toBeNull();
+  });
+
   it('takes clearable from the configuration', () => {
     const mounted = mount({ clearable: true }, (host) => host.value.set(d(2026, 10, 25)));
     mounted.open();

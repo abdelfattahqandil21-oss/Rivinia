@@ -135,9 +135,15 @@ export class RiviniaDatepickerComponent implements FormValueControl<RiviniaDate 
   readonly touch = output<void>();
   readonly applied = output<RiviniaPickerApplied<RiviniaDate>>();
   private readonly clearSnapshot = signal<RiviniaDate | null | undefined>(undefined);
-  protected readonly pendingClear = computed(
-    () => this.clearSnapshot() === this.normalized() && this.clearSnapshot() !== undefined,
-  );
+  protected readonly pendingClear = computed(() => {
+    const snapshot = this.clearSnapshot();
+    const current = this.normalized();
+
+    if (snapshot === undefined) return false;
+    if (snapshot === null) return current === null;
+
+    return isSameDay(snapshot, current);
+  });
 
   protected readonly open = signal(false);
   /** The panel stays in the DOM for the short exit animation, then leaves. */
