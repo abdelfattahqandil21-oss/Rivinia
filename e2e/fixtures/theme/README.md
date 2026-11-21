@@ -1,7 +1,7 @@
 # Theme compatibility consumer fixture
 
 This Angular host consumes the current workspace builds of Select, Datepicker,
-DateTimepicker and Theme. The seven production configurations use the same
+DateTimepicker and Theme. The nine production configurations use the same
 Angular components and data, but each gets its own output and one CSS stack:
 
 | Configuration | Stylesheet stack |
@@ -10,6 +10,8 @@ Angular components and data, but each gets its own output and one CSS stack:
 | `tailwind` | Tailwind v4, including Preflight, plus the Rivinia adapter |
 | `tailwind-no-preflight` | Tailwind theme/utilities and the Rivinia adapter |
 | `tailwind-prefix` | Prefixed Tailwind v4 utilities and the Rivinia adapter |
+| `tailwind-v3` | Tailwind v3 with Rivinia semantic tokens and generated utilities |
+| `bootstrap-tailwind` | Bootstrap 5.3 and Tailwind v4 with Rivinia adapters |
 | `bootstrap` | Bootstrap 5.3 Reboot plus the Rivinia adapter |
 | `scss` | Rivinia Theme loaded through its Sass entry |
 | `less` | Rivinia Theme CSS compiled by Angular's Less processor |

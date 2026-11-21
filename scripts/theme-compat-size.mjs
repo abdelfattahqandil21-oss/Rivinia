@@ -61,9 +61,9 @@ const report = {
 let commonMainJavascriptHash;
 
 for (const sourceFile of [
-  'projects/theme-compat-e2e/src/styles/token-overrides.css',
-  'projects/theme-compat-e2e/src/styles/custom.scss',
-  'projects/theme-compat-e2e/src/styles/custom.less',
+  'e2e/fixtures/theme/src/styles/token-overrides.css',
+  'e2e/fixtures/theme/src/styles/custom.scss',
+  'e2e/fixtures/theme/src/styles/custom.less',
 ]) {
   const source = await readFile(resolve(root, sourceFile), 'utf8');
   if (/::ng-deep|!important|\.rv-[\w-]+/.test(source)) {

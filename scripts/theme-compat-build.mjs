@@ -38,7 +38,10 @@ async function treeFingerprint(directory) {
   const files = await filesUnder(directory);
   const hash = createHash('sha256');
   for (const path of files) {
-    hash.update(relative(directory, path)).update('\0').update(await readFile(path));
+    hash
+      .update(relative(directory, path))
+      .update('\0')
+      .update(await readFile(path));
   }
   return { sha256: hash.digest('hex'), files: files.length };
 }
@@ -55,11 +58,17 @@ for (const script of ['build:popup', 'build:select', 'build:datepicker', 'build:
 }
 
 run(['exec', 'ng', 'build', 'modal']);
+run(['run', 'build:i18n']);
 run([
-  'dlx', 'tailwindcss@3.4.18',
-  '-i', 'projects/theme-compat-e2e/src/styles/tailwind-v3.css',
-  '-o', 'dist/theme-compat-e2e/tailwind-v3-generated.css',
-  '--content', './projects/theme-compat-e2e/src/**/*.{html,ts}',
+  'dlx',
+  'tailwindcss@3.4.18',
+  '-i',
+  'e2e/fixtures/theme/src/styles/tailwind-v3.css',
+  '-o',
+  'dist/theme-compat-e2e/tailwind-v3-generated.css',
+  '-c', 'e2e/fixtures/theme/tailwind.v3.config.cjs',
+  '--content',
+  './e2e/fixtures/theme/src/**/*.{html,ts}',
 ]);
 run(['exec', 'ng', 'build', 'menu-e2e']);
 run(['exec', 'ng', 'build', 'i18n-e2e', '--configuration', 'csr']);
@@ -98,4 +107,6 @@ const reportPath = resolve(root, 'dist/theme-compat-e2e/isolation-report.json');
 const existingReport = JSON.parse(await readFile(reportPath, 'utf8'));
 existingReport.harnessIsolation = { before: beforeExisting, after: afterExisting, identical: true };
 await writeFile(reportPath, `${JSON.stringify(existingReport, null, 2)}\n`);
-console.log('Isolation verified: menu-e2e and i18n-e2e emitted files are byte-identical before and after the CSS matrix.');
+console.log(
+  'Isolation verified: menu-e2e and i18n-e2e emitted files are byte-identical before and after the CSS matrix.',
+);

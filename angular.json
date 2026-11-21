@@ -369,21 +369,21 @@
     },
     "theme-compat-e2e": {
       "projectType": "application",
-      "root": "projects/theme-compat-e2e",
-      "sourceRoot": "projects/theme-compat-e2e/src",
+      "root": "e2e/fixtures/theme",
+      "sourceRoot": "e2e/fixtures/theme/src",
       "prefix": "rv-fixture",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "browser": "projects/theme-compat-e2e/src/main.ts",
-            "index": "projects/theme-compat-e2e/src/index.html",
-            "tsConfig": "projects/theme-compat-e2e/tsconfig.app.json",
+            "browser": "e2e/fixtures/theme/src/main.ts",
+            "index": "e2e/fixtures/theme/src/index.html",
+            "tsConfig": "e2e/fixtures/theme/tsconfig.app.json",
             "assets": [],
             "outputPath": "dist/theme-compat-e2e",
             "styles": [
-              "projects/theme-compat-e2e/src/styles/plain.css",
-              "projects/theme-compat-e2e/src/styles/token-overrides.css"
+              "e2e/fixtures/theme/src/styles/plain.css",
+              "e2e/fixtures/theme/src/styles/token-overrides.css"
             ]
           },
           "configurations": {
@@ -405,64 +405,65 @@
             "plain": {
               "outputPath": "dist/theme-compat-e2e/plain",
               "styles": [
-                "projects/theme-compat-e2e/src/styles/plain.css",
-                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+                "e2e/fixtures/theme/src/styles/plain.css",
+                "e2e/fixtures/theme/src/styles/token-overrides.css"
               ]
             },
             "tailwind": {
               "outputPath": "dist/theme-compat-e2e/tailwind",
               "styles": [
-                "projects/theme-compat-e2e/src/styles/tailwind.css",
-                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+                "e2e/fixtures/theme/src/styles/tailwind.css",
+                "e2e/fixtures/theme/src/styles/token-overrides.css"
               ]
             },
             "tailwind-v3": {
               "outputPath": "dist/theme-compat-e2e/tailwind-v3",
               "styles": [
+                "dist/theme/styles/theme.css",
                 "dist/theme-compat-e2e/tailwind-v3-generated.css",
-                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+                "e2e/fixtures/theme/src/styles/token-overrides.css"
               ]
             },
             "tailwind-no-preflight": {
               "outputPath": "dist/theme-compat-e2e/tailwind-no-preflight",
               "styles": [
-                "projects/theme-compat-e2e/src/styles/tailwind-no-preflight.css",
-                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+                "e2e/fixtures/theme/src/styles/tailwind-no-preflight.css",
+                "e2e/fixtures/theme/src/styles/token-overrides.css"
               ]
             },
             "tailwind-prefix": {
               "outputPath": "dist/theme-compat-e2e/tailwind-prefix",
               "styles": [
-                "projects/theme-compat-e2e/src/styles/tailwind-prefix.css",
-                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+                "e2e/fixtures/theme/src/styles/tailwind-prefix.css",
+                "e2e/fixtures/theme/src/styles/token-overrides.css"
               ]
             },
             "bootstrap-tailwind": {
               "outputPath": "dist/theme-compat-e2e/bootstrap-tailwind",
               "styles": [
-                "projects/theme-compat-e2e/src/styles/bootstrap-tailwind.css",
-                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+                "e2e/fixtures/theme/src/styles/bootstrap-tailwind.css",
+                "e2e/fixtures/theme/src/styles/token-overrides.css"
               ]
             },
             "bootstrap": {
               "outputPath": "dist/theme-compat-e2e/bootstrap",
               "styles": [
-                "projects/theme-compat-e2e/src/styles/bootstrap.css",
-                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+                "e2e/fixtures/theme/src/styles/bootstrap.css",
+                "e2e/fixtures/theme/src/styles/token-overrides.css"
               ]
             },
             "scss": {
               "outputPath": "dist/theme-compat-e2e/scss",
               "styles": [
-                "projects/theme-compat-e2e/src/styles/custom.scss",
-                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+                "e2e/fixtures/theme/src/styles/custom.scss",
+                "e2e/fixtures/theme/src/styles/token-overrides.css"
               ]
             },
             "less": {
               "outputPath": "dist/theme-compat-e2e/less",
               "styles": [
-                "projects/theme-compat-e2e/src/styles/custom.less",
-                "projects/theme-compat-e2e/src/styles/token-overrides.css"
+                "e2e/fixtures/theme/src/styles/custom.less",
+                "e2e/fixtures/theme/src/styles/token-overrides.css"
               ]
             }
           },

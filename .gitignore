@@ -53,3 +53,4 @@ Thumbs.db
 playwright-report/
 test-results/
 .playwright-cli/
+/playwright-theme-compat-report/

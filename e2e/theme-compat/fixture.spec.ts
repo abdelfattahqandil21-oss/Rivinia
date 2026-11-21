@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-test('modal surface inherits scoped semantic tokens and keeps its footer usable', async ({ page }) => {
+test('modal surface inherits scoped semantic tokens and keeps its footer usable', async ({
+  page,
+}) => {
   await page.goto('/');
   await page.getByTestId('open-modal').click();
   const dialog = page.getByRole('dialog', { name: 'CSS stack modal' });
@@ -23,7 +25,10 @@ test('modal surface inherits scoped semantic tokens and keeps its footer usable'
 
 const configuration = process.env['RV_THEME_CONFIG'] ?? 'plain';
 
-async function resolvedTokenColor(locator: import('@playwright/test').Locator, token = '--rv-bg') {
+async function resolvedTokenColor(
+  locator: import('@playwright/test').Locator,
+  token = '--rv-color-surface',
+) {
   return locator.evaluate((element, property) => {
     const probe = document.createElement('span');
     probe.style.backgroundColor = `var(${property})`;
@@ -148,7 +153,7 @@ test('retains DateTime business values when editing a seconds-enabled 24-hour co
   await expect(panel.locator('.rv-time-meridiem')).toHaveCount(0);
 
   await hour.fill('22');
-  await panel.getByRole('button', { name: 'Apply' }).click();
+  await panel.getByRole('button', { name: 'OK', exact: true }).click();
   await expect(page.getByTestId('appointment-24-value')).toHaveText('22:5:7');
   await expect(panel).toBeHidden();
 });
@@ -190,7 +195,7 @@ test('applies dark and light themes at the root and scoped Bootstrap boundary', 
 }) => {
   await page.goto('/');
 
-  if (configuration === 'bootstrap') {
+  if (configuration === 'bootstrap' || configuration === 'bootstrap-tailwind') {
     const root = page.locator('html');
     const defaultScope = page.getByTestId('default-scope');
     await root.evaluate((element) => element.setAttribute('data-bs-theme', 'dark'));
@@ -208,7 +213,7 @@ test('applies dark and light themes at the root and scoped Bootstrap boundary', 
     const root = page.locator('html');
     const bookingScope = page.getByTestId('booking-scope');
     await root.evaluate((element) => element.setAttribute('data-rv-theme', 'dark'));
-    await expect.poll(() => resolvedTokenColor(root)).toBe('rgb(22, 22, 22)');
+    await expect.poll(() => resolvedTokenColor(root)).toBe('rgb(24, 32, 40)');
     await expect.poll(() => resolvedTokenColor(bookingScope)).toBe('rgb(218, 235, 255)');
 
     await root.evaluate((element) => element.setAttribute('data-rv-theme', 'light'));
@@ -216,9 +221,9 @@ test('applies dark and light themes at the root and scoped Bootstrap boundary', 
   }
 });
 
-test('emits usable Tailwind v4 utilities only in Tailwind configurations', async ({ page }) => {
+test('emits usable Tailwind utilities in Tailwind configurations', async ({ page }) => {
   test.skip(
-    !configuration.startsWith('tailwind'),
+    !(configuration.startsWith('tailwind') || configuration === 'bootstrap-tailwind'),
     'This browser assertion is specific to Tailwind builds.',
   );
   await page.goto('/');
