@@ -8,7 +8,7 @@ function executableOverride(variable: string) {
 const build = process.env['TOAST_E2E_BUILD'] ?? 'standalone';
 
 export default defineConfig({
-  testDir: '.',
+  testDir: '../toast',
   testMatch: 'theme-contract.spec.ts',
   fullyParallel: false,
   workers: 1,

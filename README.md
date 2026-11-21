@@ -84,7 +84,7 @@ tests with `pnpm exec ng test <project-name> --watch=false`, for example
 `pnpm exec ng test select --watch=false`. Theme uses `pnpm test:theme`.
 The browser suites build first:
 `npx ng build i18n && npx ng build i18n-e2e --configuration csr`, then
-`npx playwright test --config projects/i18n/testing/playwright.config.ts`.
+`npx playwright test --config e2e/configs/i18n.config.ts`.
 
 See [Contributors](./CONTRIBUTORS.md) for acknowledgments.
 

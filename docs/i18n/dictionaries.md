@@ -115,6 +115,6 @@ it through `PendingTasks`.
 A complete, runnable host lives in
 [`i18n testing app`](https://github.com/abdelfattahqandil21-oss/Rivinia/tree/main/projects/i18n/testing/app)
 (`node:http` + `renderApplication`, no Express), with
-[`ssr-smoke.mjs`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/main/projects/i18n/testing/e2e/ssr-smoke.mjs)
+[`ssr-smoke.mjs`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/main/e2e/i18n/ssr-smoke.mjs)
 asserting the raw HTML, the server log, the transfer payload, the absence of a
 client refetch, and hydration.

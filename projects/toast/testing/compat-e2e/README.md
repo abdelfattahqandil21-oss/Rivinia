@@ -16,7 +16,7 @@ browser run:
 pnpm exec ng build toast
 pnpm exec ng build theme
 pnpm exec ng build toast-compat-e2e --configuration=standalone
-TOAST_E2E_BUILD=standalone pnpm exec playwright test --config=projects/toast/testing/e2e/playwright.config.ts
+TOAST_E2E_BUILD=standalone pnpm exec playwright test --config=e2e/configs/toast.config.ts
 pnpm exec ng build toast-compat-e2e --configuration=theme
-TOAST_E2E_BUILD=theme pnpm exec playwright test --config=projects/toast/testing/e2e/playwright.config.ts
+TOAST_E2E_BUILD=theme pnpm exec playwright test --config=e2e/configs/toast.config.ts
 ```

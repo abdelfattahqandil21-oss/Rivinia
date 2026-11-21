@@ -24,7 +24,7 @@ function executable(variable: string, fallback?: string) {
 const systemChrome = process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH'] ?? '/usr/bin/google-chrome';
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: '../i18n',
   fullyParallel: false,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,

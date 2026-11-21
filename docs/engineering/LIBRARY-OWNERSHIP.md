@@ -12,7 +12,7 @@ Every publishable library is an Angular project under `projects/<name>/`, with i
 | `http` | `projects/http/src`; one entry point | `projects/http/tests` (3 files) | No dedicated browser harness; shared consumer checks are infrastructure-owned | `projects/http/README.md` | `ng build http`; schematic tests are package-owned |
 | `toast` | `projects/toast/src`, `projects/toast/ui` (2 entry points) | `projects/toast/tests` (3 files) | No dedicated browser suite; component behavior is covered by unit tests | `projects/toast/README.md` | `ng build toast`; package schematics |
 | `modal` | `projects/modal/src`, `projects/modal/ui` (2) | `projects/modal/tests` (6 files) | No dedicated browser harness currently | `projects/modal/README.md` | `ng build modal`; package schematics |
-| `i18n` | `projects/i18n/src`, `ui`, and `select` (3) | `projects/i18n/tests` (36 files) | Exclusive independent app under `projects/i18n/testing/app`, browser/SSR suites under `projects/i18n/testing/e2e` | `projects/i18n/README.md`, `CHANGELOG.md`, `projects/i18n/specifications/`, and `docs/i18n/` | `ng build i18n`; independent Angular project name `i18n-e2e`, CSR/SSR builds, colocated Playwright config and SSR smoke |
+| `i18n` | `projects/i18n/src`, `ui`, and `select` (3) | `projects/i18n/tests` (36 files) | Exclusive independent app under `projects/i18n/testing/app`, browser/SSR suites under `e2e/i18n` | `projects/i18n/README.md`, `CHANGELOG.md`, `projects/i18n/specifications/`, and `docs/i18n/` | `ng build i18n`; independent Angular project name `i18n-e2e`, CSR/SSR builds, colocated Playwright config and SSR smoke |
 | `env` | `projects/env/src`; one entry point | `projects/env/tests` (1 file) | Schematics integration tests are package-owned | `projects/env/README.md` | `ng build env`; `projects/env/schematics/` is protected |
 | `menu` | `projects/menu/src`, `projects/menu/ui` (2) | `projects/menu/tests` (7 files) | Shares `projects/menu-e2e` with Select and root `e2e/menu` + `e2e/popup`; no exclusive ownership is implied by the harness name | `projects/menu/README.md`, `CHANGELOG.md`, `projects/menu/specifications/`, `docs/menu/` | `ng build menu`; shared browser build precedes Playwright |
 | `popup` | `projects/popup/src`; one entry point | `projects/popup/tests` | Shared popup behavior is verified through root `e2e/popup` and the Menu/Select harness | `projects/popup/README.md`, `CHANGELOG.md` | `ng build popup`; shared browser build precedes Playwright |
@@ -41,8 +41,8 @@ The pilot changed physical ownership while preserving the Angular project name `
 | `projects/i18n-e2e/src/` | `projects/i18n/testing/app/src/` |
 | `projects/i18n-e2e/public/` | `projects/i18n/testing/app/public/` |
 | `projects/i18n-e2e/tsconfig.app.json` | `projects/i18n/testing/app/tsconfig.app.json` |
-| `projects/i18n-e2e/e2e/` | `projects/i18n/testing/e2e/` |
-| `projects/i18n-e2e/playwright.config.ts` | `projects/i18n/testing/playwright.config.ts` |
+| `projects/i18n-e2e/e2e/` | `e2e/i18n/` |
+| `projects/i18n-e2e/playwright.config.ts` | `e2e/configs/i18n.config.ts` |
 | Angular project root `projects/i18n-e2e` | Angular project root `projects/i18n/testing`; project name remains `i18n-e2e` |
 | `dist/i18n-e2e-csr` and `dist/i18n-e2e` | unchanged |
 
