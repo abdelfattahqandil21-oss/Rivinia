@@ -473,16 +473,16 @@
     },
     "toast-compat-e2e": {
       "projectType": "application",
-      "root": "projects/toast/testing/compat-e2e",
-      "sourceRoot": "projects/toast/testing/compat-e2e/src",
+      "root": "e2e/fixtures/toast",
+      "sourceRoot": "e2e/fixtures/toast/src",
       "prefix": "rv-fixture",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "browser": "projects/toast/testing/compat-e2e/src/main.ts",
-            "index": "projects/toast/testing/compat-e2e/src/index.html",
-            "tsConfig": "projects/toast/testing/compat-e2e/tsconfig.app.json",
+            "browser": "e2e/fixtures/toast/src/main.ts",
+            "index": "e2e/fixtures/toast/src/index.html",
+            "tsConfig": "e2e/fixtures/toast/tsconfig.app.json",
             "assets": [],
             "outputPath": "dist/toast-compat-e2e/browser",
             "styles": []

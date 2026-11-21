@@ -1,7 +1,7 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../../../out-tsc/toast-compat-e2e",
+    "outDir": "../../../out-tsc/toast-compat-e2e",
     "types": []
   },
   "include": ["src/**/*.ts"],
