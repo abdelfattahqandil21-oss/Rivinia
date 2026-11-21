@@ -19,8 +19,12 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, value, inde
 const version = args.version;
 const distTag = args['dist-tag'];
 const artifactDir = resolve(args['artifact-dir'] ?? '');
-if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version ?? '') || !['latest', 'next'].includes(distTag) || !args['artifact-dir']) {
-  throw new Error('Usage: prepare-release.mjs --version X.Y.Z[-pre] --dist-tag latest|next --artifact-dir DIR');
+const checkOnly = process.argv.includes('--check-only');
+if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version ?? '') || !['latest', 'next'].includes(distTag) || (!checkOnly && !args['artifact-dir'])) {
+  throw new Error('Usage: prepare-release.mjs --version X.Y.Z[-pre] --dist-tag latest|next (--artifact-dir DIR | --check-only)');
+}
+if (version.includes('-') && distTag !== 'next') {
+  throw new Error('Prereleases must be published with --dist-tag next');
 }
 if (process.env.GITHUB_REF !== 'refs/heads/main') throw new Error('Release preparation must run from a workflow dispatch on main');
 
@@ -76,7 +80,15 @@ const releaseGroup = JSON.parse(readFileSync(join(root, 'release-groups.json'), 
 if (releaseGroup?.packages?.length !== packages.length) throw new Error('Expected exactly eleven synchronized release packages');
 const head = run('git', ['rev-parse', 'HEAD']);
 const tags = packages.map((name) => `${name}/v${version}`);
-const tagCommits = tags.map((tag) => run('git', ['rev-parse', `${tag}^{commit}`]));
+const tagCommits = tags.map((tag) => {
+  const result = spawnSync('git', ['rev-parse', '--verify', `refs/tags/${tag}^{commit}`], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  return result.status === 0 ? result.stdout.trim() : null;
+});
+const missingTags = tags.filter((_, index) => tagCommits[index] === null);
+if (missingTags.length) throw new Error(`Missing package release tags: ${missingTags.join(', ')}`);
 const sourceCommit = assertReleaseSource({
   headCommit: head,
   tagCommits,
@@ -90,6 +102,11 @@ for (const name of packages) {
   if (manifest.name !== pkg || manifest.version !== version) throw new Error(`${pkg} manifest does not match release ${version}`);
   const tag = `${name}/v${version}`;
   if (run('git', ['rev-parse', `${tag}^{commit}`]) !== sourceCommit) throw new Error(`${tag} must resolve to the release source commit ${sourceCommit}`);
+}
+
+if (checkOnly) {
+  console.log(`Verified ${tags.length} package release tags at ${sourceCommit}.`);
+  process.exit(0);
 }
 
 run('pnpm', ['check:governance']);

@@ -19,6 +19,9 @@ const artifactDir = resolve(args['artifact-dir'] ?? '');
 if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version ?? '') || !['latest', 'next'].includes(distTag) || !args['artifact-dir']) {
   throw new Error('Usage: publish-release.mjs --version X.Y.Z[-pre] --dist-tag latest|next --artifact-dir DIR');
 }
+if (version.includes('-') && distTag !== 'next') {
+  throw new Error('Prereleases must be published with --dist-tag next');
+}
 if (process.env.GITHUB_REF !== 'refs/heads/main') throw new Error('Publishing must run from a workflow dispatch on main');
 const manifest = JSON.parse(readFileSync(join(artifactDir, 'release-manifest.json'), 'utf8'));
 if (manifest.version !== version || manifest.distTag !== distTag || manifest.packages.length !== 11) throw new Error('Artifact release manifest does not match dispatch inputs');
@@ -53,6 +56,7 @@ function npm(args, allowMissing = false) {
 }
 
 const pending = [];
+const latestBefore = new Map();
 for (const item of manifest.packages) {
   if (item.version !== version || !item.name.startsWith('@rivinia/')) throw new Error('Unexpected package record in release manifest');
   const tarball = join(artifactDir, item.file);
@@ -65,6 +69,10 @@ for (const item of manifest.packages) {
   const sourceManifest = JSON.parse(readFileSync(join(root, 'projects', item.name.slice('@rivinia/'.length), 'package.json'), 'utf8'));
   if (sourceManifest.version !== version || sourceManifest.name !== item.name) throw new Error(`${item.name}: source manifest mismatch`);
   const published = npm(['view', `${item.name}@${version}`, 'dist.integrity', '--json'], true);
+  if (distTag === 'next') {
+    const tags = npm(['view', item.name, 'dist-tags', '--json'], true);
+    latestBefore.set(item.name, tags?.latest);
+  }
   if (published && published !== item.integrity) throw new Error(`${item.name}@${version} already exists with different integrity; immutable version collision`);
   if (published) console.log(`${item.name}@${version} already has matching integrity; skipping (safe resume).`);
   else pending.push({ item, tarball });
@@ -80,13 +88,20 @@ for (const { item, tarball } of pending) {
   }
 }
 
-for (const { item } of pending) {
+for (const item of manifest.packages) {
   await verifyPublishedIntegrity({
     name: item.name,
     version,
     expectedIntegrity: item.integrity,
     readIntegrity: () => npm(['view', `${item.name}@${version}`, 'dist.integrity', '--json'], true),
   });
+  const tags = npm(['view', item.name, 'dist-tags', '--json']);
+  if (tags[distTag] !== version) {
+    throw new Error(`${item.name}: expected ${distTag}=${version}, found ${tags[distTag] ?? '(unset)'}`);
+  }
+  if (distTag === 'next' && tags.latest !== latestBefore.get(item.name)) {
+    throw new Error(`${item.name}: latest changed during the prerelease publish`);
+  }
   console.log(`Published and verified ${item.name}@${version} (${item.integrity}).`);
 }
 console.log(`Release ${version} completed for ${manifest.packages.length} packages with dist-tag ${distTag}.`);

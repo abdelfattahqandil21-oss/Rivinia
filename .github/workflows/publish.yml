@@ -17,7 +17,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: publish-rivinia-${{ github.event.inputs.version }}
+  group: publish-rivinia-registry
   cancel-in-progress: false
 
 jobs:
@@ -36,6 +36,11 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
+      - name: Preflight release tags and manifests
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_DIST_TAG: ${{ inputs.dist_tag }}
+        run: node scripts/prepare-release.mjs --version "$RELEASE_VERSION" --dist-tag "$RELEASE_DIST_TAG" --check-only
       - run: pnpm install --frozen-lockfile
       - run: pnpm validate:ci
       - name: Inspect tagged packages and create exact tarballs
