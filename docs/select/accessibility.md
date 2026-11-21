@@ -81,13 +81,13 @@ ownership.
 The real-consumer checks in
 [`e2e/select/a11y.spec.ts`](../../e2e/select/a11y.spec.ts#L89) verify the
 trigger-to-menu relationship and that only menu-item roles are inside the
-menu. [`e2e/overlay-lifecycle.spec.ts`](../../e2e/overlay-lifecycle.spec.ts#L165)
+menu. [`e2e/integration/overlay-lifecycle.spec.ts`](../../e2e/integration/overlay-lifecycle.spec.ts#L165)
 checks the actual relationships; its Chromium accessibility-tree assertion
 also confirms the projected plain button and textbox remain independent
 controls. Separate cases verify their native keyboard behavior and the filter →
 active row → footer Tab sequence with a single tabbable row
-([plain controls](../../e2e/overlay-lifecycle.spec.ts#L227),
-[Tab order](../../e2e/overlay-lifecycle.spec.ts#L255)). These browser/axe checks
+([plain controls](../../e2e/integration/overlay-lifecycle.spec.ts#L227),
+[Tab order](../../e2e/integration/overlay-lifecycle.spec.ts#L255)). These browser/axe checks
 do not replace screen-reader testing; that remains a release-readiness gap
 below.
 

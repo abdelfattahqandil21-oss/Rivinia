@@ -7,6 +7,13 @@ function executableOverride(variable: string) {
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: [
+    '**/datepicker/**',
+    '**/table/**',
+    '**/theme-compat/**',
+    '**/i18n/**',
+    '**/toast/**',
+  ],
   fullyParallel: false,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,

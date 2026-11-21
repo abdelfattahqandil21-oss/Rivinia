@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './e2e/theme-compat',
+  testDir: './e2e/datepicker',
   testMatch: 'datepicker-integration.spec.ts',
   workers: 1,
   reporter: 'list',

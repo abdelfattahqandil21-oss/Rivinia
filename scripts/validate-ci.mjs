@@ -108,6 +108,6 @@ run('Menu, Select, and Popup browser tests', [
   'e2e/menu',
   'e2e/select',
   'e2e/popup',
-  'e2e/overlay-lifecycle.spec.ts',
+  'e2e/integration/overlay-lifecycle.spec.ts',
 ]);
 console.log('\nRequired CI validation passed.');
