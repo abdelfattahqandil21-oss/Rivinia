@@ -11,6 +11,8 @@ const configurations = [
   'tailwind',
   'tailwind-no-preflight',
   'tailwind-prefix',
+  'tailwind-v3',
+  'bootstrap-tailwind',
   'bootstrap',
   'scss',
   'less',
@@ -101,9 +103,11 @@ for (const configuration of configurations) {
     .join('\n');
   const allText = `${cssText}\n${jsText}`;
   const bootstrapSelectors = /\.btn(?:\s*\{|[,.:#\[])/.test(allText);
-  const preflight = allText.includes(
+  const preflightV4 = allText.includes(
     '*,:after,:before,::backdrop,::file-selector-button{box-sizing:border-box;margin:0;padding:0;border:0 solid}',
   );
+  const preflightV3 = /\*,:(?::)?(?:before|after),:(?::)?(?:before|after)\{box-sizing:border-box;border-width:0;border-style:solid/.test(allText);
+  const preflight = preflightV4 || preflightV3;
   const tailwindUtility = /\.bg-rv-surface\s*\{/.test(allText);
   const prefixedUtility =
     /\.tw\\:bg-rv-surface\s*\{/.test(allText) || /\.tw\\\\:bg-rv-surface\s*\{/.test(allText);
@@ -112,9 +116,9 @@ for (const configuration of configurations) {
   const duplicateCss = cssAssets
     .map((asset) => asset.sha256)
     .filter((hash, index, hashes) => hashes.indexOf(hash) !== index);
-  const shouldUseTailwind = configuration.startsWith('tailwind');
-  const shouldUseBootstrap = configuration === 'bootstrap';
-  const shouldUsePreflight = configuration === 'tailwind' || configuration === 'tailwind-prefix';
+  const shouldUseTailwind = configuration.startsWith('tailwind') || configuration === 'bootstrap-tailwind';
+  const shouldUseBootstrap = configuration === 'bootstrap' || configuration === 'bootstrap-tailwind';
+  const shouldUsePreflight = ['tailwind', 'tailwind-prefix', 'tailwind-v3', 'bootstrap-tailwind'].includes(configuration);
   const shouldUsePrefix = configuration === 'tailwind-prefix';
 
   const checks = {
