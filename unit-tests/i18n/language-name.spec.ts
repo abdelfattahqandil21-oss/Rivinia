@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { languageName } from '../../projects/i18n/ui/src/lib/utils/language-name';
+import { languageName, resolveLanguageDisplayName } from '../../projects/i18n/ui/src/lib/utils/language-name';
 
 /*
  * Every cache-sensitive case uses its own id so a module-level cache from an
@@ -90,5 +90,16 @@ describe('languageName', () => {
 
     // A cache keyed on the id alone would answer the second call and stay at 1.
     expect(constructed).toBe(2);
+  });
+});
+
+
+describe('V2 displayName resolution', () => {
+  it('prefers explicit displayName to legacy nativeName and Intl fallback', () => {
+    expect(resolveLanguageDisplayName({ id: 'ar', displayName: 'Arabic (Egypt)', nativeName: 'العربية' })).toBe('Arabic (Egypt)');
+  });
+  it('keeps legacy languageName as a compatible alias', () => {
+    const metadata = { id: 'ar', nativeName: 'العربية', dir: 'rtl' } as const;
+    expect(languageName(metadata)).toBe(resolveLanguageDisplayName(metadata));
   });
 });

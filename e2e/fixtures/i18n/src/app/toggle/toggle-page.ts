@@ -27,16 +27,16 @@ import {
 export class TogglePage {
   readonly i18n = inject(RiviniaI18n<'ar' | 'en'>);
 
-  readonly title = this.i18n.t('toggle.title');
-  readonly label = this.i18n.t('toggle.label');
+  readonly title = this.i18n.translateSignal('toggle.title');
+  readonly label = this.i18n.translateSignal('toggle.label');
 
   readonly presentationalLanguages: readonly LanguageLike[] = [
-    { id: 'ar', nativeName: 'العربية', dir: 'rtl' },
+    { id: 'ar', displayName: 'العربية', dir: 'rtl' },
     // No `dir`: the toggle renders `dir="auto"` and the button then follows its
-    // own text. `nativeName` is present so the trigger template has a name; the
+    // own text. `displayName` is present so the trigger template has a name; the
     // DisplayNames path is covered by the unit suite and by `languageName` on
     // the managed side.
-    { id: 'fr', nativeName: 'Français' },
+    { id: 'fr', displayName: 'Français' },
   ];
 
   readonly presentationalCurrent = signal('ar');

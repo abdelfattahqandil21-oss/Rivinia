@@ -9,6 +9,8 @@ Back to [the README](../../projects/i18n/README.md) ·
 > to the UI entry points: `rv-language-toggle` and `rv-language-select`. The core
 > renders nothing.
 
+> **V2 canonical naming:** `translateSignal`, `currentLanguageInfo`, `activeDictionary`, `getLanguageInfo`, `switchLanguage`, `displayName`, `detectBrowserLanguage`, `syncDocumentLanguage`, `loadOnInit`. Older names stay temporarily available; [see migration](v2-naming-migration.md).
+
 ## What each entry point exports
 
 ```ts
@@ -51,12 +53,12 @@ Every option, its default and what it does. The config is one object passed to
   dictionary follows; `'preload-first'` waits for the dictionary and keeps the old
   language when loading fails. Choose `'preload-first'` when a flash of raw keys is
   worse than a slower switch.
-- **`preload`** — `true` (default) loads the initial language during provider setup,
+- **`loadOnInit` (legacy `preload`)** — `true` (default) loads the initial language during provider setup,
   and SSR waits for it. `false` for apps that ship inline dictionaries or load by
   hand with `loadTranslations()`.
 - **`fallbackLanguage`** — the second dictionary for keys missing from the current
   one. It loads silently and its text is rendered with its own locale.
-- **`detectBrowser`** — `true` matches `navigator.languages` on the first visit; a
+- **`detectBrowserLanguage` (legacy `detectBrowser`)** — `true` matches `navigator.languages` on the first visit; a
   stored preference always wins. Off by default, so no surprise language.
 - **`persist` / `storageStrategy`** — whether and where an explicit switch is
   remembered. `'cookie'` also works on the server, so the first paint matches the
@@ -66,17 +68,17 @@ Every option, its default and what it does. The config is one object passed to
 
 | Option               | Type                                          | Default                          | Meaning                                                                       |
 | -------------------- | --------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------- |
-| `languages`          | `readonly Language<T>[]`                      | —                                | Supported languages (`id`, `nativeName`, `dir`, optional `locale`).           |
+| `languages`          | `readonly Language<T>[]`                      | —                                | Supported languages (`id`, `displayName` (legacy `nativeName`), `dir`, optional `locale`).           |
 | `defaultLanguage`    | `T`                                           | first of `languages`             | Initial language on a first visit; must be a non-empty configured id.         |
 | `fallbackLanguage`   | `T`                                           | none                             | Second lookup dictionary; must be one of `languages`.                         |
 | `loader`             | `LoaderDescriptor<T>`                         | `jsonLoader()`                   | Dictionary source.                                                            |
 | `translations`       | `Partial<Record<T, Record<string, unknown>>>` | none                             | Inline seeds, painted before any network load; a loader response still wins.  |
-| `preload`            | `boolean`                                     | `true`                           | Load the initial language during provider setup.                              |
-| `detectBrowser`      | `boolean`                                     | `false`                          | Match `navigator.languages` on first visit (a stored choice wins).            |
+| `loadOnInit` (legacy `preload`) | `boolean`                                     | `true`                           | Load the initial language during provider setup.                              |
+| `detectBrowserLanguage` (legacy `detectBrowser`) | `boolean`                                     | `false`                          | Match `navigator.languages` on first visit (a stored choice wins).            |
 | `storageStrategy`    | `'local' \| 'session' \| 'cookie' \| 'none'`  | `'local'`                        | Persistence; `'cookie'` also works on the server through `REQUEST`.           |
 | `storageKey`         | `string`                                      | `'rivinia.i18n.language'`        | Storage key.                                                                  |
 | `switchStrategy`     | `'instant' \| 'preload-first'`                | `'instant'`                      | `'preload-first'` waits for the dictionary; a failure keeps the old language. |
-| `autoApplyDirection` | `boolean`                                     | `true`                           | Write `<html lang>` and `<html dir>`.                                         |
+| `syncDocumentLanguage` (legacy `autoApplyDirection`) | `boolean`                                     | `true`                           | Write `<html lang>` and `<html dir>`.                                         |
 | `onLoadError`        | `(language, error) => void`                   | none                             | Dictionary load failure. Initialization never rejects because of it.          |
 | `warnOnLoadError`    | `boolean`                                     | `isDevMode() && !onLoadError`    | `console.error` once per language when a dictionary fails to load.            |
 | `onMissingKey`       | `(event) => void`                             | none                             | Unresolved key; suppresses the default warning.                               |
@@ -104,7 +106,7 @@ forms still throw the runtime error above.
 | Signal                  | Type                                     | Meaning                                                 |
 | ----------------------- | ---------------------------------------- | ------------------------------------------------------- |
 | `currentLanguage`       | `Signal<L>`                              | Active language id.                                     |
-| `currentLanguageObject` | `Signal<Language<L>>`                    | The active language entry.                              |
+| `currentLanguageInfo`   | `Signal<Language<L>>`                    | The active language entry.                              |
 | `languages`             | `Signal<readonly Language<L>[]>`         | Supported languages.                                    |
 | `dir` / `isRtl`         | `Signal<Direction>` / `Signal<boolean>`  | Document direction.                                     |
 | `locale`                | `Signal<string>`                         | BCP-47 locale driving `Intl` and plural rules.          |
@@ -112,7 +114,7 @@ forms still throw the runtime error above.
 | `loadingError`          | `Signal<unknown>`                        | Last load failure.                                      |
 | `isLoading`             | `Signal<boolean>`                        | `loadingState() === 'loading'`.                         |
 | `ready`                 | `Signal<boolean>`                        | Initial content settled — the one to gate skeletons on. |
-| `loadedTranslations`    | `Signal<Record<string, unknown>>`        | The active dictionary.                                  |
+| `activeDictionary`       | `Signal<Record<string, unknown>>`        | The active dictionary.                                  |
 | `missingKeys`           | `Signal<readonly string[]>`              | Unresolved keys, insertion order, deduplicated.         |
 
 `loaderContext` (not a signal, but the same platform facts the loaders get) is a
@@ -128,27 +130,28 @@ because a hand-written loader can read it.
 | `translate(key, params?)`                  | `string`                   | Key lookup + ICU rendering.                                                                    |
 | `translate(key, defaultValue, params?)`    | `string`                   | A supplied `defaultValue` is not reported as missing.                                          |
 | `translate({ en: 'Hi', ar: 'أهلاً' })`     | `string`                   | Inline map: current → fallback → first value → `''`.                                           |
-| `t(key, params?)`                          | `Signal<string>`           | Same chain as a `computed`; params may be a function of signals.                               |
-| `setLanguage(id)` / `setLanguageAsync(id)` | `void` / `Promise<void>`   | Follows `switchStrategy`.                                                                      |
+| `translateSignal(key, params?)`                          | `Signal<string>`           | Same chain as a `computed`; params may be a function of signals.                               |
+| `switchLanguage(id)`                     | `Promise<void>`            | Follows `switchStrategy`; instant does **not** wait for fetch/transition, preload-first awaits the load attempt. |
+| `setLanguage(id)` / `setLanguageAsync(id)` | `void` / `Promise<void>` | Legacy entry points: first obeys config; second always preloads. |
 | `toggle()` / `next()` / `previous()`       | `void`                     | `toggle()` flips the first two languages (dev warning with more); `next()`/`previous()` cycle. |
 | `loadTranslations(id)`                     | `Promise<Record<…>>`       | Preload without switching.                                                                     |
 | `reload(language?)`                        | `Promise<boolean>`         | Invalidate + refetch; never rejects.                                                           |
 | `formatNumber(value, options?)`            | `string`                   | `Intl.NumberFormat` bound to `locale`.                                                         |
 | `formatDate(value, options?)`              | `string`                   | `Intl.DateTimeFormat` bound to `locale`.                                                       |
-| `getLanguage(id)`                          | `Language<L> \| undefined` | Lookup.                                                                                        |
+| `getLanguageInfo(id)`                          | `Language<L> \| undefined` | Lookup.                                                                                        |
 | `initialize()`                             | `Promise<void>`            | Called by the provider; idempotent.                                                            |
 | `clearMissingKeys()`                       | `void`                     | Reset the missing-key report.                                                                  |
 | `clearMissingParams()`                     | `void`                     | Reset the missing-parameter dedupe.                                                            |
 
 `RvTranslatePipe` (`rvTranslate`) delegates to `translate()`. It is impure by
-necessity — the service reads signals on every call — so prefer `t()` or component
+necessity — the service reads signals on every call — so prefer `translateSignal()` or component
 code for long lists.
 
 ## Types
 
 | Type                                                     | Shape                                                                         |
 | -------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `Language<T>`                                            | `{ id: T, nativeName?, dir, locale? }` — the entry everything else reads.     |
+| `Language<T>`                                            | `{ id: T, displayName?, nativeName? (legacy), dir, locale? }` — the entry everything else reads.     |
 | `Direction`                                              | `'ltr' \| 'rtl'`.                                                             |
 | `Translation<L>`                                         | a per-language inline map, the argument of the inline `translate()` overload. |
 | `TranslateParams`                                        | the params object (or function) a message is rendered with; accepts `Date`.   |
@@ -164,13 +167,11 @@ code for long lists.
 
 ## API stability
 
-Every export is classified so the 1.0 freeze is predictable. **Internal** symbols
-exist only so the package's own tests can import them; they may move to an
-`@rivinia/i18n/internal` entry point (or disappear) before 1.0. The freeze
-([`docs/releases/1.0/API-SURFACE.md`](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/main/docs/releases/1.0/API-SURFACE.md))
-kept the four that are published — `parseCookie`, `serializeCookie`,
-`browserLanguages`, `detectBrowserLanguage` — on their current paths and says out
-loud that a patch release may still change them.
+The table below describes the *historical 1.x surface tiers*, not an approved
+V2 stability freeze. `Internal`-labelled symbols are exported in the existing
+root entry point for compatibility; do not remove them during the staged naming
+migration. Final V2 stability classification must be reviewed before a unified
+release. The historical 1.0 decision is recorded in `docs/releases/1.0/API-SURFACE.md`.
 
 | Export                                                                                         | Kind                | Tier         |
 | ---------------------------------------------------------------------------------------------- | ------------------- | ------------ |

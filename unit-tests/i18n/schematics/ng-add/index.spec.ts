@@ -31,10 +31,10 @@ describe('ng-add', () => {
   it('explains language selection and browser detection prompts', () => {
     expect(schema.properties.languages['x-prompt'].multiselect).toBe(true);
     expect(schema.properties.languages['x-prompt'].items).toHaveLength(8);
-    expect(schema.properties.detectBrowser['x-prompt'].message).toContain(
+    expect(schema.properties.detectBrowserLanguage['x-prompt'].message).toContain(
       "Use the visitor's browser language on their first visit?",
     );
-    expect(schema.properties.detectBrowser['x-prompt'].message).toContain(
+    expect(schema.properties.detectBrowserLanguage['x-prompt'].message).toContain(
       'A saved choice still takes priority.',
     );
   });
@@ -88,26 +88,37 @@ describe('ng-add', () => {
     const content = tree.readContent('/src/app/app.config.ts');
     expect(content).toContain(`import { provideRiviniaI18n } from '@rivinia/i18n';`);
     expect(content).toContain(`defaultLanguage: 'ar',`);
-    expect(content).toContain(`{ id: 'en', nativeName: 'English', dir: 'ltr' },`);
+    expect(content).toContain(`{ id: 'en', displayName: 'English', dir: 'ltr' },`);
     expect(content).not.toContain('detectBrowser');
     expect(content).toContain('public/i18n/{id}.json');
   });
 
-  it('honours a language list and detectBrowser flag', async () => {
-    const tree = await run({ languages: 'en, ar', detectBrowser: true });
+  it('honours a language list and detectBrowserLanguage flag', async () => {
+    const tree = await run({ languages: 'en, ar', detectBrowserLanguage: true });
     const content = tree.readContent('/src/app/app.config.ts');
     expect(content).toContain(`defaultLanguage: 'en',`);
-    expect(content).toContain('detectBrowser: true');
+    expect(content).toContain('detectBrowserLanguage: true');
     expect(content).not.toContain('],,');
+  });
+
+  it('accepts legacy ng-add flag but lets canonical detectBrowserLanguage win', async () => {
+    const legacy = await run({ detectBrowser: true });
+    expect(legacy.readContent('/src/app/app.config.ts')).toContain('detectBrowserLanguage: true');
+
+    const canonicalFalse = await run({ detectBrowserLanguage: false, detectBrowser: true });
+    expect(canonicalFalse.readContent('/src/app/app.config.ts')).not.toContain('detectBrowserLanguage: true');
+
+    const canonicalTrue = await run({ detectBrowserLanguage: true, detectBrowser: false });
+    expect(canonicalTrue.readContent('/src/app/app.config.ts')).toContain('detectBrowserLanguage: true');
   });
 
   it('parses the exact messy input users type (quotes, spaces, case)', async () => {
     const tree = await run({ languages: `'ar' , 'en' , 'fr'` });
     const content = tree.readContent('/src/app/app.config.ts');
     expect(content).toContain(`defaultLanguage: 'ar',`);
-    expect(content).toContain(`{ id: 'ar', nativeName: 'العربية', dir: 'rtl' },`);
-    expect(content).toContain(`{ id: 'en', nativeName: 'English', dir: 'ltr' },`);
-    expect(content).toContain(`{ id: 'fr', nativeName: 'Français', dir: 'ltr' },`);
+    expect(content).toContain(`{ id: 'ar', displayName: 'العربية', dir: 'rtl' },`);
+    expect(content).toContain(`{ id: 'en', displayName: 'English', dir: 'ltr' },`);
+    expect(content).toContain(`{ id: 'fr', displayName: 'Français', dir: 'ltr' },`);
   });
 
   it('accepts bracketed arrays with or without quotes', async () => {
@@ -125,7 +136,7 @@ describe('ng-add', () => {
     const tree = await run({ languages: ['ar', 'en'] });
     const content = tree.readContent('/src/app/app.config.ts');
     expect(content).toContain(`defaultLanguage: 'ar',`);
-    expect(content).toContain(`{ id: 'en', nativeName: 'English', dir: 'ltr' },`);
+    expect(content).toContain(`{ id: 'en', displayName: 'English', dir: 'ltr' },`);
     expect(content).not.toContain('],,');
   });
 

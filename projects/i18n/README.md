@@ -1,171 +1,157 @@
-# @rivinia/i18n
+# @rivinia/i18n — Angular 22 localization, from first translation to SSR
 
-[![npm version](https://img.shields.io/npm/v/@rivinia/i18n.svg)](https://www.npmjs.com/package/@rivinia/i18n)
-[![license](https://img.shields.io/npm/l/@rivinia/i18n.svg)](https://www.npmjs.com/package/@rivinia/i18n)
+**Version:** 2.0.0-alpha.1 (local V2 naming migration; do not publish this work-in-progress). Headless, Signal-first Angular internationalization with RTL, ICU, lazy dictionary loaders, optional UI, and SSR hydration support.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/abdelfattahqandil21-oss/Rivinia/i18n/v2.0.0-alpha.1/assets/rivinia-abstract-mark-light.svg" alt="Rivinia" width="340" />
-</p>
-
-A headless Angular language manager built on signals: key-based JSON
-dictionaries, inline translations, RTL/LTR document attributes, lazy loaders, ICU
-plural/select messages, browser-language detection, and `Intl` number/date
-formatting — with SSR that actually works and no runtime dependency beyond
-Angular. Package version: **2.0.0-alpha.1**.
-
-The `1.0.0` stable release follows the 1.0 release candidates; 0.x was experimental.
-
-Concretely: the text lives in JSON files, components ask for a key, and the whole
-app — text, direction, dates, numbers — follows the language the user picked.
-Arabic is a first-class target, not an afterthought of an English layout.
-
-```ts
-// src/app/header.ts
-import { Component, signal } from '@angular/core';
-import { RvTranslatePipe } from '@rivinia/i18n';
-import { injectI18n } from './i18n/languages';
-
-@Component({
-  selector: 'app-header',
-  imports: [RvTranslatePipe],
-  template: `
-    <h1>{{ title() }}</h1>
-    <p>{{ 'booking.seats' | rvTranslate: { count: seats() } }}</p>
-    <button type="button" (click)="i18n.setLanguage('en')">English</button>
-  `,
-})
-export class Header {
-  readonly i18n = injectI18n();
-  readonly title = this.i18n.t('app.title');
-  readonly seats = signal(3);
-}
-```
-
-`title()` and the pipe update on the click and the page's direction flips with the
-language — nothing else is wired by hand. The same app under
-[`e2e/fixtures/i18n/src`](https://github.com/abdelfattahqandil21-oss/Rivinia/tree/i18n/v2.0.0-alpha.1/e2e/fixtures/i18n/src)
-is what the Playwright suites drive: `npx ng build i18n-e2e` runs it locally.
-
-## Why `@rivinia/i18n`
-
-- **Signal-first state.** `currentLanguage`, `dir`, `locale`, `loadingState` and
-  `missingKeys` are readonly signals; writes go through methods only.
-- **Plurals that survive translation.** The ICU subset covers `plural`, `select`,
-  `selectordinal`, `offset:`, `#` and the number/date styles — with all six Arabic
-  categories from `Intl.PluralRules`, so one message yields six Arabic forms and
-  two English ones with no code change.
-- **Typed keys are opt-in.** Every key is a plain `string` until you generate the
-  declaration; then a typo fails the build instead of reaching the screen.
-- **SSR-correct URLs and hydration.** The default loader builds an absolute URL
-  from `REQUEST` + `<base href>`, and dictionaries rendered on the server travel in
-  `TransferState` so the client never refetches them.
-- **Failure reporting you can see.** `fallbackLanguage`, `onMissingKey`,
-  `onMissingParam` and `onLoadError`, each deduplicated once per key (or language)
-  per session — and a load failure never rejects, it lands on `loadingState`.
-- **Persistence and detection without wiring.** local/session/cookie storage, a
-  `navigator.languages` match on first visit, `<html lang>` and `<html dir>` kept
-  in sync.
-- **Two ready-made controls, when you want them.** `@rivinia/i18n/ui` ships a
-  two-language toggle; `@rivinia/i18n/select` composes `@rivinia/select` into a
-  picker for three or more. Both entry points are optional, and the picker's peer
-  is optional too.
+> **Choose your depth.** Start with a pipe and two JSON files. Add typed keys and Signals when you need them. Advanced loading, diagnostics, and SSR are opt-in. The UI is an optional entry point; core never imports the Select library.
 
 ## Install
 
 ```bash
-npm install @rivinia/i18n       # or pnpm add / yarn add / bun add
+npm install @rivinia/i18n
 ```
 
-Optional, for `ng add`: `@angular-devkit/schematics` (declared as an optional peer,
-so an app that never runs `ng add` does not install it). Optional, for the picker:
-`npm install @rivinia/select`.
+Angular 22 is required. Add `<rv-language-toggle>` only when you import `@rivinia/i18n/ui`. The language picker (`@rivinia/i18n/select`) is **on hold** until its `@rivinia/select` dependency is approved; nothing in the quick start needs it.
 
-- Requires **Angular `^22.0.0`** (`@angular/core` is a peer, not a dependency).
-- Node: **same as Angular 22** (`^22.22.3 || ^24.15.0 || >=26.0.0`).
-- `sideEffects: false`; no runtime import beyond `@angular/core`; the network
-  loaders are lazy chunks. No `HttpClient` peer — the built-in loaders use `fetch`.
+## Level 1 — Beginner: two languages, minimal configuration
 
-## Quick start
+Place `public/i18n/ar.json` and `public/i18n/en.json` in your Angular application. For example:
 
-1. **Generate the language list.** `npx rivinia-i18n-keys init` asks for each
-   language (id, native name, direction) and the default one, then writes
-   `src/app/i18n/languages.ts` plus one empty dictionary per language under
-   `public/i18n/`. `--languages ar:العربية:rtl,en:English:ltr --default en` skips
-   the questions for CI.
-2. **Register it once, at bootstrap.**
+```json
+{ "home": { "welcome": "Welcome" } }
+```
 
-   ```ts
-   // src/app/app.config.ts
-   import type { ApplicationConfig } from '@angular/core';
-   import { i18n } from './i18n/languages';
+```ts
+// app.config.ts
+import { provideRiviniaI18n } from '@rivinia/i18n';
 
-   export const appConfig: ApplicationConfig = {
-     providers: [i18n.provide()],
-   };
-   ```
+export const appConfig = {
+  providers: [provideRiviniaI18n({
+    languages: [
+      { id: 'ar', displayName: 'العربية', dir: 'rtl', locale: 'ar-EG' },
+      { id: 'en', displayName: 'English', dir: 'ltr', locale: 'en-US' },
+    ],
+    defaultLanguage: 'ar',
+  })],
+};
+```
 
-   The provider loads the initial language before first paint (SSR waits through
-   `PendingTasks`); `ready()` is the signal to gate skeletons on.
+Use `RvTranslatePipe` in a standalone Angular component:
 
-3. **Translate.** `{{ 'booking.seats' | rvTranslate }}` in a template,
-   `i18n.t('app.title')` for a component field, `i18n.translate(…)` in plain code —
-   the component at the top of this file is all three, and the JSON files hold the
-   text. Each language entry answers four questions: `id`, `nativeName`, `dir`,
-   `locale`. `locale` is the one that surprises people — a bare `ar` formats Latin
-   digits (`3`), `ar-EG` formats Arabic-Indic ones (`٣`).
+```ts
+import { Component } from '@angular/core';
+import { RvTranslatePipe } from '@rivinia/i18n';
 
-4. **Add the switch.** Two languages: `<rv-language-toggle [manager]="i18n" />` from
-   `@rivinia/i18n/ui`. Three or more: install `@rivinia/select` and use
-   `<rv-language-select [manager]="i18n" label="Language" />` from
-   `@rivinia/i18n/select`. Preferring no terminal at all, `defineRiviniaI18n({…})` is
-   the object the generated module wraps.
+@Component({
+  selector: 'app-home',
+  imports: [RvTranslatePipe],
+  template: `<h1>{{ 'home.welcome' | rvTranslate }}</h1>`,
+})
+export class Home {}
+```
 
-## Two ways to use it
+**No HttpClient setup or Select dependency.** The default loader reads `/i18n/{language}.json`. Use `ng add @rivinia/i18n` or `npx rivinia-i18n-keys init` as optional setup helpers, not prerequisites.
 
-| Way           | Entry                              | You get                                                                                |
-| ------------- | ---------------------------------- | -------------------------------------------------------------------------------------- |
-| Headless core | `@rivinia/i18n`                    | the service, the loaders, ICU formatting, the `rvTranslate` pipe, typed keys           |
-| Ready-made UI | `@rivinia/i18n/ui`, `/i18n/select` | `rv-language-toggle` and `rv-language-select`, with their ARIA and their styling hooks |
+## Level 2 — Intermediate: reactive values, typed languages, toggle
 
-The two are independent: the UI entry points import core **types** only, and the core
-never imports them. Every UI export is Experimental; the tiers are in the
-[API reference](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/docs/i18n/api.md#api-stability).
+`defineRiviniaI18n` infers language IDs once. A `translate()` call returns a string; a `translateSignal()` returns a Signal that updates after a language change or reactive parameter update.
 
-## Compatibility
+```ts
+// i18n.config.ts
+import { defineRiviniaI18n } from '@rivinia/i18n';
 
-|                            | Chrome / Edge | Firefox | Safari macOS | Safari iOS |
-| -------------------------- | ------------- | ------- | ------------ | ---------- |
-| **Supported** (test floor) | 114           | 125     | 17           | 18.3       |
-| **Enhanced** (popup)       | 131           | never   | 26.2         | 26.2       |
+export const i18nConfig = defineRiviniaI18n({
+  languages: [
+    { id: 'ar', displayName: 'العربية', dir: 'rtl', locale: 'ar-EG' },
+    { id: 'en', displayName: 'English', dir: 'ltr', locale: 'en-US' },
+  ],
+  defaultLanguage: 'ar',
+  fallbackLanguage: 'en',
+  detectBrowserLanguage: true,
+  storageStrategy: 'local',
+  syncDocumentLanguage: true,
+  switchStrategy: 'preload-first',
+});
+// app.config.ts: providers: [i18nConfig.provide()]
+```
 
-`@rivinia/i18n` itself needs no browser feature that Angular 22 does not already
-need: `Intl.PluralRules`, `Intl.DisplayNames` and `fetch` all sit below the floors
-above. The **Enhanced** row belongs to the picker's popup, which is
-`@rivinia/select`'s; the toggle is a plain button and is unaffected.
-`document.startViewTransition` is used only if you opt into `viewTransition` — the
-service feature-detects it and applies the change without a transition where it is
-absent. Peers: `@angular/core` `^22.0.0`, plus `@rivinia/select` `^1.0.0` for
-the `/select` entry only — optional, so an app that never imports
-`@rivinia/i18n/select` does not install it. The caret admits every select 1.x
-release, the rc and the final alike, and excludes a 2.0. The floor dates, the
-`@supports` gate and what has never been run (including real Safari) are in
-[browser support](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/docs/browser-support.md).
+```ts
+import { Component, signal } from '@angular/core';
+import { RiviniaLanguageToggle } from '@rivinia/i18n/ui';
+import { i18nConfig } from './i18n.config';
 
-## Go further
+@Component({
+  selector: 'app-header',
+  imports: [RiviniaLanguageToggle],
+  template: `
+    <h1>{{ heading() }}</h1>
+    <p>{{ notice() }}</p>
+    <rv-language-toggle [manager]="i18n" label="Switch language" />
+  `,
+})
+export class Header {
+  readonly i18n = i18nConfig.inject();
+  readonly count = signal(3);
+  readonly heading = this.i18n.translateSignal('home.welcome');
+  readonly notice = this.i18n.translateSignal('notifications.count',
+    () => ({ count: this.count() }));
+}
+```
 
-Three levels, kept as they were: everyday patterns first, then the complete
-surface ordered by API.
+`rv-language-toggle` is intended for **exactly two** languages. It keeps keyboard focus, has an accessible name, and emits `(languageChange)` only after a confirmed managed switch. The label is supplied by the app and can itself be translated.
 
-| Tier                    | Read                                                                                                                                                                                                                                                                                                                                                            |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Everyday use            | [translating text](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/docs/i18n/translating.md) · [switching the language](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/docs/i18n/switching.md) · [dictionaries and SSR](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/docs/i18n/dictionaries.md) |
-| Reference — behaviour   | [ICU messages](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/docs/i18n/icu.md) · [missing keys, fallback and failures](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/docs/i18n/resilience.md) · [the CLI](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/docs/i18n/cli.md)                     |
-| Reference — the surface | [the API](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/docs/i18n/api.md) · [the language toggle](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/docs/i18n/toggle.md) · [the language picker](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/docs/i18n/select.md)                               |
-| Theming                 | [Rivinia theming](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/docs/theme/README.md)                                                                                                                                                                                                                                                     |
+## Level 3 — Advanced: loading, resilience, user preferences
 
-Release history: [CHANGELOG.md](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/i18n/v2.0.0-alpha.1/projects/i18n/CHANGELOG.md).
-MIT licensed.
+```ts
+import { defineRiviniaI18n, httpLoader } from '@rivinia/i18n';
 
-## Local integration
+export const i18nConfig = defineRiviniaI18n({
+  languages: [
+    { id: 'ar', displayName: 'العربية', dir: 'rtl', locale: 'ar-EG' },
+    { id: 'en', displayName: 'English', dir: 'ltr', locale: 'en-US' },
+  ],
+  defaultLanguage: 'ar',
+  fallbackLanguage: 'en',
+  loader: httpLoader({ endpoint: '/api/translations' }),
+  loadOnInit: true,
+  switchStrategy: 'preload-first',
+  onLoadError: (language, error) => console.error(language, error),
+  onMissingKey: (event) => console.warn(event.key),
+});
+```
 
-Concurrent first dictionary loads now share descriptor initialization. Failed initialization can retry. The core API is unchanged.
+`httpLoader()` uses **Fetch**, not Angular `HttpClient`. Other supported sources are `jsonLoader`, `remoteLoader`, and `customLoader`. Inspect `ready()`, `isLoading()`, `loadingError()`, `missingKeys()` and `activeDictionary()` for UI and diagnostics. Use `loadTranslations(id)` to warm a dictionary and `reload()` to refresh without switching.
+
+`switchLanguage(id)` follows the configured `switchStrategy`: `preload-first` waits for the dictionary load attempt; `instant` initiates the switch immediately and does **not** wait for the network. For a strict preload-first operation independent of configuration use `setLanguageAsync(id)` (legacy API retained during the migration).
+
+## Level 4 — Deep: typed keys, SSR isolation, observability
+
+Use `npx rivinia-i18n-keys --source public/i18n/en.json --out src/i18n-keys.d.ts` to generate typed-key declarations; run `--check` and `--parity` in CI. Compose custom `LoaderDescriptor` / `TranslationLoader` only when the built-in sources do not meet your requirements. `formatIcu`, `formatDate`, and `formatNumber` expose formatting without changing the language state.
+
+**SSR rule:** `localStorage` and `sessionStorage` do not exist on the server. For personalized first server paint, configure `storageStrategy: 'cookie'` and read an incoming language cookie; the application remains responsible for setting server response cookies. SSR dictionaries transfer via Angular `TransferState` so hydration can reuse them without refetching. If browser-only preferences conflict with SSR HTML, hydration behavior needs a dedicated policy/test; do not claim a universal zero-mismatch guarantee.
+
+**Diagnostics:** Missing-key reporting dedupes once per key per service lifetime; missing parameters dedupe per `(key, param)`. They publish after a microtask. `clearMissingKeys()` and `clearMissingParams()` reset their respective reports. `viewTransition` is optional/experimental and must not be required for a basic integration.
+
+## Naming and migration (V2)
+
+| Legacy name (temporarily supported) | Preferred V2 name |
+| --- | --- |
+| `t()` | `translateSignal()` |
+| `nativeName` | `displayName` |
+| `currentLanguageObject()` | `currentLanguageInfo()` |
+| `loadedTranslations()` | `activeDictionary()` |
+| `getLanguage(id)` | `getLanguageInfo(id)` |
+| `detectBrowser` | `detectBrowserLanguage` |
+| `autoApplyDirection` | `syncDocumentLanguage` |
+| `preload` | `loadOnInit` |
+
+Both old and new spellings work during the migration. **New names win if both config properties are set.** This phase intentionally does not remove legacy APIs: real consumers and earlier evidence suites must migrate before a breaking removal.
+
+## Optional entry points and dependencies
+
+| Import | Purpose | Dependency policy |
+| --- | --- | --- |
+| `@rivinia/i18n` | Headless service, pipe, formatting, loaders | Angular peer only |
+| `@rivinia/i18n/ui` | Two-language Toggle | No required Select runtime |
+| `@rivinia/i18n/select` | Language picker for 3+ languages | **Deferred** until `@rivinia/select` library passes its own gates |
+
+More detail: [API reference](../../docs/i18n/api.md), [toggle](../../docs/i18n/toggle.md), [V2 phase plan](../../docs/i18n/v2-phase-plan.md). **No version increment, merge or publish is implied by this guide.**

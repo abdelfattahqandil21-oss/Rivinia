@@ -5,18 +5,21 @@ Back to [the README](../../projects/i18n/README.md) ·
 [the language toggle](toggle.md) · [the API](api.md)
 
 ```ts
-this.i18n.setLanguage('ar'); // flips now; the dictionary follows (default strategy)
-await this.i18n.setLanguageAsync('ar'); // resolves once the dictionary is in place
+void this.i18n.switchLanguage('ar'); // configured strategy; 'instant' switches now
+await this.i18n.switchLanguage('en'); // 'preload-first' waits for the dictionary attempt
 this.i18n.toggle(); // flips the first two configured languages
 ```
 
-`setLanguage()` is synchronous and obeys `switchStrategy`; `setLanguageAsync()`
-always waits for the dictionary, which is why the toggle uses it — a failed load
+`switchLanguage()` follows `switchStrategy`. Under `instant`, its promise settles
+after issuing the change, **not** after a dictionary fetch or visual transition.
+Under `preload-first`, it waits for the dictionary attempt, and a failed load
 leaves the previous language in place instead of an empty page. The two
 strategies themselves are in [the configuration
 reference](api.md#the-options-that-change-behaviour).
 
-The async call resolves when its dictionary load settles. If a newer switch
+The explicit legacy `setLanguageAsync()` still forces preload-first regardless of
+the configured strategy (the Toggle uses that contract). That call resolves
+when its dictionary load settles. If a newer switch
 request supersedes it, the older dictionary can still enter the cache but the
 older call does not activate that language. Loader failures stay in
 `loadingState`/`loadingError` and `onLoadError`; they do not reject the promise.
@@ -38,7 +41,7 @@ readonly locale = this.i18n.locale; // Signal<string>
 readonly ready = this.i18n.ready; // gate skeletons on this
 ```
 
-Nothing needs wiring. `autoApplyDirection` (the default) keeps `<html lang>` and
+Nothing needs wiring. `syncDocumentLanguage` (the default) keeps `<html lang>` and
 `<html dir>` in sync; `lang` is written with the language's **locale**
 (`ar-EG`), not its id, so `Intl` and a screen reader agree with the page.
 
@@ -59,7 +62,7 @@ by Arabic readers, pass `ar-EG`.
 
 The choice survives a reload in `localStorage` under `rivinia.i18n.language`,
 and is only written after the user actually switches (`persist`, on by default —
-the initial language is never written). On a first visit, `detectBrowser: true`
+the initial language is never written). On a first visit, `detectBrowserLanguage: true`
 matches `navigator.languages` (`ar-EG` → `ar`, base tags match); a stored choice
 always wins. `storageStrategy` moves the same value to `sessionStorage` or a
 cookie, or turns persistence off with `'none'`; `'cookie'` is the strategy that

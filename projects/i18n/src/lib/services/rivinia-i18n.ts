@@ -46,8 +46,8 @@ import { ViewTransitionService } from './view-transition.service';
 export class RiviniaI18n<L extends string = string> {
   private readonly _config = inject<RiviniaI18nConfig<L>>(RIVINIA_I18N_CONFIG);
   private readonly _viewTransition = inject(ViewTransitionService, { optional: true });
-  private readonly _autoApplyDirection: boolean =
-    this._config.autoApplyDirection ?? DEFAULT_AUTO_APPLY_DIRECTION;
+  private readonly _syncDocumentLanguage: boolean =
+    this._config.syncDocumentLanguage ?? this._config.autoApplyDirection ?? DEFAULT_AUTO_APPLY_DIRECTION;
   /** Validated once; `null` means no fallback chain. */
   private readonly _fallbackId: L | null = this._config.fallbackLanguage ?? null;
   /**
@@ -88,7 +88,7 @@ export class RiviniaI18n<L extends string = string> {
     strategy: this._config.storageStrategy ?? DEFAULT_STORAGE_STRATEGY,
     languages: () => this._languages(),
     defaultLanguage: this._defaultLanguageId,
-    detectBrowser: this._config.detectBrowser ?? false,
+    detectBrowser: this._config.detectBrowserLanguage ?? this._config.detectBrowser ?? false,
     document: this._doc,
     request: this._request ?? null,
     // Writes reach storage/cookies only after an explicit switch (RIV-17).
@@ -151,12 +151,16 @@ export class RiviniaI18n<L extends string = string> {
   readonly languages = this._languages.asReadonly();
   readonly currentLanguage = this._currentLanguageId.asReadonly();
 
-  readonly currentLanguageObject = computed<Language<L>>(() => {
+  /** Metadata for the active language; `currentLanguage()` is its id. */
+  readonly currentLanguageInfo = computed<Language<L>>(() => {
     const id = this._currentLanguageId();
     return this._languages().find((l) => l.id === id) ?? this._languages()[0];
   });
 
-  readonly dir = computed<Direction>(() => this.currentLanguageObject().dir);
+  /** @deprecated V2: use `currentLanguageInfo`. */
+  readonly currentLanguageObject = this.currentLanguageInfo;
+
+  readonly dir = computed<Direction>(() => this.currentLanguageInfo().dir);
   readonly isRtl = computed<boolean>(() => this.dir() === 'rtl');
 
   /** Loader state for skeletons/spinners. */
@@ -193,7 +197,7 @@ export class RiviniaI18n<L extends string = string> {
   /**
    * Keys that could not be resolved from the current dictionary, the fallback
    * dictionary, or a `defaultValue`, in the order they were first looked up.
-   * Published in a microtask because `t()` is a `computed` and Angular forbids
+   * Published in a microtask because `translateSignal()` uses a `computed` and Angular forbids
    * signal writes inside a computation.
    */
   readonly missingKeys = this._missingKeyReporter.missingKeys;
@@ -215,13 +219,19 @@ export class RiviniaI18n<L extends string = string> {
       );
     }
 
-    if (this._autoApplyDirection) {
-      this._direction.install(() => this.currentLanguageObject());
+    if (this._syncDocumentLanguage) {
+      this._direction.install(() => this.currentLanguageInfo());
     }
   }
 
-  getLanguage(id: L): Language<L> | undefined {
+  /** Returns metadata for a configured language id, if found. */
+  getLanguageInfo(id: L): Language<L> | undefined {
     return this._languages().find((l) => l.id === id);
+  }
+
+  /** @deprecated V2: use `getLanguageInfo`. */
+  getLanguage(id: L): Language<L> | undefined {
+    return this.getLanguageInfo(id);
   }
 
   /**
@@ -239,7 +249,7 @@ export class RiviniaI18n<L extends string = string> {
       const current = this._currentLanguageId();
       const fallback = this._fallbackId;
       const hasFallback = fallback !== null && fallback !== current;
-      const preload = this._config.preload ?? true;
+      const preload = this._config.loadOnInit ?? this._config.preload ?? true;
 
       const transferred = this._store.consumeTransfer(current);
       if (transferred) {
@@ -300,21 +310,44 @@ export class RiviniaI18n<L extends string = string> {
   }
 
   /**
-   * A `computed` over the same resolution chain as `translate()` — for
-   * component fields (`readonly title = i18n.t('home.title')`), not for
-   * calling from a template expression on every change detection.
-   *
-   * A function `params` is invoked inside the computation, so the signals it
-   * reads are tracked and a change re-renders the text.
+   * Reactive translation. Returns a readonly `Signal<string>`; create it once
+   * as a component field (not repeatedly from the template).
+   * Passing a parameter factory tracks signals read in that factory.
    */
+  translateSignal(key: RegisteredI18nKey): Signal<string>;
+  translateSignal(key: RegisteredI18nKey, params: TranslateParams | (() => TranslateParams)): Signal<string>;
+  translateSignal(
+    key: RegisteredI18nKey,
+    defaultValue: string,
+    params?: TranslateParams | (() => TranslateParams),
+  ): Signal<string>;
+  translateSignal(
+    key: RegisteredI18nKey,
+    defaultValueOrParams?: string | TranslateParams | (() => TranslateParams),
+    maybeParams?: TranslateParams | (() => TranslateParams),
+  ): Signal<string> {
+    return this._createTranslationSignal(key, defaultValueOrParams, maybeParams);
+  }
+
+  /** @deprecated V2: use `translateSignal()` for reactive values. */
   t(key: RegisteredI18nKey): Signal<string>;
+  /** @deprecated V2: use `translateSignal()`. */
   t(key: RegisteredI18nKey, params: TranslateParams | (() => TranslateParams)): Signal<string>;
+  /** @deprecated V2: use `translateSignal()`. */
   t(
     key: RegisteredI18nKey,
     defaultValue: string,
     params?: TranslateParams | (() => TranslateParams),
   ): Signal<string>;
   t(
+    key: RegisteredI18nKey,
+    defaultValueOrParams?: string | TranslateParams | (() => TranslateParams),
+    maybeParams?: TranslateParams | (() => TranslateParams),
+  ): Signal<string> {
+    return this._createTranslationSignal(key, defaultValueOrParams, maybeParams);
+  }
+
+  private _createTranslationSignal(
     key: RegisteredI18nKey,
     defaultValueOrParams?: string | TranslateParams | (() => TranslateParams),
     maybeParams?: TranslateParams | (() => TranslateParams),
@@ -339,7 +372,7 @@ export class RiviniaI18n<L extends string = string> {
       return this.render(resolved.text, params, resolved.locale, key);
     }
     if (defaultValue === undefined) {
-      // Reporting reads language signals; keep those reads out of `t()`'s
+      // Reporting reads language signals; keep those reads out of `translateSignal()`'s
       // dependency set (the dictionary/locale reads above already track it).
       untracked(() => this._reportMissingKey(key));
     }
@@ -347,7 +380,10 @@ export class RiviniaI18n<L extends string = string> {
     return params ? this.render(fallback, params, this.locale(), key) : fallback;
   }
 
-  readonly loadedTranslations = this._store.visible;
+  /** Current visible dictionary, not the whole dictionary cache. */
+  readonly activeDictionary = this._store.visible;
+  /** @deprecated V2: use `activeDictionary`. */
+  readonly loadedTranslations = this.activeDictionary;
 
   /** Preload without switching (use in `APP_INITIALIZER` / route guards). */
   async loadTranslations(languageId: L): Promise<Record<string, unknown>> {
@@ -441,6 +477,21 @@ export class RiviniaI18n<L extends string = string> {
     return this._languageSwitchGeneration;
   }
 
+  /**
+   * Switches using the configured strategy. With `preload-first`, this promise
+   * settles after the load attempt. With `instant`, it settles after the switch
+   * is requested; it does NOT await dictionary fetch or an optional visual
+   * transition. Use `setLanguageAsync()` explicitly to require preload-first.
+   * This return type intentionally makes no success/commit claim.
+   */
+  switchLanguage(id: L): Promise<void> {
+    if (this._config.switchStrategy === 'preload-first') {
+      return this.setLanguageAsync(id);
+    }
+    this.setLanguage(id);
+    return Promise.resolve();
+  }
+
   /** Number formatting bound to the current language locale (cached Intl). */
   formatNumber(value: number, options?: Intl.NumberFormatOptions): string {
     return this._messageFormatter.formatNumber(value, options);
@@ -453,7 +504,7 @@ export class RiviniaI18n<L extends string = string> {
 
   /** BCP-47 locale driving Intl + ICU plural rules (falls back to the id). */
   readonly locale = computed<string>(() => {
-    return this.currentLanguageObject().locale ?? this._currentLanguageId();
+    return this.currentLanguageInfo().locale ?? this._currentLanguageId();
   });
 
   private readonly _messageFormatter = new MessageFormatter({
@@ -530,7 +581,7 @@ export class RiviniaI18n<L extends string = string> {
 
   /**
    * Records a key no dictionary could resolve. Once per key per session; the
-   * reporter defers the signal write so `t()` can stay a pure `computed`.
+   * reporter defers the signal write so `translateSignal()` stays a pure `computed`.
    */
   private _reportMissingKey(key: string): void {
     this._missingKeyReporter.reportKey(key);

@@ -14,8 +14,10 @@ ng add @rivinia/i18n
 
 It asks for the language ids (comma-separated; the first is the default) and
 whether to detect the browser language — both are also options (`languages`,
-`detectBrowser`, plus `project` for a multi-app workspace), so CI can pass them
-on the command line instead of answering questions. It only inserts an import and
+`detectBrowserLanguage`, plus `project` for a multi-app workspace), so CI can pass them
+on the command line instead of answering questions. The historical `--detectBrowser`
+option remains accepted as a deprecated alias; `--detectBrowserLanguage` is
+preferred and takes precedence if both are supplied. It only inserts an import and
 a `provideRiviniaI18n({…})` call, is idempotent, and skips with a warning — never
 an error — when it does not recognize the workspace.
 `@angular-devkit/schematics` is an **optional peer** declared for exactly this
@@ -30,11 +32,11 @@ dictionary per language:
 ```bash
 npx rivinia-i18n-keys init
 # [rivinia/i18n] Language id (ar, en, ar-EG …): ar
-#   Native name [العربية]:
+#   Display name [العربية]:
 #   Direction (ltr/rtl) [rtl]:
 #   Another language? (Y/n): y
 # [rivinia/i18n] Language id (ar, en, ar-EG …): en
-#   Native name [English]:
+#   Display name [English]:
 #   Direction (ltr/rtl) [ltr]:
 #   Another language? (y/N): n
 # [rivinia/i18n] Default language — (1) ar  (2) en [1]:
@@ -49,8 +51,8 @@ import { defineRiviniaI18n } from '@rivinia/i18n';
 export const i18n = defineRiviniaI18n({
   defaultLanguage: 'ar',
   languages: [
-    { id: 'ar', nativeName: 'العربية', dir: 'rtl' },
-    { id: 'en', nativeName: 'English', dir: 'ltr' },
+    { id: 'ar', displayName: 'العربية', dir: 'rtl' },
+    { id: 'en', displayName: 'English', dir: 'ltr' },
   ],
 });
 
@@ -88,7 +90,7 @@ validated before anything is written.
 
 | Flag          | Effect                                                                       |
 | ------------- | ---------------------------------------------------------------------------- |
-| `--languages` | `id[:nativeName[:dir]]` pairs, comma-separated — skips the questions for CI. |
+| `--languages` | `id[:displayName[:dir]]` pairs, comma-separated — skips the questions for CI. |
 | `--default`   | Default language id; the first one listed when omitted.                      |
 | `--out`       | Module path, default `src/app/i18n/languages.ts`.                            |
 | `--dir`       | Dictionary folder, default `public/i18n`.                                    |
@@ -132,7 +134,7 @@ With that file in the program:
 
 ```ts
 i18n.translate('app.title'); // ok
-i18n.t('app.titel'); // TS error: not assignable to 'app.title' | …
+i18n.translateSignal('app.titel'); // TS error: not assignable to 'app.title' | …
 i18n.translate(`status.${code}` as RegisteredI18nKey); // dynamic key, explicit
 ```
 

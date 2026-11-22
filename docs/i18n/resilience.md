@@ -15,8 +15,8 @@ dictionary — so a slow load never produces false positives.
 provideRiviniaI18n({
   defaultLanguage: 'ar',
   languages: [
-    { id: 'ar', nativeName: 'العربية', dir: 'rtl' },
-    { id: 'en', nativeName: 'English', dir: 'ltr' },
+    { id: 'ar', displayName: 'العربية', dir: 'rtl' },
+    { id: 'en', displayName: 'English', dir: 'ltr' },
   ],
   fallbackLanguage: 'en',
   onMissingKey: ({ key, language, fallbackLanguage }) =>
@@ -68,7 +68,7 @@ The fallback dictionary loads in parallel with the initial language and
 **silently** — a fallback failure reaches `onLoadError` but never sets
 `loadingState` to `'error'`, because the current dictionary is what the UI needs.
 It is transferred with the rest of the state, so hydration does not fetch it
-again. With `preload: false`, the fallback works from cache/inline dictionaries
+again. With `loadOnInit: false`, the fallback works from cache/inline dictionaries
 only.
 
 ## Load failures
@@ -83,8 +83,8 @@ renders raw key names. Initialization never rejects: the failure lands on
 provideRiviniaI18n({
   defaultLanguage: 'ar',
   languages: [
-    { id: 'ar', nativeName: 'العربية', dir: 'rtl' },
-    { id: 'en', nativeName: 'English', dir: 'ltr' },
+    { id: 'ar', displayName: 'العربية', dir: 'rtl' },
+    { id: 'en', displayName: 'English', dir: 'ltr' },
   ],
   onLoadError: (language, error) => report(error, { language }),
 });

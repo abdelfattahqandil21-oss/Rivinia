@@ -14,9 +14,9 @@ Keys are dot paths into the JSON file: `{"booking": {"seats": "Seats"}}` becomes
 
 ```ts
 // component field: a signal that re-renders on a language switch
-readonly title = this.i18n.t('app.title');
+readonly title = this.i18n.translateSignal('app.title');
 // params may be a function of signals — the text follows both language and count
-readonly seats = this.i18n.t('booking.seats', () => ({ count: this.count() }));
+readonly seats = this.i18n.translateSignal('booking.seats', () => ({ count: this.count() }));
 ```
 
 ```ts
@@ -32,7 +32,7 @@ fallback → first value → `''`.
 
 ## Which one to use
 
-`t()` is a `computed`, so it is the right tool for component fields. The pipe is
+`translateSignal()` is a `computed`, so it is the right tool for component fields. The pipe is
 impure by necessity — the service reads signals on every call — and re-runs on
 every change-detection pass: fine for a page, wasteful for a thousand rows. For
 a template expression that runs on every change detection, `translate()` or the
@@ -41,16 +41,16 @@ pipe is cheaper than an extra signal.
 `RvTranslatePipe` (`rvTranslate`) delegates to `translate()`; that is its whole
 implementation.
 
-## `t()` signals
+## `translateSignal()` signals
 
 ```ts
-readonly title = this.i18n.t('app.title');
-readonly items = this.i18n.t('cart.items', () => ({ count: this.count() }));
+readonly title = this.i18n.translateSignal('app.title');
+readonly items = this.i18n.translateSignal('cart.items', () => ({ count: this.count() }));
 ```
 
 A function `params` is invoked inside the computation, so the signals it reads
 are tracked: changing `count` re-renders the text without touching the language.
-`t()` is a `computed` over the same resolution chain as `translate()`, and
+`translateSignal()` is a `computed` over the same resolution chain as `translate()`, and
 missing keys are recorded in a microtask because Angular forbids signal writes
 inside a `computed`.
 

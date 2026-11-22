@@ -28,13 +28,17 @@
         ]
       }
     },
-    "detectBrowser": {
+    "detectBrowserLanguage": {
       "type": "boolean",
       "description": "On the visitor's first visit, choose a language from their browser settings. A saved language choice always takes priority.",
       "x-prompt": {
         "message": "Use the visitor's browser language on their first visit? A saved choice still takes priority.",
         "type": "confirmation"
       }
+    },
+    "detectBrowser": {
+      "type": "boolean",
+      "description": "Deprecated alias for detectBrowserLanguage. Kept for existing CLI scripts."
     },
     "project": {
       "type": "string",

@@ -2,7 +2,7 @@
   <button
     type="button"
     class="rv-language-toggle__button"
-    [attr.lang]="target.id"
+    [attr.lang]="target.locale ?? target.id"
     [attr.dir]="target.dir ?? 'auto'"
     [attr.aria-label]="accessibleName()"
     [attr.aria-busy]="isBusy() ? 'true' : null"

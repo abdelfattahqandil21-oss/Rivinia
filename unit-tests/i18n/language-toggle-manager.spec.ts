@@ -153,3 +153,18 @@ describe('RiviniaLanguageToggle — manager mode', () => {
     expect(host.got).toEqual([]);
   });
 });
+
+
+describe('RiviniaLanguageToggle — V2 overlap guard', () => {
+  it('prevents a double-click while the confirming managed switch is pending', async () => {
+    const fixture = attach(ManagedHost);
+    fixture.detectChanges();
+    const inner = button(fixture);
+    inner?.click();
+    inner?.click();
+    expect(fixture.componentInstance.manager.calls).toEqual(['en']);
+    fixture.componentInstance.manager.settle('en');
+    await flush();
+    expect(fixture.componentInstance.got).toEqual(['en']);
+  });
+});

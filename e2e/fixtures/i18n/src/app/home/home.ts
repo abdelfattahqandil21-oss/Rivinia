@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RiviniaI18n } from '@rivinia/i18n';
 
 /**
- * The i18n proof page: dictionaries, ICU, fallback, missing keys, the `t()`
+ * The i18n proof page: dictionaries, ICU, fallback, missing keys, the `translateSignal()`
  * signal and the hardening cases. Routed at `/`.
  */
 @Component({
@@ -12,10 +12,10 @@ import { RiviniaI18n } from '@rivinia/i18n';
 export class Home {
   readonly i18n = inject(RiviniaI18n<'ar' | 'en'>);
 
-  /** `t()` — a signal, so a language switch re-renders without a pipe. */
-  readonly title = this.i18n.t('app.title');
-  readonly hero = this.i18n.t('home.hero');
-  readonly switchLabel = this.i18n.t('home.switch');
+  /** `translateSignal()` — a signal, so a language switch re-renders without a pipe. */
+  readonly title = this.i18n.translateSignal('app.title');
+  readonly hero = this.i18n.translateSignal('home.hero');
+  readonly switchLabel = this.i18n.translateSignal('home.switch');
 
   readonly counts = [0, 1, 2, 3, 11, 100] as const;
   readonly ordinals = [1, 2, 3, 4, 11, 21] as const;
@@ -63,10 +63,10 @@ export class Home {
   readonly live = signal(1);
   readonly racePreparationComplete = signal(false);
   /** A `params` FUNCTION, so the signal it reads is tracked. */
-  readonly liveText = this.i18n.t('signal.count', () => ({ count: this.live() }));
+  readonly liveText = this.i18n.translateSignal('signal.count', () => ({ count: this.live() }));
 
   use(id: 'ar' | 'en'): void {
-    this.i18n.setLanguage(id);
+    void this.i18n.switchLanguage(id);
   }
 
   async prepareLocaleRace(): Promise<void> {
@@ -75,6 +75,7 @@ export class Home {
     this.racePreparationComplete.set(true);
   }
 
+  /** Force preload-first for deterministic race testing, even if the default strategy is instant. */
   requestLanguageAsync(id: 'ar' | 'en'): Promise<void> {
     return this.i18n.setLanguageAsync(id);
   }

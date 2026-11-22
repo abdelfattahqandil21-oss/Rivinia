@@ -8,10 +8,11 @@ import {
   input,
   isDevMode,
   output,
+  signal,
   viewChild,
 } from '@angular/core';
 import type { LanguageLike, RiviniaLanguageManager } from '../../models/language-view';
-import { languageName } from '../../utils/language-name';
+import { resolveLanguageDisplayName } from '../../utils/language-name';
 import { RiviniaLanguageTrigger } from './language-trigger.directive';
 import type { RiviniaLanguageTriggerContext } from './language-trigger.directive';
 
@@ -70,14 +71,16 @@ export class RiviniaLanguageToggle {
     return languages.find((language) => language.id !== current);
   });
 
+  private readonly _switchPending = signal(false);
+
   readonly isBusy = computed(() => {
     const manager = this.manager();
-    return manager ? manager.loadingState() === 'loading' : this.busy();
+    return this._switchPending() || (manager ? manager.loadingState() === 'loading' : this.busy());
   });
 
   readonly visibleName = computed(() => {
     const target = this.target();
-    return target ? languageName(target) : '';
+    return target ? resolveLanguageDisplayName(target) : '';
   });
 
   readonly accessibleName = computed(() => {
@@ -121,9 +124,17 @@ export class RiviniaLanguageToggle {
       return;
     }
 
-    await manager.setLanguageAsync(targetId);
-    if (manager.currentLanguage() === targetId) {
-      this.languageChange.emit(targetId);
+    // Guard a rapid double-click even before the manager reports loading.
+    // Keep preload-first for this confirming control irrespective of the app's
+    // global instant switch strategy (see the toggle's documented contract).
+    this._switchPending.set(true);
+    try {
+      await manager.setLanguageAsync(targetId);
+      if (manager.currentLanguage() === targetId) {
+        this.languageChange.emit(targetId);
+      }
+    } finally {
+      this._switchPending.set(false);
     }
   }
 

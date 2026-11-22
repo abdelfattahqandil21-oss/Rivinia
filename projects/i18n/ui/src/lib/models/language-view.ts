@@ -4,6 +4,8 @@ import type { Direction } from '@rivinia/i18n';
  *  `Language` from @rivinia/i18n (which requires `dir`). */
 export interface LanguageLike {
   readonly id: string;
+  readonly displayName?: string;
+  /** @deprecated V2: use `displayName`. */
   readonly nativeName?: string;
   readonly dir?: Direction; // absent → rendered as dir="auto"
   readonly locale?: string;

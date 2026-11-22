@@ -251,7 +251,7 @@ test.describe('fallback and missing keys', () => {
   });
 });
 
-test.describe('t() signal', () => {
+test.describe('translateSignal() signal', () => {
   test('re-renders when the signal read by its params function changes', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByTestId('live')).toHaveText('تحديث واحد');

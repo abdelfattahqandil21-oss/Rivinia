@@ -41,7 +41,7 @@ import { RiviniaLanguageToggle } from '@rivinia/i18n/ui';
 })
 export class Header {
   readonly i18n = inject(RiviniaI18n<'ar' | 'en'>);
-  readonly switchLabel = this.i18n.t('common.switchLanguage');
+  readonly switchLabel = this.i18n.translateSignal('common.switchLanguage');
 }
 ```
 
@@ -64,7 +64,7 @@ above is rendered as:
 ```
 
 `label` is never translated for you — the UI entry point imports core types only,
-so the app passes an already translated string (a `t()` signal re-renders on a
+so the app passes an already translated string (a `translateSignal()` signal re-renders on a
 language switch).
 
 ## Presentational, without a manager
@@ -98,8 +98,8 @@ synchronous: there is nothing to await, so the event fires on activation.
 `languageChange` emits the id that is now current — see the
 [emission contract](#busy-failure-and-the-emission-contract).
 
-`LanguageLike` is `{ id, nativeName?, dir?, locale? }`: `dir` absent renders
-`dir="auto"`, and `locale` is what `Intl.DisplayNames` uses when `nativeName` is
+`LanguageLike` is `{ id, displayName?, nativeName?, dir?, locale? }`: `dir` absent renders
+`dir="auto"`, and `locale` is what `Intl.DisplayNames` uses when `displayName` (with legacy `nativeName` fallback) is
 missing.
 
 ## Two languages exactly
@@ -164,7 +164,7 @@ name — `aria-label` on the button supplies that (D57).
 })
 export class Header {
   readonly i18n = inject(RiviniaI18n<'ar' | 'en'>);
-  readonly switchLabel = this.i18n.t('common.switchLanguage');
+  readonly switchLabel = this.i18n.translateSignal('common.switchLanguage');
 }
 ```
 
@@ -193,7 +193,7 @@ receives the target entry as `$implicit` and `busy`, and inherits the button's
 <rv-language-toggle [manager]="i18n" label="Switch language">
   <ng-template rvLanguageTrigger let-language let-busy="busy">
     <svg aria-hidden="true" focusable="false"><!-- consumer-provided icon --></svg>
-    <span [lang]="language.id">{{ language.nativeName }}</span>
+    <span [lang]="language.locale ?? language.id">{{ language.displayName ?? language.id }}</span>
     @if (busy) {
     <span class="spinner" aria-hidden="true"></span>
     }
@@ -230,8 +230,8 @@ renders exactly this case.
 ## SSR and the language name
 
 The component renders the same markup on the server and touches no browser global.
-The name resolves as `nativeName` → `Intl.DisplayNames` → the raw id, cached per
-(locale, id). Supply `nativeName` when the server's CLDR data might differ from the
+The name resolves as `displayName` (with legacy `nativeName` fallback) → `Intl.DisplayNames` → the raw id, cached per
+(locale, id). Supply `displayName` (with legacy `nativeName` fallback) when the server's CLDR data might differ from the
 browser's: it short-circuits the lookup, so the server HTML and the first client
 render cannot disagree.
 
@@ -320,7 +320,7 @@ the supported shape for three or more languages, not something the toggle turns 
   <select (change)="i18n.setLanguage($any($event.target).value)">
     @for (lang of i18n.languages(); track lang.id) {
     <option [value]="lang.id" [selected]="lang.id === i18n.currentLanguage()" [lang]="lang.id">
-      {{ lang.nativeName }}
+      {{ lang.displayName ?? lang.id }}
     </option>
     }
   </select>
@@ -336,3 +336,7 @@ languages are politically ambiguous and the W3C i18n guidance recommends against
 them. A globe does not name a language it cannot represent, and it says "switch
 language" without saying which. An app that wants its own mark passes `[icon]`, or
 draws one inside `rvLanguageTrigger`; either way the accessible name is unaffected.
+
+## V2 implementation notes
+
+The preferred user-facing label is `displayName`; a supplied `nativeName` is still accepted for migration, followed by `Intl.DisplayNames` and then the id. The toggle uses `locale ?? id` for the inner button's `lang` attribute and guards a second activation while the previous managed activation remains pending. All earlier busy/disabled/confirmed-event behavior is preserved. `@rivinia/i18n/select` integration is deferred.

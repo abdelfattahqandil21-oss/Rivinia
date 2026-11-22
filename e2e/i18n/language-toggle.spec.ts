@@ -125,7 +125,7 @@ test.describe('direction matrix', () => {
     // Page RTL, target English: the button is an LTR island.
     await expect(html).toHaveAttribute('dir', 'rtl');
     await expect(host).toHaveCSS('direction', 'rtl');
-    await expect(button).toHaveAttribute('lang', 'en');
+    await expect(button).toHaveAttribute('lang', 'en-GB');
     await expect(button).toHaveAttribute('dir', 'ltr');
     await expect(button).toHaveCSS('direction', 'ltr');
     await expectInlineStartPadding(page, 'managed-toggle');
@@ -135,7 +135,7 @@ test.describe('direction matrix', () => {
     // Page LTR, target Arabic: the button is an RTL island.
     await expect(html).toHaveAttribute('dir', 'ltr');
     await expect(host).toHaveCSS('direction', 'ltr');
-    await expect(button).toHaveAttribute('lang', 'ar');
+    await expect(button).toHaveAttribute('lang', 'ar-EG');
     await expect(button).toHaveAttribute('dir', 'rtl');
     await expect(button).toHaveCSS('direction', 'rtl');
     await expectInlineStartPadding(page, 'managed-toggle');

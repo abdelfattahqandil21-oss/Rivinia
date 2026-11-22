@@ -21,8 +21,8 @@ export const appConfig: ApplicationConfig = {
     provideRiviniaI18n<'ar' | 'en'>({
       defaultLanguage: 'ar',
       languages: [
-        { id: 'ar', nativeName: 'العربية', dir: 'rtl', locale: 'ar-EG' },
-        { id: 'en', nativeName: 'English', dir: 'ltr', locale: 'en-GB' },
+        { id: 'ar', displayName: 'العربية', dir: 'rtl', locale: 'ar-EG' },
+        { id: 'en', displayName: 'English', dir: 'ltr', locale: 'en-GB' },
       ],
       fallbackLanguage: 'en',
       // Cookie preference is readable from each server REQUEST, so the SSR

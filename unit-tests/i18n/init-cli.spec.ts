@@ -42,12 +42,12 @@ function readModule(dir: string): string {
 
 function generated(options: {
   defaultLanguage: string;
-  languages: readonly { id: string; nativeName: string; dir: string }[];
+  languages: readonly { id: string; displayName: string; dir: string }[];
 }): string {
   const entries = options.languages
     .map(
       (entry) =>
-        `    { id: '${entry.id}', nativeName: '${entry.nativeName}', dir: '${entry.dir}' },`,
+        `    { id: '${entry.id}', displayName: '${entry.displayName}', dir: '${entry.dir}' },`,
     )
     .join('\n');
   return [
@@ -67,8 +67,8 @@ function generated(options: {
   ].join('\n');
 }
 
-const AR = { id: 'ar', nativeName: 'العربية', dir: 'rtl' };
-const EN = { id: 'en', nativeName: 'English', dir: 'ltr' };
+const AR = { id: 'ar', displayName: 'العربية', dir: 'rtl' };
+const EN = { id: 'en', displayName: 'English', dir: 'ltr' };
 
 afterEach(() => {
   while (dirs.length > 0) {
@@ -89,7 +89,7 @@ describe('rivinia-i18n-keys init — non-interactive', () => {
     expect(readFileSync(join(dir, 'public/i18n/en.json'), 'utf8')).toBe('{}\n');
   });
 
-  it('fills native name and direction from the id when they are omitted', () => {
+  it('fills display name and direction from the id when they are omitted', () => {
     const dir = tempDir();
     const { code } = run(dir, ['init', '--languages', 'ar,en']);
     expect(code).toBe(0);

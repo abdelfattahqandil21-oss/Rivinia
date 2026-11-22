@@ -37,14 +37,14 @@ const LANGUAGE_ID = /^[a-z]{2,8}(-[a-z0-9]{2,8})?$/;
 
 /** Display names and directions for the ids most projects start with. */
 const KNOWN_LANGUAGES = Object.freeze({
-  ar: { nativeName: 'العربية', dir: 'rtl' },
-  en: { nativeName: 'English', dir: 'ltr' },
-  fr: { nativeName: 'Français', dir: 'ltr' },
-  de: { nativeName: 'Deutsch', dir: 'ltr' },
-  es: { nativeName: 'Español', dir: 'ltr' },
-  he: { nativeName: 'עברית', dir: 'rtl' },
-  fa: { nativeName: 'فارسی', dir: 'rtl' },
-  ur: { nativeName: 'اردو', dir: 'rtl' },
+  ar: { displayName: 'العربية', dir: 'rtl' },
+  en: { displayName: 'English', dir: 'ltr' },
+  fr: { displayName: 'Français', dir: 'ltr' },
+  de: { displayName: 'Deutsch', dir: 'ltr' },
+  es: { displayName: 'Español', dir: 'ltr' },
+  he: { displayName: 'עברית', dir: 'rtl' },
+  fa: { displayName: 'فارسی', dir: 'rtl' },
+  ur: { displayName: 'اردو', dir: 'rtl' },
 });
 
 const RTL_IDS = new Set(['ar', 'he', 'fa', 'ur', 'ps', 'yi', 'dv', 'ku', 'sd']);
@@ -286,15 +286,15 @@ async function runInit(args) {
 
 /**
  * Parses `ar:العربية:rtl,en:English:ltr`. Every part after the id is optional:
- * a missing native name or direction comes from the id. `:` is the separator,
- * so a native name containing a colon must be edited in the generated file.
+ * a missing display name or direction comes from the id. `:` is the separator,
+ * so a display name containing a colon must be edited in the generated file.
  */
 function parseLanguageSpec(raw) {
   const entries = [];
   const seen = new Set();
   for (const part of raw.split(',')) {
     if (part.trim() === '') continue;
-    const [idPart, nativePart, dirPart] = part.split(':');
+    const [idPart, displayPart, dirPart] = part.split(':');
     const id = idPart.trim().toLowerCase();
     if (id === '') {
       throw new Error('A language entry needs an id, e.g. `ar:العربية:rtl`.');
@@ -308,7 +308,7 @@ function parseLanguageSpec(raw) {
     seen.add(id);
 
     const known = KNOWN_LANGUAGES[id];
-    const nativeName = (nativePart ?? '').trim() || known?.nativeName || id;
+    const displayName = (displayPart ?? '').trim() || known?.displayName || id;
     const dir = (
       (dirPart ?? '').trim() ||
       known?.dir ||
@@ -317,7 +317,7 @@ function parseLanguageSpec(raw) {
     if (dir !== 'ltr' && dir !== 'rtl') {
       throw new Error(`Invalid direction "${dir}" for "${id}" — use ltr or rtl.`);
     }
-    entries.push({ id, nativeName, dir });
+    entries.push({ id, displayName, dir });
   }
   if (entries.length === 0) {
     throw new Error('No language ids found in --languages.');
@@ -357,11 +357,11 @@ async function collectLanguages() {
       }
 
       const known = KNOWN_LANGUAGES[id];
-      const nativeDefault = known?.nativeName ?? id;
+      const displayDefault = known?.displayName ?? id;
       const dirDefault = known?.dir ?? (RTL_IDS.has(id) ? 'rtl' : 'ltr');
 
-      const nativeAnswer = await prompter.ask(`  Native name [${nativeDefault}]: `);
-      if (nativeAnswer === null) return null;
+      const displayAnswer = await prompter.ask(`  Display name [${displayDefault}]: `);
+      if (displayAnswer === null) return null;
 
       let dir = '';
       for (;;) {
@@ -374,7 +374,7 @@ async function collectLanguages() {
 
       entries.push({
         id,
-        nativeName: nativeAnswer === '' ? nativeDefault : nativeAnswer,
+        displayName: displayAnswer === '' ? displayDefault : displayAnswer,
         dir,
       });
 
@@ -468,7 +468,7 @@ function renderLanguagesModule(entries, defaultId) {
   const languages = entries
     .map(
       (entry) =>
-        `    { id: '${escapeTs(entry.id)}', nativeName: '${escapeTs(entry.nativeName)}', dir: '${entry.dir}' },`,
+        `    { id: '${escapeTs(entry.id)}', displayName: '${escapeTs(entry.displayName)}', dir: '${entry.dir}' },`,
     )
     .join('\n');
   return [
@@ -534,7 +534,7 @@ function printInitHelp() {
       '  rivinia-i18n-keys init --languages <list>   (non-interactive)',
       '',
       'Options:',
-      '  --languages  id[:nativeName[:dir]] pairs, comma-separated',
+      '  --languages  id[:displayName[:dir]] pairs, comma-separated',
       '               (e.g. ar:العربية:rtl,en:English:ltr; parts after the id are optional)',
       `  --default    Default language id (default: the first one)`,
       `  --out        Module to write (default: ${INIT_DEFAULTS.out})`,

@@ -2,11 +2,15 @@
 export type Direction = 'ltr' | 'rtl';
 
 /**
- * A supported language. `nativeName` is presentation-only metadata for
- * switcher UIs — Core never reads it internally.
+ * A supported language. `displayName` is the consumer-provided label used by
+ * UI controls; it may be a native, localized, regional or product-specific name.
+ * Core never reads presentation metadata. `nativeName` remains temporarily
+ * supported for migration; UI gives `displayName` precedence.
  */
 export interface Language<T extends string = string> {
   readonly id: T;
+  readonly displayName?: string;
+  /** @deprecated V2: use `displayName` (consumer-visible label). */
   readonly nativeName?: string;
   readonly dir: Direction;
   /**

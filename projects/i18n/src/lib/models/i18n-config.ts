@@ -24,6 +24,9 @@ export interface RiviniaI18nConfig<T extends string = string> {
   readonly fallbackLanguage?: T;
   readonly storageKey?: string;
   readonly storageStrategy?: StorageStrategy;
+  /** Synchronize the document's `<html lang>` and `<html dir>` when switching. @default true */
+  readonly syncDocumentLanguage?: boolean;
+  /** @deprecated V2: use `syncDocumentLanguage`. */
   readonly autoApplyDirection?: boolean;
   readonly viewTransition?: ViewTransitionConfig;
   /**
@@ -81,6 +84,8 @@ export interface RiviniaI18nConfig<T extends string = string> {
    * that call `loadTranslations` themselves).
    * @default true
    */
+  readonly loadOnInit?: boolean;
+  /** @deprecated V2: use `loadOnInit`. */
   readonly preload?: boolean;
   /**
    * Inline per-language dictionaries. Seeded before any network load (zero
@@ -92,6 +97,8 @@ export interface RiviniaI18nConfig<T extends string = string> {
    * (stored preference always wins; base tags match, e.g. `ar-EG` → `ar`).
    * @default false — explicit opt-in, no surprises.
    */
+  readonly detectBrowserLanguage?: boolean;
+  /** @deprecated V2: use `detectBrowserLanguage`. */
   readonly detectBrowser?: boolean;
 }
 

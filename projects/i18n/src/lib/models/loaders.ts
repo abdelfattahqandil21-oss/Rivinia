@@ -24,7 +24,7 @@ export interface LoaderContext {
 
 /**
  * Pluggable key-dictionary loader. Returns a flat/nested JSON-compatible map
- * merged into `loadedTranslations` and read by key-based `translate(key)`.
+ * merged into `activeDictionary` and read by key-based `translate(key)`.
  */
 export interface TranslationLoader<L extends string = string> {
   load(language: L, context?: LoaderContext): Promise<Record<string, unknown>>;

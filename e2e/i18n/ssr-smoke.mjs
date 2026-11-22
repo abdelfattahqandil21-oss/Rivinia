@@ -207,7 +207,7 @@ try {
   );
   check(
     'SSR managed button carries lang and dir of the target',
-    /lang="en"/.test(managedHtml) && /dir="ltr"/.test(managedHtml),
+    /lang="en-GB"/.test(managedHtml) && /dir="ltr"/.test(managedHtml),
     managedHtml.slice(0, 240),
   );
   check(

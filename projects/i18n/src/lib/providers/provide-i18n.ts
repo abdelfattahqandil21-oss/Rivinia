@@ -35,7 +35,7 @@ type AssertUniqueLanguageIds<T extends readonly { readonly id: string }[]> =
 /**
  * Configures `@rivinia/i18n` for the application. Call once at bootstrap.
  * Also registers an app initializer that loads the initial language before
- * first paint (opt out with `preload: false`).
+ * first paint (opt out with `loadOnInit: false`).
  *
  * A repeated id written inline (`languages: [AR, EN, AR]`) is a compile error.
  * The check needs the array literal, so it is skipped when the call supplies
@@ -47,8 +47,8 @@ type AssertUniqueLanguageIds<T extends readonly { readonly id: string }[]> =
  * ```ts
  * provideRiviniaI18n({
  *   languages: [
- *     { id: 'ar', nativeName: 'العربية', dir: 'rtl' },
- *     { id: 'en', nativeName: 'English', dir: 'ltr' },
+ *     { id: 'ar', displayName: 'العربية', dir: 'rtl' },
+ *     { id: 'en', displayName: 'English', dir: 'ltr' },
  *   ],
  * })
  * ```
@@ -57,8 +57,8 @@ type AssertUniqueLanguageIds<T extends readonly { readonly id: string }[]> =
  * ```ts
  * // `as const` keeps `id` and `dir` literal — hoisted objects would
  * // otherwise widen to `string` and fail the `Language` check.
- * const AR = { id: 'ar', nativeName: 'العربية', dir: 'rtl' } as const;
- * const EN = { id: 'en', nativeName: 'English', dir: 'ltr' } as const;
+ * const AR = { id: 'ar', displayName: 'العربية', dir: 'rtl' } as const;
+ * const EN = { id: 'en', displayName: 'English', dir: 'ltr' } as const;
  * provideRiviniaI18n<'ar' | 'en'>({
  *   languages: [AR, EN],
  * })
@@ -96,8 +96,8 @@ export function injectRiviniaI18n<L extends string = string>(): RiviniaI18n<L> {
  * ```ts
  * export const i18n = defineRiviniaI18n({
  *   languages: [
- *     { id: 'ar', nativeName: 'العربية', dir: 'rtl' },
- *     { id: 'en', nativeName: 'English', dir: 'ltr' },
+ *     { id: 'ar', displayName: 'العربية', dir: 'rtl' },
+ *     { id: 'en', displayName: 'English', dir: 'ltr' },
  *   ],
  * });
  * // app.config.ts

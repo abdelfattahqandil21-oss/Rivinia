@@ -2,22 +2,24 @@ import { Rule, SchematicContext, SchematicsException, Tree } from '@angular-devk
 
 export interface NgAddOptions {
   languages?: string | string[];
+  detectBrowserLanguage?: boolean;
+  /** @deprecated Use detectBrowserLanguage. */
   detectBrowser?: boolean;
   project?: string;
 }
 
 const PROVIDE_IMPORT = `import { provideRiviniaI18n } from '@rivinia/i18n';`;
 
-/** Known display names/directions; anything else gets `{ nativeName: id, dir }`. */
-const KNOWN_LANGUAGES: Record<string, { nativeName: string; dir: 'ltr' | 'rtl' }> = {
-  ar: { nativeName: 'العربية', dir: 'rtl' },
-  en: { nativeName: 'English', dir: 'ltr' },
-  fr: { nativeName: 'Français', dir: 'ltr' },
-  de: { nativeName: 'Deutsch', dir: 'ltr' },
-  es: { nativeName: 'Español', dir: 'ltr' },
-  he: { nativeName: 'עברית', dir: 'rtl' },
-  fa: { nativeName: 'فارسی', dir: 'rtl' },
-  ur: { nativeName: 'اردو', dir: 'rtl' },
+/** Known display names/directions; anything else gets `{ displayName: id, dir }`. */
+const KNOWN_LANGUAGES: Record<string, { displayName: string; dir: 'ltr' | 'rtl' }> = {
+  ar: { displayName: 'العربية', dir: 'rtl' },
+  en: { displayName: 'English', dir: 'ltr' },
+  fr: { displayName: 'Français', dir: 'ltr' },
+  de: { displayName: 'Deutsch', dir: 'ltr' },
+  es: { displayName: 'Español', dir: 'ltr' },
+  he: { displayName: 'עברית', dir: 'rtl' },
+  fa: { displayName: 'فارسی', dir: 'rtl' },
+  ur: { displayName: 'اردو', dir: 'rtl' },
 };
 
 const RTL_IDS = new Set(['ar', 'he', 'fa', 'ur', 'ps', 'yi', 'dv', 'ku', 'sd']);
@@ -26,12 +28,12 @@ const STARTER = (ids: string[], detectBrowser: boolean): string => {
   const languages = ids
     .map((id) => {
       const known = KNOWN_LANGUAGES[id];
-      const nativeName = known?.nativeName ?? id;
+      const displayName = known?.displayName ?? id;
       const dir = known?.dir ?? (RTL_IDS.has(id) ? 'rtl' : 'ltr');
-      return `      { id: '${id}', nativeName: '${nativeName}', dir: '${dir}' },`;
+      return `      { id: '${id}', displayName: '${displayName}', dir: '${dir}' },`;
     })
     .join('\n');
-  const detect = detectBrowser ? '\n    detectBrowser: true' : '';
+  const detect = detectBrowser ? '\n    detectBrowserLanguage: true' : '';
   return (
     `provideRiviniaI18n({\n` +
     `    // Dictionaries: public/i18n/{id}.json (default jsonLoader)\n` +
@@ -123,7 +125,7 @@ export function ngAdd(options: NgAddOptions): Rule {
       changed = true;
     }
     if (!content.includes('provideRiviniaI18n(')) {
-      const call = STARTER(parseLanguageIds(options.languages), options.detectBrowser === true);
+      const call = STARTER(parseLanguageIds(options.languages), (options.detectBrowserLanguage ?? options.detectBrowser) === true);
       content = insertProvider(content, call);
       changed = true;
     } else {

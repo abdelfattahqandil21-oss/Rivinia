@@ -3,8 +3,11 @@ import type { LanguageLike } from '../models/language-view';
 /** One lookup per (locale, id); the key cannot collide because of the NUL separator. */
 const cache = new Map<string, string>();
 
-/** Resolution order: `nativeName` → `Intl.DisplayNames` → the raw id, never empty. */
-export function languageName(entry: LanguageLike): string {
+/** Resolution order: displayName → legacy nativeName → Intl.DisplayNames → id. */
+export function resolveLanguageDisplayName(entry: LanguageLike): string {
+  if (entry.displayName) {
+    return entry.displayName;
+  }
   if (entry.nativeName) {
     return entry.nativeName;
   }
@@ -28,3 +31,6 @@ export function languageName(entry: LanguageLike): string {
   cache.set(key, name);
   return name;
 }
+
+/** @deprecated V2: use `resolveLanguageDisplayName`. */
+export const languageName = resolveLanguageDisplayName;
