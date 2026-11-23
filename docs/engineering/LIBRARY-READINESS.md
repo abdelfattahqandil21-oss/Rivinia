@@ -42,3 +42,18 @@ Owner-approved HTTP V2 final QA sign-off. Merge/push to main authorized. Unified
 - Optional Motion bundle optimization deferred.
 - Unified npm deployment: **NOT_AUTHORIZED**.
 <!-- RIVINIA-THEME-V2-QA:END -->
+
+<!-- RIVINIA-ENV-V2-QA:START -->
+## ENV V2 — one-shot setup readiness (2026-11-23)
+
+- `@rivinia/env`: **READY_FOR_DEPLOY** following owner approval.
+- Scope: setup-only `ng add`, typed contract, and CLI documentation.
+- Baseline: 19/19 tests passed.
+- Angular package build and npm pack inspection passed.
+- Compiled schematic smoke passed: preserve existing values,
+  multi-project isolation, and repeat-run idempotency.
+- Documentation: 0 failures; 57 non-blocking warnings.
+- Advanced reviewed workflow was not comprehensively revalidated
+  in this final one-shot gate; existing implementation unchanged.
+- Unified npm deployment: **NOT_AUTHORIZED**.
+<!-- RIVINIA-ENV-V2-QA:END -->

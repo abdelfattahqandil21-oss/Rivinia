@@ -23,10 +23,10 @@ npm install @rivinia/env
 
 ## Inspect and plan environment configuration
 
-The `inspect` schematic is read-only. It records the selected application's environment sources, build configurations, and diagnostics in a plan file:
+The `inspect` schematic is read-only. It prints the selected application's environment sources, build configurations, diagnostics and inspection plan to the console:
 
 ```bash
-ng generate @rivinia/env:inspect --project=admin --plan-file=plans/environment-inspection.json
+ng generate @rivinia/env:inspect --project=admin
 ```
 
 To propose changes, explicitly select source and destination paths in a proposal JSON file, then create a reviewable plan:
