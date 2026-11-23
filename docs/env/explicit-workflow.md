@@ -7,12 +7,10 @@ The environment workflow is available as named Angular CLI schematics. `inspect`
 ## Inspect a project
 
 ```sh
-ng generate @rivinia/env:inspect \
-  --project=admin \
-  --plan-file=plans/environment-inspection.json
+ng generate @rivinia/env:inspect --project=admin
 ```
 
-The plan captures workspace and source fingerprints, discovered build and serve configurations, proposed operations, diagnostics, and an integrity digest. It does not include environment values. Inspect the plan and the referenced source files locally before continuing.
+The plan printed to the console captures workspace and source fingerprints, discovered build and serve configurations, proposed operations, diagnostics, and an integrity digest. It does not include environment values. Inspect the plan and the referenced source files locally before continuing.
 
 ## Propose environment file wiring
 
@@ -50,7 +48,7 @@ Validate a reviewed plan without applying it:
 
 ```sh
 ng generate @rivinia/env:validate-plan \
-  --plan-file=plans/environment-plan.json \
+  --plan=plans/environment-plan.json \
   --reviewed-digest=<plan-integrity-digest>
 ```
 
