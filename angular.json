@@ -367,6 +367,64 @@
         }
       }
     },
+    "theme-visual-e2e": {
+      "projectType": "application",
+      "root": "e2e/fixtures/theme-visual",
+      "sourceRoot": "e2e/fixtures/theme-visual/src",
+      "prefix": "rv",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "e2e/fixtures/theme-visual/src/main.ts",
+            "index": "e2e/fixtures/theme-visual/src/index.html",
+            "tsConfig": "e2e/fixtures/theme-visual/tsconfig.app.json",
+            "assets": [],
+            "styles": [
+              "dist/theme/styles/theme.css",
+              "dist/theme/motion.css",
+              "e2e/fixtures/theme-visual/src/styles.css"
+            ],
+            "outputPath": "dist/theme-visual-e2e",
+            "preserveSymlinks": true
+          },
+          "configurations": {
+            "production": {
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "buildTarget": "theme-visual-e2e:build:development",
+            "prebundle": {
+              "exclude": [
+                "@rivinia/theme",
+                "@rivinia/theme/headless",
+                "@rivinia/theme/toggle",
+                "@rivinia/theme/motion"
+              ]
+            }
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "theme-visual-e2e:build:production"
+            },
+            "development": {
+              "buildTarget": "theme-visual-e2e:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        }
+      }
+    },
     "theme-compat-e2e": {
       "projectType": "application",
       "root": "e2e/fixtures/theme",
@@ -536,6 +594,15 @@
             }
           },
           "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/theme/tsconfig.spec.json",
+            "include": [
+              "../../../unit-tests/theme/runtime/*.spec.ts"
+            ]
+          }
         }
       }
     },

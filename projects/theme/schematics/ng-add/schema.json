@@ -10,17 +10,30 @@
     "tokensPath": {
       "type": "string",
       "default": "theme.tokens.css",
-      "description": "Create-only CSS token override file, relative to the selected application's sourceRoot."
+      "description": "Create-once complete CSS core token file, relative to the application sourceRoot; existing files are never overwritten."
     },
     "scope": {
       "type": "string",
-      "enum": ["root", "light", "dark", "system"],
+      "enum": [
+        "root",
+        "light",
+        "dark",
+        "system"
+      ],
       "default": "root",
-      "description": "Theme scope for the token override block generated in the consumer-owned file."
+      "description": "Scope for explicit unlayered color options; root applies to :root (including dark/system when set there). Full default light, dark and system token blocks are generated for every scope."
     },
     "integration": {
       "type": "string",
-      "enum": ["auto", "css", "scss", "less", "tailwind-v3", "tailwind-v4", "bootstrap-5.3"],
+      "enum": [
+        "auto",
+        "css",
+        "scss",
+        "less",
+        "tailwind-v3",
+        "tailwind-v4",
+        "bootstrap-5.3"
+      ],
       "default": "auto",
       "description": "Framework recipe to show in the setup summary. Framework dependencies and configuration are never changed."
     },

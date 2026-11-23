@@ -146,5 +146,8 @@ update callback. Without browser support, with reduced motion, or while another
 transition is active, the update runs once without animation.
 
 For Angular workspace stylesheet setup, `ng add @rivinia/theme` registers the
-existing CSS entry and creates a consumer-owned token override file. It does
-not enable the Angular runtime or motion stylesheet.
+existing CSS entry and creates a complete, consumer-owned core token file
+for light, dark and system modes. Defaults are layered so existing unlayered
+app overrides keep working; optional `--primary-color` / related options emit
+unlayered mode-scoped overrides. An existing token file is never overwritten.
+It does not enable the Angular runtime or motion stylesheet.

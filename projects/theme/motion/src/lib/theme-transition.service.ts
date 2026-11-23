@@ -30,6 +30,9 @@ interface TransitionState {
 export class RiviniaThemeTransitionService {
   readonly #document = inject(DOCUMENT);
   #running = false;
+  // The browser may defer its snapshot update callback. Flush a pending, older
+  // change before applying a newer request, so the latest request wins.
+  #pendingUpdate: (() => void) | null = null;
 
   run(
     origin: HTMLElement | null,
@@ -39,6 +42,13 @@ export class RiviniaThemeTransitionService {
     const view = this.#document.defaultView;
     const transitionDocument = this.#document;
     const root = this.#document.documentElement;
+
+    // If a View Transition has not yet invoked its update callback, finish
+    // that older update first. Its eventual browser callback will be a no-op.
+    // Avoids a stale callback undoing the latest consumer update.
+    if (this.#running && this.#pendingUpdate) {
+      this.#pendingUpdate();
+    }
 
     if (
       this.#running ||
@@ -57,9 +67,11 @@ export class RiviniaThemeTransitionService {
     const applyUpdate = (): void => {
       if (applied) return;
       applied = true;
+      if (this.#pendingUpdate === applyUpdate) this.#pendingUpdate = null;
       update();
     };
     const cleanup = (): void => {
+      if (this.#pendingUpdate === applyUpdate) this.#pendingUpdate = null;
       this.#restoreState(root, state);
       this.#running = false;
     };
@@ -73,6 +85,7 @@ export class RiviniaThemeTransitionService {
       root.style.setProperty(ROOT_PROPERTIES[4], options.easing?.trim() || 'ease-out');
       root.setAttribute(DIRECTION_ATTRIBUTE, options.direction ?? 'expand');
       this.#running = true;
+      this.#pendingUpdate = applyUpdate;
 
       const transition = transitionDocument.startViewTransition(applyUpdate);
       return transition.updateCallbackDone.then(
@@ -80,7 +93,7 @@ export class RiviniaThemeTransitionService {
         (error: unknown) => {
           cleanup();
           if (!applied) {
-            update();
+            applyUpdate();
             return;
           }
           throw error;
@@ -89,7 +102,7 @@ export class RiviniaThemeTransitionService {
     } catch (error) {
       cleanup();
       if (!applied) {
-        update();
+        applyUpdate();
         return Promise.resolve();
       }
       return Promise.reject(error);

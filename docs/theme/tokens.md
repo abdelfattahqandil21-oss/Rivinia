@@ -37,6 +37,29 @@ placed on the root or on a nested element with `data-rv-theme="light|dark|system
 | `--rv-shadow-md` | `0 16px 48px rgba(0, 0, 0, 0.22)` light; stronger in dark mode |
 | `--rv-font-family` | System UI font stack |
 
+## Generated consumer token file (`ng add`)
+
+`ng add @rivinia/theme` creates `src/theme.tokens.css` (or the configured
+`--tokens-path`) once and registers it after the package stylesheet. It includes
+all **20 core defaults** as active CSS for light, dark and OS-dark system modes.
+You can edit individual colors, radii, spacing, shadow or font values directly.
+
+Defaults are in `@layer rivinia-consumer-tokens`, so existing **unlayered**
+consumer declarations keep priority regardless of import order:
+
+```css
+/* Outside layers: overrides the generated default and Bootstrap adapter. */
+:root { --rv-color-primary: #3157a4; }
+[data-rv-theme='dark'] { --rv-color-primary: #96baff; }
+```
+
+The Schematic's optional `--primary-color`, `--surface-color`, `--text-color`
+and `--border-color` create an unlayered block after the defaults, scoped by
+`--scope=root|light|dark|system`. A root-scoped override also affects dark/system
+when that mode is on the root, so use explicit scopes for different palettes.
+The generator preserves any existing `theme.tokens.css` byte for byte and never
+auto-installs Bootstrap or Tailwind. Recheck contrast after customizing colors.
+
 ## V1 migration
 
 V1 semantic names and Tailwind utility aliases are removed. Update consumer

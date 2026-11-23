@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "outDir": "../../out-tsc/spec",
+    "types": ["vitest/globals"],
+    "paths": {
+      "@rivinia/theme/headless": ["./headless/src/public-api.ts"],
+      "@rivinia/theme/motion": ["./motion/src/public-api.ts"]
+    }
+  },
+  "include": [
+    "src/**/*.d.ts",
+    "../../unit-tests/theme/runtime/*.spec.ts"
+  ]
+}
