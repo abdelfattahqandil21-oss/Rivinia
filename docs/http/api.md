@@ -1,38 +1,41 @@
-# API reference
+# HTTP V2 public API — working contract
 
-Find the public entry points, symbols, and exports.
+[Package README](../../projects/http/README.md)
 
-[Back to @rivinia/http README](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/http/v1.0.1/projects/http/README.md)
+## Core
 
-## Public API
+| Export | Responsibility |
+| --- | --- |
+| `provideRiviniaHttp()` | Adds the facade provider; does **not** configure Angular HttpClient or interceptors |
+| `injectRiviniaHttp()` | Inject the facade in an injection context |
+| `RiviniaHttp` | Native JSON methods, typed `request`, QUERY, raw text/blob and reactive GET resources |
+| `joinUrl(base, endpoint)` | Optional boundary-slash path utility; not a complete URL parser |
+| `RiviniaRequestBase` / `RiviniaRequestOptions` | Native headers, params, context and transport controls |
+| `RiviniaDeleteRequestOptions` | Native request controls plus optional delete body |
+| `RiviniaRawOptions` | Same transport controls for text/blob and response shortcuts |
+| `RiviniaHttpRequestBase` | Transport options, body and reportProgress |
+| `RiviniaHttpJsonBodyOptions` / `RiviniaHttpJsonResponseOptions` / `RiviniaHttpJsonEventsOptions` | Discriminated JSON observe contracts |
+| `RiviniaHttpNonJsonOptions` | Typed text/blob/arraybuffer observe contracts |
+| `RiviniaResourceEndpoint` / `RiviniaResourceOptions` | Angular reactive request controls; consumer-owned parse |
+| `QueryParamsInput` / `ReactiveInput` | Repeated primitive array params / reactive values |
 
-| Export                        | Kind     | Purpose                                                                                                          |
-| ----------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
-| `provideRiviniaHttp(config?)` | provider | Sets `envelope` and optional `httpFeatures`; no global unwrap option.                                            |
-| `RiviniaHttp`                 | class    | `get`, `post`, `put`, `patch`, `delete`, `getBlob`, `getText`, `getResponse`, `postResponse`, and `getResource`. |
-| `injectRiviniaHttp()`         | function | Injection-context shorthand for `inject(RiviniaHttp)`.                                                           |
-| `joinUrl(base, endpoint)`     | utility  | Removes one boundary slash when joining; absolute HTTP(S) endpoints pass through.                                |
-| `unwrapAs(body, key)`         | utility  | Strict, single-level typed extraction.                                                                           |
-| `extractKey(body, key)`       | utility  | Strict extraction without a generic cast.                                                                        |
-| `RiviniaHttpUnwrapError`      | class    | Error for invalid or missing unwrap properties.                                                                  |
-| `RiviniaHttpEnvelopeError`    | class    | Error for a failed configured response envelope.                                                                 |
-| `RiviniaHttpConfig`           | type     | `envelope` and `httpFeatures` provider configuration.                                                            |
-| `RiviniaEnvelopePolicy`       | type     | Success key, error key, and failure policy settings.                                                             |
-| `RiviniaRequestOptions`       | type     | Options for requests that may unwrap.                                                                            |
-| `RiviniaRawOptions`           | type     | Options for methods that never unwrap.                                                                           |
-| `RiviniaDeleteOptions`        | type     | Delete options including an optional request body.                                                               |
-| `RiviniaDeleteRequestOptions` | type     | Delete options including the unwrap contract.                                                                    |
-| `RiviniaTransportOptions` | type | Native HttpClient transport controls, shared by requests and resources. |
-| `RiviniaResourceEndpoint` | type | Static URL, URL signal, or callback receiving native ResourceParamsContext. |
-| `RiviniaRequestBase`          | type     | Shared transport and envelope options.                                                                           |
-| `RiviniaResourceOptions`      | type     | Reactive resource options and unwrap contract.                                                                   |
-| `RiviniaResourceBase`         | type     | Shared resource-specific options.                                                                                |
-| `ReactiveInput`               | type     | Static value, signal, or reactive function input.                                                                |
-| `QueryParamsInput`            | type     | `HttpParams` or scalar/readonly-array query values; nullish entries are omitted.                                                                 |
-| `RiviniaUnwrapOn`             | type     | Required key form for `{ unwrap: true }`.                                                                        |
-| `RiviniaUnwrapOff`            | type     | Form where an unwrap key is disallowed.                                                                          |
+## Methods
 
+| Method | Return |
+| --- | --- |
+| `get<T>(url, opts?)` | `Observable<T>` raw JSON body |
+| `post<T>(url, body?, opts?)` | `Observable<T>` raw JSON body |
+| `put<T>(url, body?, opts?)` | `Observable<T>` raw JSON body |
+| `patch<T>(url, body?, opts?)` | `Observable<T>` raw JSON body |
+| `delete<T>(url, opts?)` | `Observable<T>` raw JSON body |
+| `query<T>(url, body?, opts?)` | `Observable<T>` raw JSON body, HTTP `QUERY` verb |
+| `request<T>(method, url, opts?)` | Native typed body, full response or events; supports JSON, text, blob, arraybuffer |
+| `getText(url, opts?)`, `getBlob(url, opts?)` | `Observable<string>` / `Observable<Blob>` |
+| `getResponse<T>(url, opts?)`, `postResponse<T>(url, body?, opts?)` | `Observable<HttpResponse<T>>` convenience shortcuts |
+| `getResource<T>(urlOrSignalOrCallback, opts?)` | Angular `HttpResourceRef<T | undefined>` or `HttpResourceRef<T>` when defaultValue supplied |
 
-## License
+No business response normalization, unwrap, envelope, translation, auto-retry, or server-state cache in the core.
 
-MIT.
+## Angular compatibility
+
+`request('QUERY', ...)` works with the Angular 22.2 HttpClient API without requiring `HttpClient.query()` at compile time. Do not infer native QUERY-specific SSR transfer-cache behavior from this wrapper. `HttpClient` owns actual network serialization, interceptors and errors.

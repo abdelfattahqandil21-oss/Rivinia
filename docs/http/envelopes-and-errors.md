@@ -1,53 +1,38 @@
-# Response envelopes and errors
+# Backend responses and errors — V2
 
-Handle response envelopes and request errors.
+## Rule
 
-[Back to @rivinia/http README](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/http/v1.0.1/projects/http/README.md)
-
-## Response envelopes and errors
-
-By default, all JSON response bodies are returned raw, even when they contain
-a field named `data`. To extract a payload, opt in on that call and provide a
-key:
+**HTTP transport status is not a business decision.** Rivinia emits successful HTTP response bodies exactly as received. It does not inspect `isSuccess`, `isValid`, `error`, or `errors`. A `200` with an error array is a value; a `4xx` remains Angular's `HttpErrorResponse`. A raw array or array of arrays is never flattened.
 
 ```ts
-this.http.get<Trip[]>(url); // raw response body
-this.http.get<Trip[]>(url, { unwrap: true, unwrapKey: 'data' });
+interface TicketResponse {
+  data?: Ticket[][];
+  error?: unknown;
+}
+
+const response$ = http.get<TicketResponse>('/api/tickets');
+// Possible 200 payload:
+// { error: [[{ ar: 'لا توجد تذاكر', en: 'No tickets' }]] }
 ```
 
-The type contract requires `unwrapKey` when `unwrap: true`, and rejects a key
-when unwrapping is off. Extraction is strict and single-level: the response
-must be a non-null, non-array object with that own property. A missing key,
-primitive/array/null body, or empty key throws `RiviniaHttpUnwrapError`;
-it does not silently return the original body. Present values such as `null`,
-`false`, `0`, and `''` are returned as-is. Nested data and sibling fields are
-not modified. `unwrapAs<T>` performs the same one-level extraction outside a
-request; its generic type is an unchecked cast, not runtime validation.
-
-An optional envelope policy checks backend-declared failures before
-unwrapping. The default keys are `isSuccess` and `error`; only an object whose
-`isSuccess` value is exactly `false` is considered failed:
+The generic `TicketResponse` only describes a compile-time expectation. It does not prove what the server sent. To validate an untrusted response, use consumer-owned `map`, a parser (Zod/Valibot/etc.) or an OpenAPI-generated contract.
 
 ```ts
-// Apply to JSON request paths made by this configured client.
-provideRiviniaHttp({ envelope: {} });
+import { map } from 'rxjs';
 
-// Or specify a per-request policy; it replaces the global policy.
-this.http.get<Trip[]>(url, {
-  envelope: { successKey: 'ok', errorKey: 'message' },
-});
+const result$ = http.get<unknown>('/api/tickets').pipe(
+  map(raw => parseMyTicketsResponse(raw)),
+);
 ```
 
-When a failure is detected, `RiviniaHttpEnvelopeError` is sent through the
-Observable error channel or appears as the resource error. It carries the raw
-`body` and failure `code`. Set `throwOnFailure: false` for a passive policy.
-Policy validation runs before unwrapping, including on `getResponse` and
-`postResponse`. Those full-response methods return raw `HttpResponse<T>`
-(status, headers, and unwrapped body is not applied). `getBlob` and `getText`
-also return raw bodies and do not run envelope validation.
+In reactive `getResource`, the same consumer-owned parser can be passed as `parse: (raw: unknown) => T`, and Angular surfaces parsing failures via `resource.error()`.
 
-The generic type does not validate the server response. For untrusted or
-loosely typed APIs, validate the extracted value with `getResource`'s `parse`
-hook, or validate in the Observable pipeline in app code. Do not log
-`RiviniaHttpUnwrapError.body` or `RiviniaHttpEnvelopeError.body` without
-considering that they may contain sensitive data.
+## Ownership boundary
+
+- Rivinia: HTTP method, options, params, native response modes, resources.
+- Angular: HTTP errors, SSR transport/caching, cancellation and interceptors.
+- Consumer: business failures vs empty states, localized messages, field validation, retry policy, auth, toast UI.
+
+## Migration
+
+V1 `unwrap`, `unwrapKey`, `envelope`, `unwrapAs`, `RiviniaHttpEnvelopeError` and `RiviniaHttpUnwrapError` have no equivalent automatic behavior in the V2 core. See [migration notes](v2-migration.md). Do not silently restore this behavior with a default policy.

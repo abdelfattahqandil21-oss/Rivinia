@@ -1,18 +1,20 @@
-export type { RiviniaHttpConfig } from './lib/models/http-config';
 export type {
   QueryParamsInput,
   ReactiveInput,
-  RiviniaDeleteOptions,
   RiviniaDeleteRequestOptions,
   RiviniaRawOptions,
   RiviniaRequestBase,
-  RiviniaTransportOptions,
   RiviniaRequestOptions,
-  RiviniaUnwrapOff,
-  RiviniaUnwrapOn,
+  RiviniaTransportOptions,
+  RiviniaHttpRequestBase,
+  RiviniaHttpAnyRequestOptions,
+  RiviniaHttpJsonBodyOptions,
+  RiviniaHttpJsonResponseOptions,
+  RiviniaHttpJsonEventsOptions,
+  RiviniaHttpNonJsonOptions,
+  RiviniaHttpBinaryKind,
 } from './lib/models/http-options';
-export type { RiviniaResourceBase, RiviniaResourceOptions, RiviniaResourceEndpoint } from './lib/services/rivinia-http';
-export { extractKey, joinUrl, RiviniaHttpUnwrapError, unwrapAs } from './lib/utils/http-utils';
-export { RiviniaHttpEnvelopeError, type RiviniaEnvelopePolicy } from './lib/models/http-envelope';
+export type { RiviniaResourceOptions, RiviniaResourceEndpoint } from './lib/services/rivinia-http';
+export { joinUrl } from './lib/utils/http-utils';
 export { injectRiviniaHttp, provideRiviniaHttp } from './lib/providers/provide-http';
 export { RiviniaHttp } from './lib/services/rivinia-http';

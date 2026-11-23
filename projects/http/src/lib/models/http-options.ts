@@ -1,48 +1,15 @@
 import type { HttpContext, HttpHeaders, HttpParams, HttpClientCommonOptions } from '@angular/common/http';
 import type { Signal } from '@angular/core';
-import type { RiviniaEnvelopePolicy } from './http-envelope';
 
-/**
- * A value, a signal of it, or a reactive function returning it — evaluated
- * inside the `httpResource` request function, so signal reads stay reactive
- * (same contract as `httpResource` itself).
- */
+/** Evaluated in Angular's `httpResource` request callback, preserving signal tracking. */
 export type ReactiveInput<T> = T | Signal<T> | (() => T);
 
-/** Shorthand for building query strings; `null`/`undefined` values are dropped. */
+/** Object shorthand: readonly primitive arrays use repeated query parameter keys. */
 export type QueryParamsInput =
-  HttpParams | Record<string, string | number | boolean | readonly (string | number | boolean)[] | undefined | null>;
+  | HttpParams
+  | Record<string, string | number | boolean | readonly (string | number | boolean)[] | undefined | null>;
 
-/**
- * Unwrap contract for a single request — a discriminated union on the literal
- * `unwrap` flag (no overloads needed: both modes return the same types).
- *
- * - omitted/disabled: `unwrapKey` is forbidden (`never`).
- * - `unwrap: true`: `unwrapKey` is required. There is no default key.
- * - a key alone, or `{ unwrap: false, unwrapKey }`, fails compilation.
- *
- * NOTE: excess-property checks apply to fresh literals only. A pre-built
- * object widens `unwrap` to `boolean` — inline the options, annotate them,
- * or use `as const`.
- */
-export interface RiviniaUnwrapOn {
-  /** Extract `body[unwrapKey]`; a missing key throws `RiviniaHttpUnwrapError`. */
-  unwrap: true;
-  /** Envelope key to extract. Required, non-empty. No default. */
-  unwrapKey: string;
-}
-
-export interface RiviniaUnwrapOff {
-  unwrap?: false;
-  /** Forbidden while unwrapping is off — a key alone never enables it. */
-  unwrapKey?: never;
-}
-
-/**
- * Shared per-request fields (transport + envelope validation). Unwrap
- * behavior is added by the contract types below — never by a global.
- */
-/** Native transport controls; caching here means the browser HTTP cache. */
+/** Native transport controls, with no Rivinia-owned retry, cache or response interpretation. */
 export interface RiviniaTransportOptions extends Pick<HttpClientCommonOptions,
   'withCredentials' | 'timeout' | 'transferCache' | 'keepalive' | 'cache' |
   'credentials' | 'priority' | 'mode' | 'redirect' | 'referrer' | 'referrerPolicy' | 'integrity'> {}
@@ -50,42 +17,32 @@ export interface RiviniaTransportOptions extends Pick<HttpClientCommonOptions,
 export interface RiviniaRequestBase extends RiviniaTransportOptions {
   params?: QueryParamsInput;
   headers?: HttpHeaders | Record<string, string | string[]>;
-  /** Pass-through for app-owned interceptors (auth opt-out, error policy, ...). */
+  /** Goes straight to Angular interceptors; Rivinia never interprets it. */
   context?: HttpContext;
-  /**
-   * Opt-in backend-envelope validation for this call (replaces any global
-   * `envelope` policy wholesale). See `RiviniaEnvelopePolicy`.
-   */
-  envelope?: RiviniaEnvelopePolicy;
 }
 
-/**
- * Per-request options for methods that can unwrap (`get`/`post`/`put`/
- * `patch`/`delete`, `getResource`). A discriminated union on the literal
- * `unwrap` flag (no overloads needed: both modes return the same types):
- *
- * - omitted/disabled: `unwrapKey` is forbidden (`never`).
- * - `unwrap: true`: `unwrapKey` is required. There is no default key.
- * - a key alone, or `{ unwrap: false, unwrapKey }`, fails compilation.
- *
- * NOTE: excess-property checks apply to fresh literals only. A pre-built
- * object widens `unwrap` to `boolean` — inline the options, annotate them,
- * or use `as const`.
- */
-export type RiviniaRequestOptions = RiviniaRequestBase & (RiviniaUnwrapOn | RiviniaUnwrapOff);
-
-/** Options for methods that never unwrap (blob/text/raw): unwrap fields rejected. */
-export type RiviniaRawOptions = RiviniaRequestBase & RiviniaUnwrapOff;
-
-export interface RiviniaDeleteOptions extends RiviniaRequestBase {
+/** All shorthand JSON methods return the complete, unmodified response body. */
+export type RiviniaRequestOptions = RiviniaRequestBase;
+/** `delete` may carry a body without reinterpreting its response. */
+export interface RiviniaDeleteRequestOptions extends RiviniaRequestBase {
   body?: unknown;
 }
+/** Raw text/blob and the two legacy full-response shortcuts accept the same native controls. */
+export type RiviniaRawOptions = RiviniaRequestBase;
 
-/**
- * Delete accepts the same unwrap contract as the other unwrapping methods:
- * compose the base delete shape with the union (an `interface extends`
- * a union is illegal, and `Omit` over a union would destroy the
- * discrimination — so the union is applied here explicitly).
- */
-export type RiviniaDeleteRequestOptions = RiviniaDeleteOptions &
-  (RiviniaUnwrapOn | RiviniaUnwrapOff);
+/** Generic `request()` forwards Angular's body, event and response observation modes. */
+export interface RiviniaHttpRequestBase extends RiviniaRequestBase {
+  body?: unknown;
+  reportProgress?: boolean;
+}
+export type RiviniaHttpJsonBodyOptions = RiviniaHttpRequestBase & { observe?: 'body'; responseType?: 'json' };
+export type RiviniaHttpJsonResponseOptions = RiviniaHttpRequestBase & { observe: 'response'; responseType?: 'json' };
+export type RiviniaHttpJsonEventsOptions = RiviniaHttpRequestBase & { observe: 'events'; responseType?: 'json' };
+
+export type RiviniaHttpBinaryKind = 'arraybuffer' | 'blob' | 'text';
+export type RiviniaHttpNonJsonOptions<K extends RiviniaHttpBinaryKind, O extends 'body' | 'response' | 'events'> =
+  RiviniaHttpRequestBase & { responseType: K; observe: O };
+export type RiviniaHttpAnyRequestOptions = RiviniaHttpRequestBase & {
+  responseType?: 'json' | RiviniaHttpBinaryKind;
+  observe?: 'body' | 'response' | 'events';
+};

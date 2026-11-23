@@ -1,105 +1,70 @@
-import { describe, expect } from 'vitest';
-import { unwrapAs } from '../../projects/http/src/lib/utils/http-utils';
-import type { HttpResourceRef } from '@angular/common/http';
+import type { HttpEvent, HttpResourceRef, HttpResponse } from '@angular/common/http';
+import { describe, expect, it } from 'vitest';
 import type { RiviniaHttp } from '../../projects/http/src/lib/services/rivinia-http';
+import type { RiviniaRequestOptions } from '../../projects/http/src/lib/models/http-options';
+import { provideRiviniaHttp } from '../../projects/http/src/lib/providers/provide-http';
 
-/**
- * Compile-time contract tests. Functions below are NEVER invoked — they exist
- * so `tsc`/ng-packagr typechecks what IS enforced. Each `@ts-expect-error`
- * sits directly above a single-line call it must suppress; a stale
- * suppression (line no longer erroring) fails the build by itself.
- * The `unwrapAs<T>` unchecked cast is deliberately NOT asserted — any `T`
- * compiles by design (see JSDoc).
- */
-function assertUnwrapAsFlowsGeneric(key: string): void {
-  const users: string[] = unwrapAs<string[]>({ data: ['a'] }, key);
-  // @ts-expect-error - string[] is not assignable to number[]
-  const notUsers: number[] = unwrapAs<string[]>({ data: ['a'] }, key);
-  void users;
-  void notUsers;
-}
-
+interface User { id: number }
 declare const http: RiviniaHttp;
 
-function assertDefaultCompiles(): void {
-  http.get<User[]>('/api/users');
-  http.post<User>('/api/users', {});
-  http.put<User>('/api/users/1', {});
-  http.patch<User>('/api/users/1', {});
-  http.delete<void>('/api/users/1');
-  http.getBlob('/api/file.bin');
-  http.getText('/api/note.txt');
-  http.getResponse<User[]>('/api/users');
-  http.postResponse<User>('/api/users', {});
-  http.getResource<User[]>('/api/users');
+// Compile-time assertions: functions deliberately never invoked in the test.
+function assertRawContracts(): void {
+  http.get<User[]>('/users');
+  http.post<User>('/users', {});
+  http.put<User>('/users/1', {});
+  http.patch<User>('/users/1', {});
+  http.delete<void>('/users/1', { body: { reason: 'x' } });
+  http.getBlob('/file');
+  http.getText('/note');
+  http.getResponse<User[]>('/users');
+  http.postResponse<User>('/users', {});
+  http.query<User[]>('/search', { q: 'x' });
+  http.getResource<User[]>('/users');
+  http.get('/users', { params: { tag: ['a', 'b'] as const, omit: null } });
 }
 
-function assertExplicitUnwrapCompiles(): void {
-  http.get<User[]>('/api/users', { unwrap: true, unwrapKey: 'data' });
-  http.post<User>('/api/users', {}, { unwrap: true, unwrapKey: 'payload' });
-  http.put<User>('/api/users/1', {}, { unwrap: true, unwrapKey: 'data' });
-  http.patch<User>('/api/users/1', {}, { unwrap: true, unwrapKey: 'data' });
-  http.delete<void>('/api/users/1', { unwrap: true, unwrapKey: 'data' });
-  http.getResource<User[]>('/api/users', { unwrap: true, unwrapKey: 'data' });
-  http.get<User[]>('/api/users', { unwrap: false });
+function assertOverloads(): void {
+  const body: import('rxjs').Observable<User[]> = http.request<User[]>('GET', '/users');
+  const response: import('rxjs').Observable<HttpResponse<User[]>> = http.request<User[]>('GET', '/users', { observe: 'response' });
+  const events: import('rxjs').Observable<HttpEvent<User[]>> = http.request<User[]>('PATCH', '/users', { observe: 'events', body: {} });
+  const blob: import('rxjs').Observable<Blob> = http.request('GET', '/file', { responseType: 'blob' });
+  const text: import('rxjs').Observable<string> = http.request('GET', '/text', { responseType: 'text' });
+  const bytes: import('rxjs').Observable<ArrayBuffer> = http.request('GET', '/binary', { responseType: 'arraybuffer' });
+  const binaryResponse: import('rxjs').Observable<HttpResponse<Blob>> = http.request('GET', '/file', { responseType: 'blob', observe: 'response' });
+  // @ts-expect-error - body is not an HttpResponse
+  const wrong: import('rxjs').Observable<HttpResponse<User[]>> = http.request<User[]>('GET', '/users');
+  void body; void response; void events; void blob; void text; void bytes; void binaryResponse; void wrong;
 }
 
-function assertKeyRequiresUnwrap(): void {
-  // @ts-expect-error - key is required when unwrap is enabled
-  http.get<User[]>('/api/users', { unwrap: true });
-}
-
-function assertKeyAloneRejected(): void {
-  // @ts-expect-error - key cannot be supplied alone
-  http.get<User[]>('/api/users', { unwrapKey: 'data' });
-}
-
-function assertDisabledWithKeyRejected(): void {
-  // @ts-expect-error - disabled unwrap cannot carry a key
-  http.get<User[]>('/api/users', { unwrap: false, unwrapKey: 'data' });
-}
-
-function assertRawMethodsRejectUnwrap(): void {
-  // @ts-expect-error - blob responses never unwrap
-  http.getBlob('/api/file.bin', { unwrap: true, unwrapKey: 'data' });
-  // @ts-expect-error - text responses never unwrap
-  http.getText('/api/note.txt', { unwrap: true, unwrapKey: 'data' });
-  // @ts-expect-error - raw responses never unwrap
-  http.getResponse<User[]>('/api/users', { unwrap: true, unwrapKey: 'data' });
-  // @ts-expect-error - raw responses never unwrap
-  http.postResponse<User>('/api/users', {}, { unwrap: true, unwrapKey: 'data' });
-}
-
-function assertResourceContract(): void {
+function assertResourceTypes(): void {
   const defined: HttpResourceRef<User[]> = http.getResource<User[]>('/users', { defaultValue: [] });
   const nullable: HttpResourceRef<User | null> = http.getResource<User | null>('/users/1', { defaultValue: null });
-  // @ts-expect-error - no default means the native value can be undefined
-  const missing: HttpResourceRef<User[]> = http.getResource<User[]>('/users');
-  void defined; void nullable; void missing;
-
-  http.getResource<User[]>('/api/users', { unwrap: true, unwrapKey: 'data' });
-  // @ts-expect-error - key is required when unwrap is enabled
-  http.getResource<User[]>('/api/users', { unwrap: true });
-  // @ts-expect-error - key cannot be supplied alone
-  http.getResource<User[]>('/api/users', { unwrapKey: 'data' });
-  http.delete<void>('/api/users/1', { body: { reason: 'x' }, unwrap: true, unwrapKey: 'data' });
-  // @ts-expect-error - key is required when unwrap is enabled
-  http.delete<void>('/api/users/1', { unwrap: true });
+  // @ts-expect-error - undefined is possible without a defaultValue
+  const absent: HttpResourceRef<User[]> = http.getResource<User[]>('/users');
+  void defined; void nullable; void absent;
 }
 
-interface User {
-  id: number;
+function assertRemovedBusinessContracts(): void {
+  // @ts-expect-error - no implicit or opt-in unwrap in transport V2
+  http.get('/users', { unwrap: true, unwrapKey: 'data' });
+  // @ts-expect-error - a backend-specific error policy cannot be set on requests
+  http.get('/users', { envelope: {} });
+  // @ts-expect-error - resources do not interpret backend envelopes
+  http.getResource('/users', { unwrap: true, unwrapKey: 'data' });
+  // @ts-expect-error - transport provider is deliberately configuration-free
+  provideRiviniaHttp({ envelope: {} });
+  // @ts-expect-error - backend features belong to Angular provideHttpClient
+  provideRiviniaHttp({ httpFeatures: [] });
+  // @ts-expect-error - option type has no business-dependent fields
+  const opts: RiviniaRequestOptions = { unwrap: true };
+  void opts;
+  // @ts-expect-error - discriminated union rejects unsupported MIME response types
+  http.request('GET', '/body', { responseType: 'xml' });
 }
 
-describe('Http type safety', () => {
-  it('exposes typed assertion functions (compile-time only)', () => {
-    expect(typeof assertUnwrapAsFlowsGeneric).toBe('function');
-    expect(typeof assertDefaultCompiles).toBe('function');
-    expect(typeof assertExplicitUnwrapCompiles).toBe('function');
-    expect(typeof assertKeyRequiresUnwrap).toBe('function');
-    expect(typeof assertKeyAloneRejected).toBe('function');
-    expect(typeof assertDisabledWithKeyRejected).toBe('function');
-    expect(typeof assertRawMethodsRejectUnwrap).toBe('function');
-    expect(typeof assertResourceContract).toBe('function');
+describe('V2 TypeScript contracts', () => {
+  it('keeps compile-time assertions in the build surface', () => {
+    for (const fn of [assertRawContracts, assertOverloads, assertResourceTypes, assertRemovedBusinessContracts])
+      expect(typeof fn).toBe('function');
   });
 });

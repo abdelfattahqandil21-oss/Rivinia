@@ -17,3 +17,17 @@
 
 Owner-approved partial sign-off recorded in `specs/i18n/V2-PHASE1-CLOSURE.md`.
 <!-- RIVINIA-I18N-PHASE1-END -->
+
+<!-- RIVINIA-HTTP-V2-QA:START -->
+## HTTP — V2 candidate verification (2026-11-23)
+
+| Segment | State | Evidence / next action |
+| --- | --- | --- |
+| `@rivinia/http` generic transport and TypeScript API | `QA_PASSED` | 29/29 unit, compile-time types; Angular build |
+| `@rivinia/http` `ng add` | `QA_PASSED` | 5/5 schematics; schema TS check |
+| `@rivinia/http` standalone consumer / SSR / browser | `QA_PASSED` | exact packed tarball; 17/17 Chromium, 17/17 Firefox; CSR, SSR & hydration |
+| Final owner review | `READY_FOR_DEPLOY` | Owner-approved 2026-11-23; QA evidence: [HTTP-V2-QA-EVIDENCE](../../specs/http/HTTP-V2-QA-EVIDENCE.md) |
+| Unified npm deployment | `NOT_AUTHORIZED` | No package publication or version bump |
+
+Owner-approved HTTP V2 final QA sign-off. Merge/push to main authorized. Unified npm deployment remains unauthorized.
+<!-- RIVINIA-HTTP-V2-QA:END -->

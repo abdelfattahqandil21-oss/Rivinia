@@ -9,10 +9,8 @@ const PROVIDE_HTTP_IMPORT = `import { provideRiviniaHttp } from '@rivinia/http';
  *
  * - Never overwrites user files; only inserts two imports + two providers.
  * - Idempotent: safe to run twice (existing entries are detected and skipped).
- * - Never provides the backend beyond `provideHttpClient()`; interceptors,
- *   URLs and per-request unwrap options stay app-owned. Unwrapping is
- *   strictly per call (`{ unwrap: true, unwrapKey }`) — the schematic emits
- *   no unwrap configuration.
+ * - Angular owns the HTTP backend and interceptors. Rivinia forwards raw
+ *   bodies unchanged and has no envelope or unwrap configuration.
  */
 function ngAdd(options) {
     return (tree, context) => {
@@ -34,9 +32,7 @@ function ngAdd(options) {
         if (!content) {
             throw new schematics_1.SchematicsException(`[rivinia/http] ${configPath} is empty.`);
         }
-        // Unwrapping is strictly per request (`{ unwrap: true, unwrapKey }`) —
-        // the schematic emits no unwrap configuration. URLs are never touched:
-        // the caller owns them (environment, joinUrl, …).
+        // Response interpretation and URLs remain application-owned.
         let changed = false;
         if (!importsValue(content, '@angular/common/http', 'provideHttpClient')) {
             content = insertAfterLastImport(content, HTTP_CLIENT_IMPORT);

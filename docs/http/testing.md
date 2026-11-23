@@ -1,32 +1,22 @@
-# Testing
+# HTTP V2 — testing contract
 
-Test code that uses the package.
+[Package README](../../projects/http/README.md)
 
-[Back to @rivinia/http README](https://github.com/abdelfattahqandil21-oss/Rivinia/blob/http/v1.0.1/projects/http/README.md)
-
-## Testing
-
-Use Angular's HTTP testing providers. The testing provider follows
-`provideHttpClient()` so the test backend replaces the real backend:
+Use native Angular HTTP testing tools:
 
 ```ts
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRiviniaHttp, RiviniaHttp } from '@rivinia/http';
 
 TestBed.configureTestingModule({
   providers: [provideHttpClient(), provideHttpClientTesting(), provideRiviniaHttp()],
 });
-
-const api = TestBed.inject(RiviniaHttp);
+const http = TestBed.inject(RiviniaHttp);
 const requests = TestBed.inject(HttpTestingController);
-api
-  .get<unknown[]>('https://api.test/trips', {
-    unwrap: true,
-    unwrapKey: 'data',
-  })
-  .subscribe();
-requests.expectOne('https://api.test/trips').flush({ data: [] });
-requests.verify();
 ```
+
+Critical regressions: 200 with business error remains a value, multilingual nested arrays remain untouched, actual 4xx remain `HttpErrorResponse`, generic `request` forwards event/response/headers, QUERY sends the real method, reactive params cancel obsolete requests, and no automatic interceptors, retry or envelope handling appear.
+
+The V2 source candidate has not yet passed the user's Angular build, Browser/SSR E2E or packed consumer gates; these must be run locally before sign-off.

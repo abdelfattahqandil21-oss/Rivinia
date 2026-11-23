@@ -1,36 +1,18 @@
 import { EnvironmentProviders, inject, makeEnvironmentProviders } from '@angular/core';
-import { provideHttpClient } from '@angular/common/http';
-import { RIVINIA_HTTP_CONFIG, type RiviniaHttpConfig } from '../models/http-config';
 import { RiviniaHttp } from '../services/rivinia-http';
 
 /**
- * Configures `@rivinia/http`.
+ * Explicitly registers the response-agnostic facade in the application.
  *
- * URLs are always used as given — build them at the call site from wherever
- * you want (see the exported `joinUrl` + your `environment.apiUrl`).
- *
- * Three backend styles (pick ONE):
- * - `provideRiviniaHttp()` alone — Angular ≥21 already injects `HttpClient` (fetch).
- * - `provideRiviniaHttp({ httpFeatures: [withInterceptors([...])] })` — single
- *   call that also configures the backend. Do NOT additionally call
- *   `provideHttpClient()` (double registration duplicates the XSRF interceptor).
- * - `provideHttpClient(...)` + `provideRiviniaHttp()` separately — equivalent,
- *   keeps backend config visibly in app code (this is what `ng add` generates).
- *
- * @example
- * ```ts
- * provideRiviniaHttp()
- * ```
+ * The application owns `provideHttpClient(withInterceptors(...))`, XSRF,
+ * fetch/XHR, auth, error policies and backend configuration. This provider
+ * neither installs an HTTP backend nor registers interceptors.
  */
-export function provideRiviniaHttp(config: RiviniaHttpConfig = {}): EnvironmentProviders {
-  const { httpFeatures, ...rest } = config;
-  return makeEnvironmentProviders([
-    ...(httpFeatures ? [provideHttpClient(...httpFeatures)] : []),
-    { provide: RIVINIA_HTTP_CONFIG, useValue: rest },
-  ]);
+export function provideRiviniaHttp(): EnvironmentProviders {
+  return makeEnvironmentProviders([RiviniaHttp]);
 }
 
-/** Shorthand for `inject(RiviniaHttp)`. */
+/** Shorthand for `inject(RiviniaHttp)` inside an Angular injection context. */
 export function injectRiviniaHttp(): RiviniaHttp {
   return inject(RiviniaHttp);
 }
