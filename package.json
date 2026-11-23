@@ -25,7 +25,7 @@
     "build:theme-compat": "node scripts/theme-compat-build.mjs",
     "test:theme-compat": "node scripts/theme-compat-test.mjs",
     "test:schematics": "vitest run unit-tests/http/schematics unit-tests/toast/schematics unit-tests/i18n/schematics unit-tests/modal/schematics unit-tests/env/schematics",
-    "test:theme": "vitest run unit-tests/theme",
+    "test:theme": "vitest run unit-tests/theme/check-theme-package.spec.ts unit-tests/theme/schematics && ng test theme --watch=false",
     "test:table:prod-identity": "node scripts/table-prod-identity-smoke.mjs",
     "check:docs": "node scripts/check-docs.mjs",
     "check:theme": "node scripts/check-theme-package.mjs",

@@ -18,6 +18,49 @@ const TOKEN_PROPERTIES = [
   ['borderColor', '--rv-color-border'],
 ];
 
+// Mirror the shipped CSS core contract. The C2 tests assert these values against
+// styles/theme.css so the generator cannot silently drift from the package.
+const LIGHT_COLORS = [
+  ['--rv-color-primary', '#005fcc'],
+  ['--rv-color-surface', '#ffffff'],
+  ['--rv-color-surface-raised', '#f5f7fa'],
+  ['--rv-color-text', '#101820'],
+  ['--rv-color-text-muted', '#454f58'],
+  ['--rv-color-border', '#767676'],
+  ['--rv-color-focus', '#005fcc'],
+  ['--rv-color-danger', '#dc2626'],
+  ['--rv-color-success', '#16a34a'],
+  ['--rv-color-info', '#2563eb'],
+  ['--rv-color-warning', '#d97706'],
+];
+const DARK_COLORS = [
+  ['--rv-color-primary', '#8ab4ff'],
+  ['--rv-color-surface', '#182028'],
+  ['--rv-color-surface-raised', '#202d38'],
+  ['--rv-color-text', '#f5f7fa'],
+  ['--rv-color-text-muted', '#c4ced8'],
+  ['--rv-color-border', '#8292a1'],
+  ['--rv-color-focus', '#8ab4ff'],
+  ['--rv-color-danger', '#f87171'],
+  ['--rv-color-success', '#4ade80'],
+  ['--rv-color-info', '#60a5fa'],
+  ['--rv-color-warning', '#fbbf24'],
+];
+const SHARED_TOKENS = [
+  ['--rv-radius-sm', '0.25rem'],
+  ['--rv-radius-md', '0.5rem'],
+  ['--rv-radius-lg', '0.75rem'],
+  ['--rv-space-1', '0.25rem'],
+  ['--rv-space-2', '0.5rem'],
+  ['--rv-space-3', '0.75rem'],
+  ['--rv-space-4', '1rem'],
+  ['--rv-font-family', "system-ui, -apple-system, 'Segoe UI', sans-serif"],
+];
+const SHADOWS = {
+  light: '0 16px 48px rgba(0, 0, 0, 0.22)',
+  dark: '0 16px 48px rgba(0, 0, 0, 0.6)',
+};
+
 function fail(message) {
   throw new Error(`[rivinia/theme] ${message}`);
 }
@@ -129,6 +172,21 @@ function detectIntegrations(tree, styles) {
   return [...found].sort();
 }
 
+function renderTokenBlock(selectors, mode, indent) {
+  const colors = mode === 'dark' ? DARK_COLORS : LIGHT_COLORS;
+  const entries = [
+    ...colors,
+    ...SHARED_TOKENS.filter(([name]) => name !== '--rv-font-family'),
+    ['--rv-shadow-md', SHADOWS[mode]],
+    ...SHARED_TOKENS.filter(([name]) => name === '--rv-font-family'),
+  ];
+  const prefix = ' '.repeat(indent);
+  const inner = ' '.repeat(indent + 2);
+  return `${prefix}${selectors} {\n${inner}color-scheme: ${mode};\n${entries
+    .map(([name, value]) => `${inner}${name}: ${value};`)
+    .join('\n')}\n${prefix}}`;
+}
+
 function tokenStyles(options) {
   const selectors = {
     root: ':root',
@@ -136,16 +194,40 @@ function tokenStyles(options) {
     dark: "[data-rv-theme='dark']",
     system: "[data-rv-theme='system']",
   };
-  const selector = selectors[options.scope] || ':root';
+  const scope = options.scope || 'root';
+  const selector = selectors[scope];
+  if (!selector) fail('scope must be root, light, dark or system. No files were changed.');
   const declarations = TOKEN_PROPERTIES.filter(([key]) => options[key]).map(
     ([key, token]) => `  ${token}: ${options[key]};`,
   );
-  const body = declarations.length
-    ? declarations.join('\n')
-    : '  /* Add --rv-color-* semantic overrides here. */';
-  return `/* Consumer-owned Rivinia Theme overrides. This file is created once and is never replaced. */\n${selector} {\n${body}\n}\n`;
-}
 
+  // The complete shipped defaults live in a dedicated layer, stronger than
+  // rivinia-theme but weaker than ordinary unlayered consumer rules. This keeps
+  // pre-existing app token overrides effective even when this file is appended
+  // to angular.json's styles array. Dark and system modes are mirrored exactly.
+  const defaults = [
+    renderTokenBlock(":root,\n  [data-rv-theme='light'],\n  [data-rv-theme='system']", 'light', 2),
+    renderTokenBlock("[data-rv-theme='dark']", 'dark', 2),
+    "  @media (prefers-color-scheme: dark) {\n" +
+      renderTokenBlock("[data-rv-theme='system']", 'dark', 4) +
+      '\n  }',
+  ].join('\n\n');
+  const scopedOverride = declarations.length
+    ? `\n/* Explicit overrides are unlayered and beat framework/default tokens.\n` +
+      `   A root override also applies when the root is in dark/system mode; use\n` +
+      `   --scope=dark or --scope=system for mode-specific customizations. */\n` +
+      `${selector} {\n${declarations.join('\n')}\n}\n`
+    : '';
+  return `/* Consumer-owned Rivinia Theme overrides. Created once; never overwritten.\n` +
+    ` * Full editable V2 core defaults follow, including light/dark/system.\n` +
+    ` * The extra layer preserves existing unlayered app/custom framework rules.\n` +
+    ` * To make an unconditional consumer override, add an ordinary rule below\n` +
+    ` * this layer (or pass a supported colour option to ng add).\n` +
+    ` * Check contrast after changing any semantic colour.\n` +
+    ` */\n` +
+    `@layer rivinia-theme, rivinia-consumer-tokens;\n` +
+    `@layer rivinia-consumer-tokens {\n${defaults}\n}\n${scopedOverride}`;
+}
 function addArrayItem(content, path, index, value) {
   const errors = [];
   const root = parseTree(content, errors, { allowTrailingComma: true, disallowComments: false });

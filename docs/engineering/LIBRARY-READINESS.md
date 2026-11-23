@@ -31,3 +31,14 @@ Owner-approved partial sign-off recorded in `specs/i18n/V2-PHASE1-CLOSURE.md`.
 
 Owner-approved HTTP V2 final QA sign-off. Merge/push to main authorized. Unified npm deployment remains unauthorized.
 <!-- RIVINIA-HTTP-V2-QA:END -->
+
+<!-- RIVINIA-THEME-V2-QA:START -->
+## Theme V2 — owner-approved readiness (2026-11-23)
+
+- `@rivinia/theme`: **READY_FOR_DEPLOY**
+- C4–C9 QA gates passed; Angular Visual Lab validated.
+- [QA evidence](release-v2/THEME-V2-QA-EVIDENCE.md)
+- [SDLC handoff](release-v2/THEME-V2-HANDOFF.md)
+- Optional Motion bundle optimization deferred.
+- Unified npm deployment: **NOT_AUTHORIZED**.
+<!-- RIVINIA-THEME-V2-QA:END -->

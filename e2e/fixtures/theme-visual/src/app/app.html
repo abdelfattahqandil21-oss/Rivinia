@@ -1,0 +1,116 @@
+<div class="page" [attr.dir]="direction()">
+  <header class="topbar">
+    <div class="identity">
+      <div class="mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="identity-text"><strong>rivinia</strong><span>Design system / Theme V2</span></div>
+      <span class="environment">LOCAL LAB</span>
+    </div>
+    <div class="top-actions">
+      <span class="top-caption">REAL ANGULAR COMPONENT</span>
+      <div class="header-toggle"><rv-theme-toggle presentation="segmented" variant="outline" shape="pill" size="sm" transitionOrigin="click" [transitionDuration]="560" /></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="toolbox" aria-label="Design controls">
+      <div class="section-overline"><span class="pulse"></span> VISUAL CONTROL PANEL</div>
+      <h2>Make it yours.</h2>
+      <p class="subtle">غيّر التصميم وشوف نفس مكوّن Rivinia الحقيقي بيتفاعل مع الـ View Transition.</p>
+
+      <div class="controls">
+        <label for="presentation">Presentation</label>
+        <select id="presentation" [value]="presentation()" (change)="change($event, 'presentation')">
+          <option value="segmented">Segmented · 3 modes</option><option value="single">Single · cycle modes</option>
+        </select>
+        <label for="variant">Variant</label>
+        <select id="variant" [value]="variant()" (change)="change($event, 'variant')">
+          <option value="solid">Solid</option><option value="outline">Outline</option><option value="ghost">Ghost</option><option value="unstyled">Unstyled</option>
+        </select>
+        <div class="control-pair"><div><label for="shape">Shape</label>
+          <select id="shape" [value]="shape()" (change)="change($event, 'shape')"><option value="pill">Pill</option><option value="rounded">Rounded</option><option value="square">Square</option></select>
+        </div><div><label for="size">Size</label>
+          <select id="size" [value]="size()" (change)="change($event, 'size')"><option value="sm">Small</option><option value="md">Medium</option><option value="lg">Large</option></select>
+        </div></div>
+        <div class="rule"></div>
+        <div class="section-overline">VIEW TRANSITION REVEAL</div>
+        <label for="origin">Reveal origin</label>
+        <select id="origin" [value]="origin() ?? 'none'" (change)="change($event, 'origin')">
+          <option value="click">Click position</option><option value="center">Screen center</option><option value="corner">Screen corner</option><option value="none">No transition</option>
+        </select>
+        <label for="corner">Corner</label>
+        <select id="corner" [value]="corner()" [disabled]="origin() !== 'corner'" (change)="change($event, 'corner')">
+          <option value="top-left">Top left</option><option value="top-right">Top right</option><option value="bottom-left">Bottom left</option><option value="bottom-right">Bottom right</option>
+        </select>
+        <div class="duration-head"><label for="duration">Duration</label><output id="duration-output">{{ duration() }} ms</output></div>
+        <input id="duration" type="range" min="0" max="1200" step="20" [value]="duration()" (input)="changeDuration($event)" />
+        <label for="easing">Easing</label>
+        <select id="easing" [value]="easing()" (change)="change($event, 'easing')">
+          <option value="ease-out">Ease out</option><option value="ease-in-out">Ease in / out</option><option value="linear">Linear</option><option value="cubic-bezier(0.16, 1, 0.3, 1)">Smooth spring-like</option>
+        </select>
+      </div>
+      <div class="rule"></div>
+      <button type="button" class="direction-button" id="toggle-rtl" (click)="toggleDirection()">
+        <span>Direction</span><strong>{{ direction().toUpperCase() }}</strong><span aria-hidden="true">⇄</span>
+      </button>
+      <p class="hint">Only the demo fixture changes. Library source and API stay untouched.</p>
+    </aside>
+
+    <main class="content">
+      <div class="heading"><div>
+        <div class="breadcrumb">COMPONENT LIBRARY <span>/</span> THEME <span>/</span> VISUAL QA</div>
+        <h1>Theme, <em>beautifully controlled.</em></h1>
+        <p>One design surface. Every mode. A real circular reveal with the actual <code>&lt;rv-theme-toggle&gt;</code>.</p>
+      </div><div class="status"><span class="status-dot"></span> Live Angular preview</div></div>
+
+      <section class="hero" aria-label="Interactive Theme preview">
+        <div class="hero-copy">
+          <div class="eyebrow">✦&nbsp; LIVE THEME EXPERIENCE</div>
+          <h2>Watch the entire<br /><i>interface transform.</i></h2>
+          <p>Choose a mode below. See the reveal expand across every surface, chart and card.</p>
+          <div class="hero-toggle-wrap" data-testid="hero-toggle">
+            <rv-theme-toggle
+              [presentation]="presentation()" [variant]="variant()" [shape]="shape()" [size]="size()"
+              [transitionOrigin]="origin()" [transitionCorner]="corner()"
+              [transitionDuration]="duration()" [transitionEasing]="easing()" />
+          </div>
+          <div class="mode-readout"><span class="tiny-dot"></span> ACTIVE <strong id="active-mode">{{ currentModeLabel() }}</strong><span class="sep">•</span> RESOLVED <strong id="resolved-mode">{{ resolvedName() }}</strong></div>
+        </div>
+        <div class="hero-orbit" aria-hidden="true"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="orb"></div><div class="orbit-center">◐</div></div>
+      </section>
+
+      <div class="section-heading"><div><span class="section-kicker">01 / COMPONENTS</span><h2>Toggle design gallery</h2></div><p>Production component, four visual directions.</p></div>
+      <div class="variants">
+        @for (item of gallery; track item.title) {
+          <article class="variant-card">
+            <div class="variant-meta"><div class="sample-mark">◈</div><span>{{ item.title }}</span></div>
+            <div class="variant-control"><rv-theme-toggle presentation="segmented" [variant]="item.variant" [shape]="item.shape" [size]="item.size" transitionOrigin="click" [transitionDuration]="560" /></div>
+            <div class="variant-caption">{{ item.variant }} &nbsp;•&nbsp; {{ item.shape }} &nbsp;•&nbsp; {{ item.size }}</div>
+          </article>
+        }
+      </div>
+
+      <div class="section-heading lower-heading"><div><span class="section-kicker">02 / DESIGN TOKENS</span><h2>Real-time surfaces</h2></div><p>Semantic tokens update with the controller.</p></div>
+      <div class="data-layout">
+        <section class="analytics" aria-label="Example analytics interface">
+          <div class="panel-head"><div><div class="panel-title">Analytics overview</div><p>Just a visual demo · last 7 days</p></div><span class="round-icon">⋯</span></div>
+          <div class="analytics-stats"><div><span>Total sessions</span><strong>24,892</strong><small>↑ 12.8% this week</small></div><div><span>Engagement</span><strong>78.4%</strong><small>↑ 6.2% this week</small></div></div>
+          <div class="bars" aria-hidden="true"><div style="--h:51%"></div><div style="--h:70%"></div><div style="--h:57%"></div><div style="--h:83%"></div><div style="--h:67%"></div><div style="--h:95%"></div><div style="--h:76%"></div></div>
+          <div class="days"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span></div>
+        </section>
+        <section class="token-panel" aria-label="Theme tokens">
+          <div class="panel-head"><div><div class="panel-title">Current palette</div><p>Computed from Theme CSS variables</p></div><span class="round-icon">✦</span></div>
+          <div class="swatch-row"><span class="swatch primary"></span><div><strong>Primary</strong><small>--rv-color-primary</small></div></div>
+          <div class="swatch-row"><span class="swatch surface"></span><div><strong>Surface</strong><small>--rv-color-surface</small></div></div>
+          <div class="swatch-row"><span class="swatch raised"></span><div><strong>Raised surface</strong><small>--rv-color-surface-raised</small></div></div>
+          <div class="swatch-row"><span class="swatch text-color"></span><div><strong>Text</strong><small>--rv-color-text</small></div></div>
+        </section>
+      </div>
+      <section class="quick-actions"><div><strong>Try the presets</strong><p>Changes inputs only. These are real public Toggle inputs.</p></div><div class="preset-buttons">
+        <button id="preset-soft" type="button" (click)="usePreset('soft')">Soft & rounded</button>
+        <button id="preset-sharp" type="button" (click)="usePreset('sharp')">Sharp & precise</button>
+        <button id="preset-minimal" type="button" (click)="usePreset('minimal')">Minimal</button>
+      </div></section>
+      <footer>RIVINIA <span>•</span> THEME V2 VISUAL QA <span>•</span> NOT A PRODUCTION RELEASE</footer>
+    </main>
+  </div>
+</div>
